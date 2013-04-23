@@ -1,0 +1,951 @@
+# 
+# 
+
+Integer16=2                     # 1=assume Pascal integers are 16 bits
+                                # 0=assume Pascal integers are 32 bits
+                                # 2=use native C "int" for Pascal "integer"
+                                # default=0 for HP/Oregon/VAX, 1 for Turbo/MPW
+
+DoubleReals=1                   # 1=convert Pascal real to C double
+                                # 0=convert Pascal real to C float
+                                # default=1 for Turbo and HP-UX, 0 for HP
+
+UnsignedChar=2                  # 1=Pascal char must be unsigned
+                                # 0=Pascal char must be signed
+                                # 2=doesn't matter; use native C "char"
+                                # default=unsigned, but use native "char"
+
+NeedSignedByte=1                # 1=use "signed char" even if not available
+                                # 0 or default=use "short" if not sure
+
+PascalEnumSize=def              # Size in BITS of a Pascal enum type.
+                                # Default=according to Language.
+
+MainType=int                    # Type name to put in front of "main";
+                                # generally either "int" or "void".  Blank
+                                # works on most systems.
+				
+
+# TARGET LANGUAGE
+
+AnsiC=1                         # 1=use all Ansi C features and definitions
+                                # 2=use GNU C language extensions
+                                # 0=use only original K&R features
+                                # default=use "modern" Unix-like C
+
+C++=def                         # 1=use C++ extensions,
+                                # 0=use straight C,
+                                # default=generate code that works on either
+
+Void*=1                         # 1=use "void *" for anyptr's
+                                # 0=use "char *" for anyptr's
+                                # default=1 if AnsiC=1 or C++=1
+
+HasSignedChar=1                 # 1="signed char" and "signed int" are legal
+                                # 0="signed ..." is not supported
+                                # default=1 if AnsiC=1
+
+CastNull=1                      # 1=must type-cast NULL into specific types
+                                # 0 or default=don't cast NULL
+
+CopyStructs=3                   # 0=no implicit copying of structs allowed
+                                # 1=can assign but not pass to/from funcs
+                                # 2=struct assignment and parameters only
+                                # 3=can assign, pass, and return structs
+                                # default=3 unless AnsiC=0
+
+VariableArrays=1                # 1=allows variable-length arrays
+                                # 0=array sizes must be constant
+                                # default=1 for Gnu C, 0 otherwise
+
+InitPACStrings=1                # 1=can init char array with full-sized string
+                                # 0=string literal initializer always has \0
+                                # default=1 if AnsiC=1, else 0
+
+ReUseFieldNames=1               # 1=can use same field name in many structs
+                                # 0=field names must be globally unique
+                                # default=1
+
+UseVExtern=1                    # 1 or default=assume strict ANSI linkage
+                                # 0=UNIX-like "common" variable linkage
+
+UseAnyptrMacros=0               # 1=use Anyptr, Signed, Static, etc. macros
+                                # 0=use true C constructs as specified above
+                                # 2=use Static, Local, Char only
+                                # default=2 if AnsiC=1, else 1
+
+UsePPMacros=0                   # 1=use PP and PV macros for prototypes
+                                # 0=do not use these macros for prototypes
+                                # 2=use them only for external/forward
+                                # default=0 if AnsiC=1, else 2
+
+
+# TARGET MACHINE
+
+Target                          # machine name, if any.  Specify this or answer
+                                # the following questions to tailor the output
+                                # program to a particular architecture.
+                                # Machines known:
+                                #   HPUX-300, SUN-68K, BSD-VAX, BSD, SYSV
+
+SignedChar=def                  # 1=char is signed, 0=char is unsigned,
+                                # default=don't know
+
+SignedField=2                   # 1="int" bit-fields in structs are signed,
+                                # 0="int" bit-fields are unsigned,
+                                # default=don't know but probably signed
+                                # 2=don't know, be paranoid
+
+SignedShift=2                   # 1=">>" does arithmetic (signed) shift,
+                                # 0=">>" does logical shift even for ints,
+                                # default=don't know but probably signed
+                                # 2=don't know, be paranoid
+
+CharSize=8                      # size in bits of a char, default at least 8
+ShortSize=16                    # size in bits of a short, default at least 16
+IntSize=32                      # size in bits of an int, default at least 16
+LongSize=32                     # size in bits of a long, default at least 32
+PtrSize=def                     # size in bits of a pointer.  If not all
+                                # pointers have same size, must leave blank.
+FloatSize=32                    # size in bits of a float
+DoubleSize=64                   # size in bits of a double
+EnumSize=def                    # size in bits of an enum
+
+Size_T_Long=1                   # 1=Ansi "size_t" type is long
+                                # 0=Ansi "size_t" type is int
+                                # default=don't know, probably long
+
+
+
+# BRACES AND PLACEMENT OF STATEMENTS
+
+NullStmtLine=1                  # 1=put null statements on their own lines,
+                                # 0 or default=write "while (x) ;"
+
+BracesAlways=def                # 1=use {braces} always,
+                                # 0=never unless needed,
+                                # default=use nice braces
+
+BraceLine=def                   # 1=always put open braces on a new line,
+                                # 0=never put open brace on new line if poss,
+                                # default=0 for sub-stmts, 1 for func bodies
+
+BraceCombine=0                  # 1=don't put newline after '{' if possible
+                                # 0 or default=open brace always ends a line
+
+BraceElse=1                     # 1=put { } on both "then" and "else" if would
+                                #   put them on either, default=independent
+
+BraceElseLine=1                 # 0 or default=write "} else {"
+                                # 1=write "}\nelse {", 2=write "} else\n{"
+                                # 3=write "}\nelse\n{"
+
+ElseIf=1                        # 1=always write "else if" on same line
+                                # 0=always write "else\nif"
+                                # default=use "else if" only when input used it
+
+NewLineFuncs=0                  # 1=write "static int\nfoo()" in function defs
+                                # 0 or default=write "static int foo()"
+
+
+
+# INDENTATION
+
+PhysTabSize=4                   # Spacing of tab-character tabs; default=8.
+                                # 0=do not use tabs in output file.
+
+Indent=+4                       # Basic indentation delta; default=+2.
+                                # Indentation deltas specify an amount by which
+                                # to change indentation; +n or -n specifies a
+                                # relative adjustment, n specifies an absolute
+                                # amount of indentation where 0=far left.
+
+BlockIndent=+0                  # Indentation delta for statements enclosed
+                                # in braces; applied after Indent.  Default=+0.
+
+SwitchIndent=+0                 # Indentation delta for switch statement body;
+                                # applied after Indent.  Default=+0.
+
+CaseIndent=-4                   # Indentation delta for case labels; applied
+                                # after Indent and SwitchIndent.  Default=-2.
+
+LabelIndent=0                   # Indentation delta for statement labels.
+                                # Default is 0 (absolute).
+
+OpenBraceIndent=+0              # Indentation delta for the open brace that
+                                # begins a block.  Used only if the brace is
+                                # on its own line.  Default=+0.
+
+CloseBraceIndent=+0             # Indentation delta for the close brace that
+                                # ends a block.  Default=+0.
+
+FuncArgIndent=0                 # Indentation delta for function arguments.
+                                # Default is 0.
+
+BodyIndent=+0                   # Indentation delta for the body of a function;
+                                # applied after Indent.  Default=+0.
+
+FuncOpenIndent=+0               # Indentation delta for the open brace that
+                                # begins a function body.  Default=+0.
+
+FuncCloseIndent=+0              # Indentation delta for the close brace that
+                                # ends a function body.  Default=+0.
+
+StructIndent=+0                 # Indentation delta for "struct" declarations;
+                                # applied after Indent.  Default=+0.
+
+StructInitIndent=+0             # Indentation delta for struct and array
+                                # initializers; applied after Indent.
+                                # Default=+0.
+
+ExtraInitIndent=+4              # Indentation delta for nested struct/array
+                                # initializers; not combined with Indent.
+                                # Default=+2.
+
+ExtraIndent=+8                  # Extra indentation for broken lines if
+                                # indenting by nesting order is too much;
+                                # default=+2:
+                                #    long_function_name(arguments,
+                                #        more_arguments);
+                                #    1234
+
+BumpIndent=+4                   # Extra indentation for subexpressions which
+                                # coincide with next statement's indentation
+                                # in a visually confusing way:
+                                #     if (foo &&
+                                #         bar)     <- this gets BumpIndent
+                                #         spam();
+                                # May be pos, neg or zero.  Default=+1.
+
+ConstIndent=+1                  # Target column for #defines; default=24.
+                                # A positive relative value (e.g., +3) means
+                                # to use that many spaces always rather than
+                                # tabbing to a fixed column.  A value of the
+                                # form, e.g., *5 means to tab to the next
+                                # multiple-of-5 column.
+
+CommentIndent=+1                # Target column (as in ConstIndent) for
+                                # comments trailing statements.  Another
+                                # syntax is, e.g., "-80" which means to
+                                # right-justify comments on an 80-column line.
+                                # Default=+3.
+
+BraceCommentIndent=+1           # Indentation for trailing comments on
+                                # braces.  Default=+2.
+
+DeclCommentIndent=def           # Target column for comments trailing
+                                # declarations.  Default=CommentIndent.
+
+CommentOverIndent=+4            # If line is too long to indent nicely by
+                                # CommentIndent or BraceCommentIndent, start
+                                # a new line and indent according to this
+                                # indentation, either n, +n, or -n.  Zero means
+                                # never to start a new line.  Default=+4.
+
+MinSpacing=1                    # Minimum spacing allowed for things like
+                                # absolute ConstIndent spacing.  Default=2,
+                                # i.e., ConstIndent will always insert at
+                                # least two spaces, even on long lines.
+
+MinSpacingThresh=1              # If specified, threshhold below which
+                                # MinSpacing is used.  (Default=MinSpacing.)
+                                # For example, if MinSpacingThresh=1:
+                                #    foo  /*comment*/   (CommentIndent=5 used)
+                                #    spam /*comment*/   (CommentIndent=5 used)
+                                #    thing  /*comment*/ (MinSpacing=2 used)
+
+
+
+# LINE BREAKING
+
+LineWidth=128                   # Target max output line width; default=78.
+                                
+MaxLineWidth=128                # Absolute max output line width; default=90.
+
+BreakArith=N                    # Options string for how to break lines at
+                                # arithmetic operators.  One or more of:
+                                #   L  Break on left side of operator.
+                                #   R  Break on right side of operator.
+                                #   H  Same as L, but use "hanging" indent.
+                                #   N  No breaking.
+                                #  L>R Break either way, L preferred (or R<L).
+                                #  R>L Break either way, R preferred (or L<R).
+                                #  L=R Break either way equally (or LR).
+                                #   A  (with above) Use all-or-none breaking.
+                                # Default is R.
+
+BreakRel=N                      # Same for relational ops (==, <, etc.)
+
+BreakLog=L                      # Same for logical operators && and ||
+
+BreakDot=N                      # Same for dot operators . and ->
+
+BreakAssign=N                   # Same for assignments.
+
+For_AllOrNone=1                 # 1 or default=all-or-none breaking of the
+                                # three clauses of a "for" statement.  0=plain.
+
+
+
+# COMMENTS AND BLANK LINES
+
+NoBanner=1                      # 1=omit "From input file..." comment
+                                # 0 or default=put this command at top of file
+
+SlashSlash=2                    # 1=use C++ // for all comments except #define
+                                # 2=use C++ // even on #define lines
+                                # 0=use C /* */ for all comments
+                                # default=1 if C++=1, else 0
+
+EatComments=1                   # 1=don't copy any comments into C code
+                                # 2=don't copy comments inside procedures
+                                # 0 or default=keep all comments
+
+SpitComments=0                  # 1=spit out all comments between procedures
+                                # 0 or default=try to attach comments to code
+
+SpitOrphanComments=0            # 1=spit out comments whose orig stmts are lost
+                                # 0 or default=attach orphans to nearby code
+
+CommentAfter=0                  # 1=assume comments follow statements
+                                # 0 or default=assume comments precede stmts
+                                # (in case statements are rearranged.)
+
+BlankAfter=1                    # 1 or default=assume blank lines follow stmts
+                                # 0=assume blanks precede statements
+
+MajorSpacing=1                  # Minimum number of blank lines between major
+                                # sections of code, default=2.
+
+MinorSpacing=1                  # Minimum number of blank lines between minor
+                                # sections, default=1.
+
+FuncSpacing=1                   # Minimum number of blank lines between global
+                                # functions, default=2.
+
+MinFuncSpacing=1                # Minimum number of blank lines separating
+                                # sub-procedures, default=1.
+
+
+
+# STYLISTIC OPTIONS
+
+ExtraParens=1                   # 1=use many parentheses for readability,
+                                # 2=use even more parentheses,
+                                # 0=use minimal parens,
+                                # default=use nice parens
+
+BreakAddParens=1                # 1=always add parens for operators broken
+                                # across lines.  0=never, default=nice parens
+
+ReturnParens=0                  # 1=write "return (x)"
+                                # 0=write "return x"
+                                # default=omit parens for trivial expressions
+
+SpaceExprs=def                  # 1=use many spaces in expressions,
+                                # 0=use minimal spaces in expressions,
+                                # default=use nice spacing
+
+SpaceFuncs=0                    # 1=write a space after function name in call
+                                # 0 or default=no space: f(x)
+
+SpaceCommas=1                   # 1 or default=one space after commas: f(x, y)
+                                # 0=no space after commas: f(x,y)
+
+ImplicitZero=1                  # 1=generate "if (x)" rather than "if (x!=0)"
+                                # 0=always generate explicit comparisons
+                                # default=only with strcmp and other idioms
+
+StarIndex=0                     # 1=always use "*a"
+                                # 0=always use "a[0]"
+                                # default=use "*a" only in common idioms
+
+AddIndex=def                    # 1=always use "a + n"
+                                # 0=always use "&a[n]"
+                                # default=use "a+n" only in common idioms
+
+StarArrays=0                    # 1 or default=write "f(int *a)" for array a
+                                # 0=write "f(int a[10])"
+                                # 2=write "f(int a[])"
+
+StarFunctions=0                 # 1=write "(*fp)(x,y)" to call thru func ptr
+                                # 0=write "fp(x,y)"
+                                # default=1 unless AnsiC=1
+
+PostIncrement=0                 # 1 or default=write i++ preferentially
+                                # 0=write ++i preferentially
+
+CaseSpacing=1                   # Number of blank lines between CASE sections,
+                                # default=1.
+
+CaseTabs=+1                     # 0 or default=put each CASE on its own line.
+                                # Else this is an amount by which to space
+                                # cases on same line, either +n or *n in the
+                                # style of ConstIndent.
+
+CaseLimit=8                     # Maximum number of options in a CASE subrange
+                                # that will be expanded out in-line; more than
+                                # this moves to an "if" in the default clause.
+                                # Default=9.
+
+UseCommas=1                     # 1=use comma operator when convenient
+                                # 0=do not use comma operator
+                                # default=use comma operator when necessary
+
+UseReturns=1                    # 1 or default=introduce "return" statements
+                                # 0=do not rearrange to use "return"
+
+ReturnLimit=def                 # Need at least this many statements in an
+                                # "if" block before "return" rearrangement;
+                                # default=3
+
+UseBreaks=1                     # 1 or default=introduce "break"/"continue"
+                                # 0=do not use "break" and "continue"
+
+BreakLimit=def                  # Need at least this many statements in an
+                                # "if" block before "break" rearrangement;
+                                # default=2
+
+ContinueLimit=def               # Need at least this many statements in an
+                                # "if" block before "continue" rearrangement;
+                                # default=5
+
+InfLoopStyle=2                  # 0 or default=follow the source file
+                                # 1=use "for (;;) ..." for all infinite loops
+                                # 2=use "while (1) ..."
+                                # 3=use "do ... while (1)"
+
+NullChar=1                      # 1 or default=write '\0' for null character
+                                # 0=write 0 for null character constant
+
+HighCharInt=1                   # 1 or default=write '\200' as 128 and above
+                                # 0=write all char consts as characters
+
+MixVars=def                     # 1=mix all vars of same base type: int a,b;
+                                # 0=never mix variables: int a; int b;
+                                # default=mix only adjacent variables
+
+MixTypes=1                      # 1=mix all var types: int a,*b,c[5];
+                                # 0=never mix variables with different types
+                                # default=pointers only: int a,*b; int c[5];
+
+MixFields=0                     # 1=mix bit-fields just like other vars
+                                # 0=only one bit-field per declaration
+                                # default=1
+
+MixInits=1                      # 1=always mix variables with initializers
+                                # 0=never mix variables with initializers
+                                # default=mix only in pleasing cases
+
+MainLocals=1                    # 1 or default=make globals local to main if poss
+                                # 0=globals are always made global
+
+
+
+# CODING OPTIONS
+
+ElimDeadCode=2                  # 1 or default=eliminate unreachable code
+                                # 2=even eliminate "if (false)" statements
+                                # 0=leave unreachable code in place
+
+AnalyzeFlow=1                   # 1 or default=perform data flow analysis
+                                # 0=make no assumptions based on data flow
+
+FoldConstants=0                 # 1=instantiate non-structure const's in-line
+                                #   (applies to int, char, boolean, enum, real)
+                                # 0 or default=use #define's for constants
+                                # 0 causes constant to be completely symbolic;
+                                # default sometimes instantiates if convenient.
+                                # A constant is folded if FoldConstants=1
+                                # either when the const was defined, or when
+                                # it was referenced.
+
+FoldStrConstants=0              # 1=instantiate string const's in-line, as above
+                                # 0 or default=use #define's for string const's
+
+CharConsts=1                    # 1 or default=const a='X' => #define a 'X'
+                                # 0=const a='X' => #define a "X"
+                                # (either always works---aesthetic only)
+
+UseConsts=1                     # 1=use "const" keyword in C
+                                # 2=use "Const" form even if UseAnyptrMacros=0
+                                # 0=do not use "const" declarations
+                                # default=1 if AnsiC=1 or C++=1
+
+UseUndef=1                      # 1=use "#undef" when #defines go out of scope
+                                # 0=do not use "#undef", default=1.
+
+StoreFileNames=def              # 1=store file names associated with file vars
+                                # 0=let the system record the name
+                                # default=1 in Turbo Pascal, 0 otherwise.
+
+SqueezeSubr=1                   # 1 or default=squeeze subranges into char, etc.
+                                # 0=use only short's and int's (or long's).
+
+UseEnum=1                       # 1=use C "enum" types
+                                # 0=use integers for enumerations
+                                # default=1 unless AnsiC=0
+
+SqueezeEnum=1                   # 1=use bytes for small enums, when UseEnum=0
+                                # 0=use shorts always
+                                # default=0 for HP Pascal, 1 otherwise.
+
+CompEnums=1                     # 1=okay to compare enums directly
+                                # 0=cast enums to ints for comparisons
+                                # default=0 unless AnsiC=1.
+
+PreserveTypes=0                 # 1 or default=use typedef for all Pascal types
+                                # 0=don't unnecessarily use typedef
+                                # (Can be turned on/off for different decls)
+
+PreservePointers=0              # 1=override PreserveTypes for pointer types
+                                # 0 or default=use in-line "*" notation
+                                # -1=same as PreserveTypes
+
+PreserveStrings=0               # 1=override PreserveTypes for string types
+                                # 2=use typedef for strings w/non-const lengths
+                                # 0=use in-line "[]" notation for strings
+                                # -1 or default=same as PreserveTypes
+
+Packing=1                       # 1 or default=fully packed records and arrays
+                                # 0=ignore "packed" keyword
+                                # 2=pack to bytes, but not bits
+
+PackSigned=1                    # 1=implement packed arrays of signed values
+                                # 0=only pack unsigned arrays
+                                # default=1
+
+SkipIndices=1                   # Number of vacant array indices allowable,
+                                # default 0.  If 1, then array [1..10] is
+                                # converted to array [11], but array [2..10]
+                                # would be converted as array [9] with offsets.
+
+OffsetForLoops=0                # 1=adjust loops where index is always used
+                                #   as, e.g., i-1 by offsetting the index.
+                                # 0=leave them alone.  Default=1.
+
+ForEvalOrder=0                  # 1=in for x:=y to z, force eval of y before z.
+                                # 0 or default=evaluation order unimportant.
+
+StringCeiling=def               # Maximum size for strings.  Default is 255.
+                                # If > 255, allows some "slop" in strings.
+                                # If < 255, shortens large strings.
+
+StringDefault=def               # Size of string declared without [ ] brackets.
+                                # Default is 255.
+
+StringTruncLimit=def            # Minimum size of strings for which a warning
+                                # is generated when assigned possibly longer
+                                # strings.  These are assignments to check if
+                                # Turbo-like truncation is necessary.
+                                # Default is 80 for Turbo, 0 otherwise.
+
+LongStringSize                  # Smallest string which can be considered
+                                # "arbitrarily long"; default=StringCeiling.
+
+KeepNulls=0                     # 1=try to preserve null (#0) chars in strings
+                                # 0 or default=ignore them (but warn)
+
+HighCharBits=0                  # 1=convert "ch >= 128" to "(ch & ~127) != 0"
+                                # 2=convert "ch >= 128" to "(ch & 128) != 0"
+                                # 0=do not use bit ops for high characters
+                                # default=1 only if ch's signed-ness is unknown
+
+StaticFunctions=0               # 1 or default=use "static" for private funcs
+                                # 0=don't create static functions
+
+StaticVariables=0               # 1 or default=use "static" for private vars
+                                # 0=don't create static global vars
+
+NeedStatic                      # Names of functions or variables which
+NeedStatic                      # need to be declared static despite
+NeedStatic                      # StaticFunctions=0 or StaticVariables=0.
+
+AlwaysCopyValues=0              # 1=always make a local copy of a parameter
+                                # 0 or default=only if it appears to be changed
+
+VoidArgs=0                      # 1=write "f(void)" for funcs with no args
+                                # 0=write "f()" for funcs with no args
+                                # default=depends on AnsiC and C++
+
+Prototypes=1                    # 1=write "f(int a, int b)"
+                                # 2=write "f(int, int)" when possible
+                                # 0=write "f(a, b) \n int a, b;"
+                                # default=depends of AnsiC and C++
+
+FullPrototyping=1               # 1 or default=use prototypes everywhere
+                                # 0=use prototypes only for forward/extern
+
+ProcPtrPrototypes=1             # 1 or default=use prototypes for C func ptrs
+                                # 0=always write, e.g., int (*fp)();
+
+CastArgs=def                    # 1=include argument casts if needed: (double)i
+                                # 0=do not include argument casts (dangerous!)
+                                # default=do not cast if func has a prototype
+
+CastLongArgs=def                # 1=include int/long argument casts if needed
+                                # 0=do not cast between int and long
+                                # default=follow CastArgs
+
+PromoteArgs=0                   # 1=promote e.g. short to int in prototypes
+                                # 0=do not promote in prototypes
+                                # default=only when prototyping forwards only
+
+FixPromotedArgs=def             # 1=attempt to handle "&" of promoted args
+                                # 2=warn in this case but do not try to fix
+                                # 0=leave promoted args alone
+                                # default=1
+
+PromoteEnums=0                  # 1=promote enum to int when promoting args
+                                # 0=leave enums alone in prototypes
+                                # default=only when UseEnum=0
+
+StaticLinks=0                   # 1=use _PROCEDURE (ProcTypeName) for proc ptrs
+                                # 2=use _PROCEDURE but assume only global procs
+                                # 0=use C function pointers, no static links
+                                # default=1 in HP, 0 in Turbo Pascal
+
+VarStrings=1                    # 1=full support for "var s:string" params
+                                #   and HP Pascal's strmax function
+                                # 0=assume all var s:string's are string[255]
+                                # default=0 always; may need 1 for some
+                                #   HP Pascal programs
+
+VarFiles=0                      # 1 or default="var f : file" params use &
+                                # 0=pass FILE *'s by value; must not open or
+                                #   close the file within the procedure
+
+AddrStdFiles=0                  # 1=okay to write "&stdout", etc.
+                                # 0 or default=not okay
+
+CopyStructFuncs=0               # 1=write "temp = f(); temp.field"
+                                # 0=write "f().field"
+                                # default=1 unless AnsiC=1
+
+Atan2=1                         # 1=convert arctan(a/b) to atan2(a,b)
+                                # 0 or default=convert it to atan(a/b)
+
+BitwiseMod=1                    # 1 or default=convert x mod 16 to x&15
+                                # 0=convert x mod 16 to x%16
+
+BitwiseDiv=0                    # 1=convert x div 16 to x>>4
+                                # 0 or default=convert x div 16 to x/16
+
+AssumeBits=1                    # 1=assume args of funcs like na_po2 are
+                                #   within reasonable range; write 1<<x.
+                                # 0 or default=no assumptions; write na_po2
+
+AssumeSigns=0                   # 1 or default=for e.g. na_lsl, assume
+                                #   "x" is positive, "-x" is negative.
+                                # 0=no assumptions (except for constants!)
+
+AllocZeroNil=0                  # 1=na_new(p,0) must set p to nil
+                                # 0 or default=not necessary
+                                # 2=not necessary, but print a warning
+
+PrintfOnly=0                    # 1=don't use puts, putc, etc., in WRITE
+                                # 0=use puts, etc., as well as printf
+                                # default=a pleasing compromise
+
+MixWritelns=1                   # 1 or default=writeln;writeln=>printf("\n\n")
+                                # 0=don't mix consecutive writeln stmts
+
+MessageStderr=1                 # 1 or default="message" writes to stderr
+                                # 0="message" is exactly like "writeln"
+
+IntegerWidth=1                  # Default field width for writing integers.
+                                # Default is 1 for Turbo, 12 for HP.
+
+RealWidth=1                     # Default field width for writing reals.
+                                # Default is 12.
+
+FormatStrings=1                 # 1=full support for write(string:width)
+                                # 0 or default=':width' only stretches
+
+WhileFgets=1                    # 1 or default=while (fgets(...)) { ... }
+                                # 0=while (!eof(...)) { fgets(...); ... }
+
+UseGets=0                       # 1 or default=use gets to read string[255]
+                                # 0=always use fgets (with length checking)
+
+NewLineSpace=0                  # 1=convert \n to ' ' in read(ch)
+                                # 0=leave newlines alone reading characters
+                                # default=0 in Turbo Pascal, 1 otherwise
+
+BuildReads=def                  # 1=combine x:=f^;get(f) into read(f,x)
+                                # 2=only for text files and files of char
+                                # 0=leave it alone; default=1
+
+BuildWrites=def                 # 1=combine f^:=x;put(f) into write(f,x)
+                                # 2=only for text files and files of char
+                                # 0=leave it alone; default=1
+
+BinaryMode=1                    # 1 or default=fopen binary files as, say, "rb"
+                                # 0=fopen binary files as "r"
+                                # 2=fopen binary files as "r" with a warning
+
+ReadWriteOpen=0                 # 1=RESET/REWRITE open binary files read/write
+                                # 0=RESET opens read-only, REWRITE write-only
+                                # 2=Open all files (text and binary) read/write
+                                # default=1 in Turbo, 0 otherwise.
+
+OpenMode=def                    # fopen mode string to use for Pascal open
+                                # statement.  Use a+ if that mode allows
+                                # seeking.  Default=build out of ANSI modes
+
+FileNameFilter=trim_name        # Name of a function to call which converts
+                                # a file name into a form usable by fopen;
+                                # if name must be changed this should return
+                                # a pointer to a static buffer.
+                                # Not used for constant names.  "0"=no filter.
+                                # default=P_trimname for Oregon/Berk, else 0
+
+LiteralFiles=1                  # 0=nameless rewrite(f) generates a temp file
+                                # 1=nameless rewrite(f) uses "f" as file name
+                                # 2=like 1 only if f appeared in "program" stmt
+                                # default=2 for Berkeley, else 0.
+
+LiteralFile                     # A file variable which should be treated as
+LiteralFile                     # if LiteralFiles=1.  If LiteralFiles=2, files
+LiteralFile                     # in program header are added to this list.
+                                
+StructFiles=1                   # 1="file of x" produces a struct with buffer
+                                #   and file-name included.
+                                # 0 or default=use native FILE *'s, with
+                                #   extra variables to hold buffer and name.
+
+StructFile                      # A file variable which should be treated as
+StructFile                      # if StructFiles=1.
+
+FullStrWrite=1                  # 1=full implementation of strwrite(s,i,j,...)
+                                # 0=ignore "j" variable and other issues
+                                # default=assign "j", assume not mid-string
+                                # 2=like default, but issue a warning
+
+FullStrRead=1                   # 1 or default=full impl of strread using "%n"
+                                # 0=fake the value of "j"
+                                # 2=like default, but issue a warning
+
+SetBits=def                     # Number of bits to use in each "long" of a set
+                                # default=LongSize if defined, else 32
+
+DefaultSetSize=def              # Default size of un-typed set constants;
+                                # default default=256 for VAX, else 8192
+
+SmallSetConst=1                 # 0=write small-set literals like "1<<2|1<<4"
+                                # 1=write them like "0x14"
+                                # 2=write them like "20"
+                                # -1=do not use small-sets at all
+                                # default=-1 if SetBitsName defined, else 1
+
+BigSetConst=1                   # (analogous to SmallSetConst for big sets)
+
+LeLeRange=0                     # 1=write "j in [1..10]" as "1<=j && j<=10"
+                                # 0 or default=write ... as "j>=1 && j<=10"
+
+UnsignedTrick=1                 # 1 or default=write "(unsigned)i <= 10"
+                                # 0=leave "i >= 0 && i <= 10" alone
+
+UseIsAlpha=1                    # 1 or default=use "isalpha", "isdigit", etc.
+                                # 0=use plain comparisons
+
+UseIsSpace=1                    # 1=convert "c==' '" to "isspace(c)"
+                                # 0 or default=leave it alone
+
+UseStrncmp=1                    # 1=use strncmp to compare packed array of char
+                                # 0=use memcmp, same as for all other arrays
+                                # default=1
+
+# NAMING CONVENTIONS
+
+
+ReturnValueName   result        # Return value holding variable; [%s=func name]
+UnionName         variant       # Name of variant union
+TempName          character%s   # Name of general temporary vars; %s=unique id
+ForName           N%s           # Name of FOR statement temp limit; %s=unique id
+
+AvoidGlobalName   remainder
+FNSizeName        file_name_size # Maximum length of file name (macro or integer)
+
+Alias                           # Name of external proc or var; default="%s".
+                                # If does not contain a "%s", this simply
+                                # renames the next defined symbol of any kind.
+
+
+# TARGET LIBRARY
+
+QuoteIncludes=1                 # 1 or default=write #include "foo.h"
+                                # 0=write #include <foo.h>
+
+# LeaveAlone        write         # Names of library functions which should
+# LeaveAlone        read          # be left alone, rather than translated
+# LeaveAlone        get           # into C equivalents.  (For example, prevents
+# LeaveAlone        put           # converting fwritebytes into C fwrite.)
+# LeaveAlone        write_ln
+# LeaveAlone        read_ln
+# LeaveAlone        open
+# LeaveAlone        reset
+# LeaveAlone        rewrite
+# LeaveAlone        eoln
+# LeaveAlone        eof
+
+HeaderName        "tex.inl"     # Name of standard p2c header file
+
+UCharName         uint8_t       # Name of a typedef for "unsigned char";
+                                # default="char" or "unsigned char".
+
+SCharName         int8_t        # Name of a typedef for "signed char";
+                                # default="char" or "signed char".
+
+BooleanName       bool          # Name of a typedef for booleans; default=char.
+
+TrueName          true          # Name of a boolean "true" constant (optional)
+FalseName         false         # Name of a boolean "false" constant (opt.)
+
+NullName          nullptr       # Name of a NULL pointer constant
+
+MainName          getopt        # Name of program setup function
+
+IOResultName      errno
+
+EscIO2Name        io_error      # Name of named-I/O-error-generation function
+
+FileNotFoundName  errno         # Name or number of "File Not Found" ioresult
+
+RoundName         lround        # Name of function or macro for rounding
+                                # a real to an integer.  Precede name with
+                                # a '*' if it is a macro that evaluates its
+                                # arguments more than once.  Default=do it
+                                # by hand.
+
+StrCpyLeft=0                    # 1 or default=strcpy(s1,s2) works even if
+                                # s1 and s2 overlap, provided s1 <= s2.
+                                # 0=strcpy(s1,s2) does not allow overlap.
+
+FreopenName       fopen         # Name of function or macro that acts like
+                                # freopen(n,m,f), but if f==NULL acts like
+                                # fopen(n,m).  Default=do it by hand.
+                                # "fopen"=assume not reopening files.
+                                # "fclose"=fclose first, then fopen.
+
+EofName           feof          # Name of "feof" with Pascal semantics.
+EolnName          eoln          # Name of "eoln" function.
+FilePosName       ftell         # Name of "filepos" function.
+
+GetBitsName       *get_bits     # Name of family of array-unpacking functions.
+                                # Precede name with '*' if a macro.  %s will
+                                # expand to S (for signed) or U (for unsigned),
+                                # followed by B (big array) or S (small array).
+
+PutBitsName       *put_bits     # Name of family of functions which 'OR' a
+                                # value into an element of a packed array.
+                                # %s expands to S or U, followed by B or S.
+                                # Use '*' if macro.  Default=use StoreBits.
+
+ClrBitsName       *clr_bits     # Name of family of functions which zero an
+                                # element of a packed array.  %s expands
+                                # to B or S only.  Use '*' if macro.
+                                # Default=use StoreBits.
+
+StoreBitsName                   # Name of a family of functions or macros
+                                # which act just like PutBits, but overwrite
+                                # the array element rather than OR'ing.
+                                # Default=use ClrBits followed by PutBits.
+                                # At least StoreBits or both PutBits and
+                                # ClrBits must be defined.
+
+# DeclBufName        FILEBUF      # Name of a macro for declaring the file
+#                                 # buffer for a file using GET and PUT.
+
+# DeclBufNCName      FILEBUFNC    # Name of a DeclBufName-like macro with two
+#                                 # arguments (no storage class), in case your
+#                                 # compiler can't handle null macro arguments.
+
+# ResetBufName       RESETBUF     # Name of a macro for setting up a file
+#                                 # buffer in "read" mode.  (For RESET.)
+
+# SetupBufName       SETUPBUF     # Name of a macro for setting up a file
+#                                 # buffer in read/write mode.  (For OPEN, SEEK.)
+
+# GetFBufName        GETFBUF      # Name of a macro for accessing a file
+#                                 # buffer using "file^" notation.
+
+# GetName            GET          # Name of a macro for advancing
+#                                 # to the next element of an input file.
+
+# PutFBufName        PUTFBUF      # Name of a macro for storing an element
+#                                 # of a file using "file^" notation.
+
+# PutName            PUT          # Name of a macro for advancing
+#                                 # to the next element of an output file.
+
+CharGetFBufName    peek         # A special GetFBuf for text and files of char.
+
+CharGetName        fgetc         # A special Get for text and files of char.
+
+# CharPutFBufName    CPUTFBUF     # A special PutFBuf for text and files of char.
+
+# CharPutName        CPUT         # A special Put for text and files of char.
+
+# ArrayGetFBufName   AGETFBUF     # A special GetFBuf for files of arrays.
+
+# ArrayGetName                    # A special Get for files of arrays.
+
+# ArrayPutFBufName   APUTFBUF     # A special PutFBuf for files of arrays.
+
+# ArrayPutName                    # A special Put for files of arrays.
+
+EofBufName         feof          # Name of a macro for "eof" of a buffered file.
+
+FilePosBufName     ftell        # Name of a macro for buffered "filepos".
+
+
+
+# CHECKING
+
+CaseCheck=0                     # 1=check CASE statements without OTHERWISE
+                                # 0 or default=skip CASE stmt if out of range
+                                # 2=according to $range$ directives
+
+ArrayCheck=0                    # 1=check array bounds
+                                # 0 or default=do not check array bounds
+                                # 2=according to $range$ directives
+                                #   (not yet implemented)
+
+NilCheck=0                      # check pointer dereferences (0, 1, or 2)
+
+RangeCheck=0                    # enable other range checking (0, 1, or 2):
+                                #   string indexing, ...?
+                                #   (not yet implemented)
+
+MallocCheck=0                   # 1=check if malloc returns NULL
+                                # 0 or default=assume malloc never returns NULL
+                                # (often used with MallocName; see above)
+
+CheckFileOpen=def               # 1 or default=check for errors during open,
+                                # 0=assume file opens successfully
+                                # 2=check only when $iocheck off$ or {$I-}
+
+CheckFileIsOpen=def             # 1=check for "file not open" error,
+                                # 0 or default=eof, etc., assume file is open
+                                # 2=check only when $iocheck off$ or {$I-}
+
+CheckFileWrite=def              # 1=check for errors during write
+                                # 0=ignore write errors
+                                # 2 or default=only when $iocheck off$ or {$I-}
+
+CheckReadFormat=def             # 1=check for "bad format" errors during read
+                                # 0=ignore read format errors
+                                # 2 or default=only when $iocheck off$ or {$I-}
+
+CheckFileEOF=def                # 1=check for "past EOF" errors reading files
+                                # 0=ignore file EOF errors
+                                # 2 or default=only when $iocheck off$ or {$I-}
+
+CheckStdinEOF=def               # 1=check for "past EOF" errors reading stdin
+                                # 0=ignore stdin EOF errors
+                                # 2 or default=only when $iocheck off$ or {$I-}
+
+CheckFileSeek=def               # 1=check for errors during seek
+                                # 0=ignore seek errors
+                                # 2 or default=only when $iocheck off$ or {$I-}
