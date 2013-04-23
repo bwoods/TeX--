@@ -98,6 +98,7 @@ int isextern;
     int flags = 0;
     if (func->wasdeclared)
         return;
+#if 0
     if (isextern && func->constdefn && !checkvarmac(func))
 	return;
     if (isextern) {
@@ -122,6 +123,7 @@ int isextern;
     }
     outdeclarator(func->type, func->name, ODECL_FORWARD | flags);
     output(";\n");
+#endif
     func->wasdeclared = 1;
 }
 
