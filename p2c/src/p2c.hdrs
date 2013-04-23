@@ -169,7 +169,7 @@ extern Symbol  *findsymbol         PP( (char *name) );
 extern void     clearprogress      PV();
 extern void     progress           PV();
 extern void     replacestrings     PP( (char *buf, Strlist *sl) );
-extern void     getline            PV();
+extern void     get1line           PV();
 extern void     push_input_file    PP( (FILE *fp, char *fname, int isinclude) );
 extern void     include_as_import  PV();
 extern void     push_input_strlist PP( (Strlist *sp, char *fname) );
