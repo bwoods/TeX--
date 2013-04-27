@@ -525,8 +525,8 @@
 23Missing = inserted for 
 48I was expecting to see `<', `=', or `>'. Didn't.
 06{case 
-10TeXinputs:
-09TeXfonts:
+04tex/
+04tfm/
 04.fmt
 15input file name
 19I can't find file `
