@@ -421,6 +421,10 @@ NullChar=1                      # 1 or default=write '\0' for null character
 HighCharInt=1                   # 1 or default=write '\200' as 128 and above
                                 # 0=write all char consts as characters
 
+AnonymousUnions=1               # 1=use C++ anonymous unions for variant recs
+                                # 0=use regular C named unions
+                                # default=1 if C++=1, 0 otherwise
+
 MixVars=def                     # 1=mix all vars of same base type: int a,b;
                                 # 0=never mix variables: int a; int b;
                                 # default=mix only adjacent variables
@@ -475,6 +479,13 @@ UseConsts=1                     # 1=use "const" keyword in C
 UseUndef=1                      # 1=use "#undef" when #defines go out of scope
                                 # 0=do not use "#undef", default=1.
 
+UseInits=2                      # 1=use "int x = 5" instead of "int x; x = 5"
+                                # 2=use "int x = a" for non-constant "a"
+                                # 3=use inits throughout body, a la C++
+                                # 4=use multiple inits in "if" branches, etc.
+                                # 0=do not convert assignments to initializers
+                                # default=4 if C++=1, 1 otherwise
+
 StoreFileNames=def              # 1=store file names associated with file vars
                                 # 0=let the system record the name
                                 # default=1 in Turbo Pascal, 0 otherwise.
@@ -494,7 +505,7 @@ CompEnums=1                     # 1=okay to compare enums directly
                                 # 0=cast enums to ints for comparisons
                                 # default=0 unless AnsiC=1.
 
-PreserveTypes=0                 # 1 or default=use typedef for all Pascal types
+PreserveTypes=1                 # 1 or default=use typedef for all Pascal types
                                 # 0=don't unnecessarily use typedef
                                 # (Can be turned on/off for different decls)
 
@@ -709,7 +720,7 @@ LiteralFile                     # A file variable which should be treated as
 LiteralFile                     # if LiteralFiles=1.  If LiteralFiles=2, files
 LiteralFile                     # in program header are added to this list.
                                 
-StructFiles=1                   # 1="file of x" produces a struct with buffer
+StructFiles=0                   # 1="file of x" produces a struct with buffer
                                 #   and file-name included.
                                 # 0 or default=use native FILE *'s, with
                                 #   extra variables to hold buffer and name.
@@ -777,7 +788,7 @@ Alias                           # Name of external proc or var; default="%s".
 QuoteIncludes=1                 # 1 or default=write #include "foo.h"
                                 # 0=write #include <foo.h>
 
-# LeaveAlone        write         # Names of library functions which should
+LeaveAlone        write         # Names of library functions which should
 # LeaveAlone        read          # be left alone, rather than translated
 # LeaveAlone        get           # into C equivalents.  (For example, prevents
 # LeaveAlone        put           # converting fwritebytes into C fwrite.)
@@ -832,22 +843,22 @@ EofName           feof          # Name of "feof" with Pascal semantics.
 EolnName          eoln          # Name of "eoln" function.
 FilePosName       ftell         # Name of "filepos" function.
 
-GetBitsName       *get_bits     # Name of family of array-unpacking functions.
+GetBitsName       get_bit       # Name of family of array-unpacking functions.
                                 # Precede name with '*' if a macro.  %s will
                                 # expand to S (for signed) or U (for unsigned),
                                 # followed by B (big array) or S (small array).
 
-PutBitsName       *put_bits     # Name of family of functions which 'OR' a
+PutBitsName                     # Name of family of functions which 'OR' a
                                 # value into an element of a packed array.
                                 # %s expands to S or U, followed by B or S.
                                 # Use '*' if macro.  Default=use StoreBits.
 
-ClrBitsName       *clr_bits     # Name of family of functions which zero an
+ClrBitsName                     # Name of family of functions which zero an
                                 # element of a packed array.  %s expands
                                 # to B or S only.  Use '*' if macro.
                                 # Default=use StoreBits.
 
-StoreBitsName                   # Name of a family of functions or macros
+StoreBitsName     put_bit       # Name of a family of functions or macros
                                 # which act just like PutBits, but overwrite
                                 # the array element rather than OR'ing.
                                 # Default=use ClrBits followed by PutBits.
@@ -879,7 +890,7 @@ StoreBitsName                   # Name of a family of functions or macros
 # PutName            PUT          # Name of a macro for advancing
 #                                 # to the next element of an output file.
 
-CharGetFBufName    peek         # A special GetFBuf for text and files of char.
+CharGetFBufName    fpeek         # A special GetFBuf for text and files of char.
 
 CharGetName        fgetc         # A special Get for text and files of char.
 

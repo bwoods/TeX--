@@ -1,4 +1,23 @@
-// Τεχ82 encapsulated in a C++ class
+//
+// Copyright (c) 2013 Bryan Woods
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 //
 
 #include <stdio.h>
@@ -13,9 +32,12 @@
 #include <errno.h>
 #include <setjmp.h>
 
-#include <array>
 #include <string>
 #include <stdexcept>
+
+#include <iostream>
+#include <sstream>
+#include <fstream>
 
 
 namespace tex {
@@ -24,68 +46,47 @@ class tex {
 
 protected:
 
-template<class File>
-static void read_ln(File& file)
+template<typename T>
+void get(std::iostream * ios, int& mode, T * value)
 {
-	int character = fgetc(file.f);
-	assert(character == '\n');
+	if (mode == 1)
+		ios->read(reinterpret_cast<char *>(value), sizeof(T));
+	else
+		mode = 1;
 }
 
-template<class File>
-static void write_ln(File& file)
+template<typename T>
+T& getfbuf(std::iostream * ios, int& mode, T * value)
 {
-	fputc('\n', file.f);
+	if (mode == 1) {
+		mode = 2;
+		ios->read(reinterpret_cast<char *>(value), sizeof(T));
+	}
+
+	return *value;
 }
 
-template<class File>
-static void write_ln(File& file, const char * s)
+template<typename T>
+void put(std::iostream * ios, int& mode, T * value)
 {
-	fputs(s, file.f);
-	fputc('\n', file.f);
+	ios->write(reinterpret_cast<const char *>(value), sizeof(T));
+	mode = 0;
 }
 
-template<class File>
-static void write_ln(File& file, const char * s, const char * t)
+static int erstat(std::iostream * ios)
 {
-	fprintf(file.f, "%s %s\n", s, t);
+	return ios == nullptr or ios->bad() or ios->fail();
 }
 
-template<class File>
-static void write_ln(File& file, const char * s, const char * t, int n)
+static void break_in(std::iostream * ios, bool)
 {
-	fprintf(file.f, "%s %s %i\n", s, t, n);
+
 }
 
-template<class File>
-static int erstat(File& file)
+static bool eoln(std::iostream * ios)
 {
-	return file.f == nullptr or ferror(file.f);
-}
-
-template<class File>
-static void break_in(File& file, bool)
-{
-	fpurge(file.f);
-}
-
-static bool eoln(FILE * f)
-{
-	int character = fgetc(f);
-	if (character == EOF)
-		return true;
-
-	ungetc(character, f);
-	return (character == '\n');
-}
-
-static int peek(FILE * f)
-{
-	int character = fgetc(f);
-	if (character == EOF)
-		return EOF;
-
-	ungetc(character, f);
-	return (character == '\n') ? ' ' : character;
+	int character = ios->peek();
+	return (character == EOF or character == '\n');
 }
 
 static const char * trim_name(char * filename, size_t length) // never called on a string literal; note the lack of a const
@@ -101,11 +102,7 @@ static void io_error(int error, const char * name)
 
 }
 
-
 // Output from p2c 1.21alpha-07.Dec.93, the Pascal-to-C translator
-
-
-#include "tex.inl"
 
 constexpr static int mem_max = 30000;
 constexpr static int mem_min = 0;
@@ -130,243 +127,243 @@ constexpr static int file_name_size = PATH_MAX;
 
 constexpr static const char * pool_name = "tex/tex.pool";
 
-typedef struct alpha_file {
-	FILE *f;
-	FILEBUFNC(f,char);
-	char name[file_name_size];
-} alpha_file;
-
-typedef struct byte_file {
-	FILE *f;
-	FILEBUFNC(f,uint8_t);
-	char name[file_name_size];
-} byte_file;
+typedef uint8_t ASCII_code;
+typedef uint8_t eight_bits;
+typedef int pool_pointer;
+typedef int str_number;
+typedef uint8_t packed_ASCII_code;
+typedef int scaled;
+typedef int integer;
+typedef int nonnegative_integer;
+typedef char small_number;
+typedef double glue_ratio;
+typedef uint8_t quarterword;
+typedef unsigned short halfword;
+typedef char two_choices;
+typedef char four_choices;
 
 typedef struct two_halves {
-	unsigned short rh;
+	halfword rh;
 	union {
-		unsigned short lh;
+		halfword lh;
 		struct {
-			uint8_t b0, b1;
+			quarterword b0, b1;
 		} U2;
-	} variant;
+	};
 } two_halves;
 
 typedef struct four_quarters {
-	uint8_t b0, b1, b2, b3;
+	quarterword b0, b1, b2, b3;
 } four_quarters;
 
 typedef union memory_word {
-	int int_;
-	double gr;
+	integer int_;
+	glue_ratio gr;
 	two_halves hh;
 	four_quarters qqqq;
 } memory_word;
 
-typedef struct word_file {
-	FILE *f;
-	FILEBUFNC(f,memory_word);
-	char name[file_name_size];
-} word_file;
+typedef char glue_ord;
 
 typedef struct list_state_record {
 	short mode_field;
-	unsigned short head_field, tail_field;
-	int pg_field, ml_field;
+	halfword head_field, tail_field;
+	integer pg_field, ml_field;
 	memory_word aux_field;
 } list_state_record;
 
+typedef char group_code;
+
 typedef struct in_state_record {
-	uint8_t state_field, index_field;
-	unsigned short start_field, loc_field, limit_field, name_field;
+	quarterword state_field, index_field;
+	halfword start_field, loc_field, limit_field, name_field;
 } in_state_record;
 
-int bad;
-uint8_t xord[256];
+typedef int internal_font_number;
+typedef int font_index;
+typedef int dvi_index;
+typedef int trie_pointer;
+typedef short hyph_pointer;
+integer bad, tally, trick_count, first_count, interrupt, var_used, dyn_used,
+	font_in_short_display, depth_threshold, breadth_max, cs_count, mag_set, line,
+	max_param_stack, align_state, cur_val, if_line, skip_line, total_pages,
+	max_push, last_bop, dead_cycles, lq, lr, dvi_offset, dvi_gone, cur_s,
+	last_badness, pack_begin_line, magic_offset, threshold, minimum_demerits,
+	fewest_demerits, actual_looseness, line_diff, hyf_char, l_hyf, r_hyf,
+	init_l_hyf, init_r_hyf, least_page_cost, last_penalty, insert_penalties,
+	main_s, ready_already;
+ASCII_code xord[256];
 char xchr[256], name_of_file[file_name_size];
 int name_length;
-uint8_t buffer[buf_size + 1];
+ASCII_code buffer[buf_size + 1];
 int first, last, max_buf_stack;
-alpha_file term_in, term_out;
-uint8_t str_pool[pool_size + 1];
-int str_start[max_strings + 1], pool_ptr, str_ptr, init_pool_ptr, init_str_ptr;
-alpha_file pool_file, log_file;
+std::iostream *term_in, *term_out;
+packed_ASCII_code str_pool[pool_size + 1];
+pool_pointer str_start[max_strings + 1], pool_ptr;
+str_number str_ptr;
+pool_pointer init_pool_ptr;
+str_number init_str_ptr;
+std::iostream *pool_file, *log_file;
 char selector, dig[23];
-int tally, term_offset, file_offset;
-uint8_t trick_buf[error_line + 1];
-int trick_count, first_count;
+int term_offset, file_offset;
+ASCII_code trick_buf[error_line + 1];
 char interaction;
 bool deletions_allowed, set_box_allowed;
 char history;
 int8_t error_count;
-int help_line[6];
+str_number help_line[6];
 char help_ptr;
-bool use_err_help;
-int interrupt;
-bool OK_to_interrupt, arith_error;
-int remainder_;
-unsigned short temp_ptr;
+bool use_err_help, OK_to_interrupt, arith_error;
+scaled remainder_, max_v, max_h, rule_ht, rule_dp, rule_wd, dvi_h, dvi_v, cur_h, cur_v, cur_mu, disc_width, first_width,
+	   second_width, first_indent, second_indent, best_height_plus_depth, page_max_depth, best_size, last_kern;
+halfword temp_ptr;
 memory_word mem[mem_max - mem_min + 1];
-unsigned short lo_mem_max, hi_mem_min;
-int var_used, dyn_used;
-unsigned short avail, mem_end, rover;
-int font_in_short_display, depth_threshold, breadth_max;
+halfword lo_mem_max, hi_mem_min, avail, mem_end, rover;
 list_state_record nest[nest_size + 1];
 int nest_ptr, max_nest_stack;
 list_state_record cur_list;
 short shown_mode;
 char old_setting;
 memory_word eqtb[6107];
-uint8_t xeq_level[844];
+quarterword xeq_level[844];
 two_halves hash[2367];
-unsigned short hash_used;
+halfword hash_used;
 bool no_new_control_sequence;
-int cs_count;
 memory_word save_stack[save_size + 1];
 int save_ptr, max_save_stack;
-uint8_t cur_level;
-char cur_group;
-int cur_boundary, mag_set;
-uint8_t cur_cmd;
-unsigned short cur_chr, cur_cs, cur_tok;
+quarterword cur_level;
+group_code cur_group;
+int cur_boundary;
+eight_bits cur_cmd;
+halfword cur_chr, cur_cs, cur_tok;
 in_state_record input_stack[stack_size + 1];
 int input_ptr, max_in_stack;
 in_state_record cur_input;
 int in_open, open_parens;
-alpha_file input_file[max_in_open + 1];
-int line, line_stack[max_in_open + 1];
+std::iostream *(input_file[max_in_open + 1]);
+integer line_stack[max_in_open + 1];
 char scanner_status;
-unsigned short warning_index, def_ref, param_stack[param_size + 1];
-int param_ptr, max_param_stack, align_state, base_ptr;
-unsigned short par_loc, par_token;
+halfword warning_index, def_ref, param_stack[param_size + 1];
+int param_ptr, base_ptr;
+halfword par_loc, par_token;
 bool force_eof;
-unsigned short cur_mark[5];
+halfword cur_mark[5];
 char long_state;
-unsigned short pstack[9];
-int cur_val;
-char cur_val_level, radix, cur_order;
-alpha_file read_file[16];
+halfword pstack[9];
+char cur_val_level;
+small_number radix;
+glue_ord cur_order;
+std::iostream *(read_file[16]);
 char read_open[17];
-unsigned short cond_ptr;
-char if_limit, cur_if;
-int if_line, skip_line, cur_name, cur_area, cur_ext, area_delimiter, ext_delimiter;
+halfword cond_ptr;
+char if_limit;
+small_number cur_if;
+str_number cur_name, cur_area, cur_ext;
+pool_pointer area_delimiter, ext_delimiter;
 char TEX_format_default[20];
 bool name_in_progress;
-int job_name;
+str_number job_name;
 bool log_opened;
-byte_file dvi_file;
-int output_file_name, log_name;
-byte_file tfm_file;
+std::iostream *dvi_file;
+str_number output_file_name, log_name;
+std::iostream *tfm_file;
 memory_word font_info[font_mem_size + 1];
-int fmem_ptr, font_ptr;
+font_index fmem_ptr;
+internal_font_number font_ptr;
 four_quarters font_check[font_max + 1];
-int font_size[font_max + 1], font_dsize[font_max + 1], font_params[font_max + 1], font_name[font_max + 1],
-	font_area[font_max + 1];
-uint8_t font_bc[font_max + 1], font_ec[font_max + 1];
-unsigned short font_glue[font_max + 1];
+scaled font_size[font_max + 1], font_dsize[font_max + 1];
+font_index font_params[font_max + 1];
+str_number font_name[font_max + 1], font_area[font_max + 1];
+eight_bits font_bc[font_max + 1], font_ec[font_max + 1];
+halfword font_glue[font_max + 1];
 bool font_used[font_max + 1];
-int hyphen_char[font_max + 1], skew_char[font_max + 1], bchar_label[font_max + 1];
+integer hyphen_char[font_max + 1], skew_char[font_max + 1];
+font_index bchar_label[font_max + 1];
 short font_bchar[font_max + 1], font_false_bchar[font_max + 1];
-int char_base[font_max + 1], width_base[font_max + 1], height_base[font_max + 1], depth_base[font_max + 1],
-	italic_base[font_max + 1], lig_kern_base[font_max + 1], kern_base[font_max + 1],
+integer char_base[font_max + 1], width_base[font_max + 1], height_base[font_max + 1],
+	depth_base[font_max + 1], italic_base[font_max + 1],
+	lig_kern_base[font_max + 1], kern_base[font_max + 1],
 	exten_base[font_max + 1], param_base[font_max + 1];
 four_quarters null_character;
-int total_pages, max_v, max_h, max_push, last_bop, dead_cycles;
 bool doing_leaders;
-uint8_t c, f;
-int rule_ht, rule_dp, rule_wd;
-unsigned short g;
-int lq, lr;
-uint8_t dvi_buf[dvi_buf_size + 1];
-int half_buf, dvi_limit, dvi_ptr, dvi_offset, dvi_gone;
-unsigned short down_ptr, right_ptr;
-int dvi_h, dvi_v, cur_h, cur_v, dvi_f, cur_s, total_stretch[4], total_shrink[4], last_badness;
-unsigned short adjust_tail;
-int pack_begin_line;
+quarterword c, f;
+halfword g;
+eight_bits dvi_buf[dvi_buf_size + 1];
+dvi_index half_buf, dvi_limit, dvi_ptr;
+halfword down_ptr, right_ptr;
+internal_font_number dvi_f;
+scaled total_stretch[4], total_shrink[4];
+halfword adjust_tail;
 two_halves empty_field;
 four_quarters null_delimiter;
-unsigned short cur_mlist;
-char cur_style, cur_size;
-int cur_mu;
+halfword cur_mlist;
+small_number cur_style, cur_size;
 bool mlist_penalties;
-int cur_f;
-uint8_t cur_c;
+internal_font_number cur_f;
+quarterword cur_c;
 four_quarters cur_i;
-int magic_offset;
-unsigned short cur_align, cur_span, cur_loop, align_ptr, cur_head, cur_tail, just_box, passive, printed_node, pass_number;
-int active_width[7], cur_active_width[7], background[7], break_width[7];
+halfword cur_align, cur_span, cur_loop, align_ptr, cur_head, cur_tail, just_box, passive, printed_node, pass_number;
+scaled active_width[7], cur_active_width[7], background[7], break_width[7];
 bool no_shrink_error_yet;
-unsigned short cur_p;
+halfword cur_p;
 bool second_pass, final_pass;
-int threshold, minimal_demerits[4], minimum_demerits;
-unsigned short best_place[4], best_pl_line[4];
-int disc_width;
-unsigned short easy_line, last_special_line;
-int first_width, second_width, first_indent, second_indent;
-unsigned short best_bet;
-int fewest_demerits;
-unsigned short best_line;
-int actual_looseness, line_diff;
+integer minimal_demerits[4];
+halfword best_place[4], best_pl_line[4], easy_line, last_special_line, best_bet, best_line;
 short hc[66];
-char hn;
-unsigned short ha, hb;
-int hf;
+small_number hn;
+halfword ha, hb;
+internal_font_number hf;
 short hu[64];
-int hyf_char;
-uint8_t cur_lang, init_cur_lang;
-int l_hyf, r_hyf, init_l_hyf, init_r_hyf;
-unsigned short hyf_bchar;
+ASCII_code cur_lang, init_cur_lang;
+halfword hyf_bchar;
 char hyf[65];
-unsigned short init_list;
+halfword init_list;
 bool init_lig, init_lft;
-char hyphen_passed;
-unsigned short cur_l, cur_r, cur_q, lig_stack;
+small_number hyphen_passed;
+halfword cur_l, cur_r, cur_q, lig_stack;
 bool ligature_present, lft_hit, rt_hit;
 two_halves trie[trie_size + 1];
-char hyf_distance[trie_op_size + 1], hyf_num[trie_op_size + 1];
-uint8_t hyf_next[trie_op_size + 1];
-int op_start[256], hyph_word[308];
-unsigned short hyph_list[308];
-short hyph_count;
+small_number hyf_distance[trie_op_size + 1], hyf_num[trie_op_size + 1];
+quarterword hyf_next[trie_op_size + 1];
+int op_start[256];
+str_number hyph_word[308];
+halfword hyph_list[308];
+hyph_pointer hyph_count;
 int trie_op_hash[trie_op_size + trie_op_size + 1];
-uint8_t trie_used[256], trie_op_lang[trie_op_size + 1], trie_op_val[trie_op_size + 1];
+quarterword trie_used[256];
+ASCII_code trie_op_lang[trie_op_size + 1];
+quarterword trie_op_val[trie_op_size + 1];
 int trie_op_ptr;
-uint8_t trie_c[trie_size + 1], trie_o[trie_size + 1];
-int trie_l[trie_size + 1];
-int trie_r[trie_size + 1], trie_ptr;
-int trie_hash[trie_size + 1];
-uint8_t trie_taken[(trie_size + 7) / 8];
-int trie_min[256], trie_max;
+packed_ASCII_code trie_c[trie_size + 1];
+quarterword trie_o[trie_size + 1];
+trie_pointer trie_l[trie_size + 1];
+trie_pointer trie_r[trie_size + 1], trie_ptr;
+trie_pointer trie_hash[trie_size + 1];
+std::bitset<trie_size> trie_taken;
+trie_pointer trie_min[256], trie_max;
 bool trie_not_ready;
-int best_height_plus_depth;
-unsigned short page_tail;
+halfword page_tail;
 char page_contents;
-int page_max_depth;
-unsigned short best_page_break;
-int least_page_cost, best_size, page_so_far[8];
-unsigned short last_glue;
-int last_penalty, last_kern, insert_penalties;
+halfword best_page_break;
+scaled page_so_far[8];
+halfword last_glue;
 bool output_active;
-int main_f;
+internal_font_number main_f;
 four_quarters main_i, main_j;
-int main_k;
-unsigned short main_p;
-int main_s;
-unsigned short bchar, false_bchar;
+font_index main_k;
+halfword main_p, bchar, false_bchar;
 bool cancel_boundary, ins_disc;
-unsigned short cur_box, after_token;
+halfword cur_box, after_token;
 bool long_help_seen;
-int format_ident;
-word_file fmt_file;
-int ready_already;
-alpha_file write_file[16];
+str_number format_ident;
+std::iostream *fmt_file, *(write_file[16]);
 bool write_open[18];
-unsigned short write_loc;
+halfword write_loc;
 
 void initialize()
 {
-	int i, k;
-	short z;
+	integer i, k;
+	hyph_pointer z;
 
 	xchr[32] = ' ';
 	xchr[33] = '!';
@@ -501,7 +498,7 @@ void initialize()
 	for (k = 5263; k <= 6106; ++k)
 		xeq_level[k-5263] = 1;
 	no_new_control_sequence = true;
-	hash[0].variant.lh = 0;
+	hash[0].lh = 0;
 	hash[0].rh = 0;
 	for (k = 515; k <= 2880; ++k)
 		hash[k-514] = hash[0];
@@ -552,7 +549,7 @@ void initialize()
 	last_badness = 0;
 	pack_begin_line = 0;
 	empty_field.rh = 0;
-	empty_field.variant.lh = 0;
+	empty_field.lh = 0;
 	null_delimiter.b0 = 0;
 	null_delimiter.b1 = 0;
 	null_delimiter.b2 = 0;
@@ -585,75 +582,75 @@ void initialize()
 	k = 0;
 	while (k <= 19) {
 		mem[k - mem_min].hh.rh = 1;
-		mem[k - mem_min].hh.variant.U2.b0 = 0;
-		mem[k - mem_min].hh.variant.U2.b1 = 0;
+		mem[k - mem_min].hh.U2.b0 = 0;
+		mem[k - mem_min].hh.U2.b1 = 0;
 		k += 4;
 	}
 	mem[6 - mem_min].int_ = 65536;
-	mem[4 - mem_min].hh.variant.U2.b0 = 1;
+	mem[4 - mem_min].hh.U2.b0 = 1;
 	mem[10 - mem_min].int_ = 65536;
-	mem[8 - mem_min].hh.variant.U2.b0 = 2;
+	mem[8 - mem_min].hh.U2.b0 = 2;
 	mem[14 - mem_min].int_ = 65536;
-	mem[12 - mem_min].hh.variant.U2.b0 = 1;
+	mem[12 - mem_min].hh.U2.b0 = 1;
 	mem[15 - mem_min].int_ = 65536;
-	mem[12 - mem_min].hh.variant.U2.b1 = 1;
+	mem[12 - mem_min].hh.U2.b1 = 1;
 	mem[18 - mem_min].int_ = -65536;
-	mem[16 - mem_min].hh.variant.U2.b0 = 1;
+	mem[16 - mem_min].hh.U2.b0 = 1;
 	rover = 20;
 	mem[rover - mem_min].hh.rh = 65535;
-	mem[rover - mem_min].hh.variant.lh = 1000;
-	mem[rover - mem_min + 1].hh.variant.lh = rover;
+	mem[rover - mem_min].hh.lh = 1000;
+	mem[rover - mem_min + 1].hh.lh = rover;
 	mem[rover - mem_min + 1].hh.rh = rover;
 	lo_mem_max = rover + 1000;
 	mem[lo_mem_max - mem_min].hh.rh = 0;
-	mem[lo_mem_max - mem_min].hh.variant.lh = 0;
+	mem[lo_mem_max - mem_min].hh.lh = 0;
 	for (k = 29987; k <= 30000; ++k)
 		mem[k - mem_min] = mem[lo_mem_max - mem_min];
-	mem[29990 - mem_min].hh.variant.lh = 6714;
+	mem[29990 - mem_min].hh.lh = 6714;
 	mem[29991 - mem_min].hh.rh = 256;
-	mem[29991 - mem_min].hh.variant.lh = 0;
-	mem[29993 - mem_min].hh.variant.U2.b0 = 1;
-	mem[29994 - mem_min].hh.variant.lh = 65535;
-	mem[29993 - mem_min].hh.variant.U2.b1 = 0;
-	mem[30000 - mem_min].hh.variant.U2.b1 = 255;
-	mem[30000 - mem_min].hh.variant.U2.b0 = 1;
+	mem[29991 - mem_min].hh.lh = 0;
+	mem[29993 - mem_min].hh.U2.b0 = 1;
+	mem[29994 - mem_min].hh.lh = 65535;
+	mem[29993 - mem_min].hh.U2.b1 = 0;
+	mem[30000 - mem_min].hh.U2.b1 = 255;
+	mem[30000 - mem_min].hh.U2.b0 = 1;
 	mem[30000 - mem_min].hh.rh = 30000;
-	mem[29998 - mem_min].hh.variant.U2.b0 = 10;
-	mem[29998 - mem_min].hh.variant.U2.b1 = 0;
+	mem[29998 - mem_min].hh.U2.b0 = 10;
+	mem[29998 - mem_min].hh.U2.b1 = 0;
 	avail = 0;
 	mem_end = 30000;
 	hi_mem_min = 29987;
 	var_used = 20;
 	dyn_used = 14;
-	eqtb[2881].hh.variant.U2.b0 = 101;
+	eqtb[2881].hh.U2.b0 = 101;
 	eqtb[2881].hh.rh = 0;
-	eqtb[2881].hh.variant.U2.b1 = 0;
+	eqtb[2881].hh.U2.b1 = 0;
 	for (k = 1; k <= 2880; ++k)
 		eqtb[k] = eqtb[2881];
 	eqtb[2882].hh.rh = 0;
-	eqtb[2882].hh.variant.U2.b1 = 1;
-	eqtb[2882].hh.variant.U2.b0 = 117;
+	eqtb[2882].hh.U2.b1 = 1;
+	eqtb[2882].hh.U2.b0 = 117;
 	for (k = 2883; k <= 3411; ++k)
 		eqtb[k] = eqtb[2882];
 	mem[-mem_min].hh.rh += 530;
 	eqtb[3412].hh.rh = 0;
-	eqtb[3412].hh.variant.U2.b0 = 118;
-	eqtb[3412].hh.variant.U2.b1 = 1;
+	eqtb[3412].hh.U2.b0 = 118;
+	eqtb[3412].hh.U2.b1 = 1;
 	for (k = 3413; k <= 3677; ++k)
 		eqtb[k] = eqtb[2881];
 	eqtb[3678].hh.rh = 0;
-	eqtb[3678].hh.variant.U2.b0 = 119;
-	eqtb[3678].hh.variant.U2.b1 = 1;
+	eqtb[3678].hh.U2.b0 = 119;
+	eqtb[3678].hh.U2.b1 = 1;
 	for (k = 3679; k <= 3933; ++k)
 		eqtb[k] = eqtb[3678];
 	eqtb[3934].hh.rh = 0;
-	eqtb[3934].hh.variant.U2.b0 = 120;
-	eqtb[3934].hh.variant.U2.b1 = 1;
+	eqtb[3934].hh.U2.b0 = 120;
+	eqtb[3934].hh.U2.b1 = 1;
 	for (k = 3935; k <= 3982; ++k)
 		eqtb[k] = eqtb[3934];
 	eqtb[3983].hh.rh = 0;
-	eqtb[3983].hh.variant.U2.b0 = 120;
-	eqtb[3983].hh.variant.U2.b1 = 1;
+	eqtb[3983].hh.U2.b0 = 120;
+	eqtb[3983].hh.U2.b1 = 1;
 	for (k = 3984; k <= 5262; ++k)
 		eqtb[k] = eqtb[3983];
 	for (k = 0; k <= 255; ++k) {
@@ -695,7 +692,7 @@ void initialize()
 		eqtb[k].int_ = 0;
 	hash_used = 2614;
 	cs_count = 0;
-	eqtb[2623].hh.variant.U2.b0 = 116;
+	eqtb[2623].hh.U2.b0 = 116;
 	hash[2109].rh = 502;
 	font_ptr = 0;
 	fmem_ptr = 7;
@@ -735,8 +732,8 @@ void initialize()
 	hash[2100].rh = 1189;
 	format_ident = 1256;
 	hash[2108].rh = 1295;
-	eqtb[2622].hh.variant.U2.b1 = 1;
-	eqtb[2622].hh.variant.U2.b0 = 113;
+	eqtb[2622].hh.U2.b1 = 1;
+	eqtb[2622].hh.U2.b0 = 113;
 	eqtb[2622].hh.rh = 0;
 }
 
@@ -745,19 +742,19 @@ void print_ln()
 	switch (selector) {
 
 	case 19:
-		write_ln(term_out);
-		write_ln(log_file);
+		*term_out << std::endl;
+		*log_file << std::endl;
 		term_offset = 0;
 		file_offset = 0;
 		break;
 
 	case 18:
-		write_ln(log_file);
+		*log_file << std::endl;
 		file_offset = 0;
 		break;
 
 	case 17:
-		write_ln(term_out);
+		*term_out << std::endl;
 		term_offset = 0;
 		break;
 
@@ -766,12 +763,12 @@ void print_ln()
 		break;
 
 	default:
-		write_ln(write_file[selector]);
+		*write_file[selector] << std::endl;
 		break;
 	}
 }
 
-void print_char(uint8_t s)
+void print_char(ASCII_code s)
 {
 	if (s == eqtb[5312].int_) {
 		if (selector < 20) {
@@ -782,29 +779,29 @@ void print_char(uint8_t s)
 	switch (selector) {
 
 	case 19:
-		fwrite(&xchr[s], 1, 1, term_out.f);
-		fwrite(&xchr[s], 1, 1, log_file.f);
+		*term_out << xchr[s];
+		*log_file << xchr[s];
 		++term_offset;
 		++file_offset;
 		if (term_offset == max_print_line) {
-			write_ln(term_out);
+			*term_out << std::endl;
 			term_offset = 0;
 		}
 		if (file_offset == max_print_line) {
-			write_ln(log_file);
+			*log_file << std::endl;
 			file_offset = 0;
 		}
 		break;
 
 	case 18:
-		fwrite(&xchr[s], 1, 1, log_file.f);
+		*log_file << xchr[s];
 		++file_offset;
 		if (file_offset == max_print_line)
 			print_ln();
 		break;
 
 	case 17:
-		fwrite(&xchr[s], 1, 1, term_out.f);
+		*term_out << xchr[s];
 		++term_offset;
 		if (term_offset == max_print_line)
 			print_ln();
@@ -827,16 +824,17 @@ void print_char(uint8_t s)
 		break;
 
 	default:
-		fwrite(&xchr[s], 1, 1, write_file[selector].f);
+		*write_file[selector] << xchr[s];
 		break;
 	}
 	++tally;
 _L10: ;
 }
 
-void print(int s)
+void print(integer s)
 {
-	int j, nl;
+	pool_pointer j;
+	integer nl;
 
 	if (s >= str_ptr) {
 		s = 259;
@@ -873,9 +871,9 @@ void print(int s)
 _L10: ;
 }
 
-void slow_print(int s)
+void slow_print(integer s)
 {
-	int j;
+	pool_pointer j;
 
 	if ((s >= str_ptr) || (s < 256)) {
 		print(s);
@@ -888,18 +886,17 @@ void slow_print(int s)
 	}
 }
 
-void print_nl(int s)
+void print_nl(str_number s)
 {
 	if (((term_offset > 0) && (selector & 1)) || ((file_offset > 0) && (selector >= 18)))
 		print_ln();
 	print(s);
 }
 
-void print_esc(int s)
+void print_esc(str_number s)
 {
-	int c;
+	integer c = eqtb[5308].int_;
 
-	c = eqtb[5308].int_;
 	if (c >= 0) {
 		if (c < 256)
 			print(c);
@@ -907,7 +904,7 @@ void print_esc(int s)
 	slow_print(s);
 }
 
-void print_the_digs(uint8_t k)
+void print_the_digs(eight_bits k)
 {
 	while (k > 0) {
 		--k;
@@ -918,10 +915,10 @@ void print_the_digs(uint8_t k)
 	}
 }
 
-void print_int(int n)
+void print_int(integer n)
 {
 	char k = 0;
-	int m;
+	integer m;
 
 	if (n < 0) {
 		print_char(45);
@@ -950,7 +947,7 @@ void print_int(int n)
 	print_the_digs(k);
 }
 
-void print_cs(int p)
+void print_cs(integer p)
 {
 	if (p < 514) {
 		if (p >= 257) {
@@ -983,7 +980,7 @@ void print_cs(int p)
 	}
 }
 
-void sprint_cs(unsigned short p)
+void sprint_cs(halfword p)
 {
 	if (p >= 514) {
 		print_esc(hash[p-514].rh);
@@ -1002,14 +999,15 @@ void sprint_cs(unsigned short p)
 	}
 }
 
-void print_file_name(int n, int a, int e)
+void print_file_name(integer n, integer a,
+					 integer e)
 {
 	slow_print(a);
 	slow_print(n);
 	slow_print(e);
 }
 
-void print_size(int s)
+void print_size(integer s)
 {
 	if (!s) {
 		print_esc(412);
@@ -1021,14 +1019,14 @@ void print_size(int s)
 		print_esc(414);
 }
 
-void print_write_whatsit(int s, unsigned short p)
+void print_write_whatsit(str_number s, halfword p)
 {
 	print_esc(s);
-	if (mem[p - mem_min + 1].hh.variant.lh < 16) {
-		print_int(mem[p - mem_min + 1].hh.variant.lh);
+	if (mem[p - mem_min + 1].hh.lh < 16) {
+		print_int(mem[p - mem_min + 1].hh.lh);
 		return;
 	}
-	if (mem[p - mem_min + 1].hh.variant.lh == 16)
+	if (mem[p - mem_min + 1].hh.lh == 16)
 		print_char(42);
 	else
 		print_char(45);
@@ -1043,8 +1041,8 @@ void jump_out()
 
 void error()
 {
-	uint8_t c;
-	int s1, s2, s3, s4;
+	ASCII_code c;
+	integer s1, s2, s3, s4;
 
 	if (history < 2)
 		history = 2;
@@ -1165,7 +1163,7 @@ _L22:
 				}
 				print(277);
 				print_ln();
-				fflush(term_out.f);
+				term_out->flush();
 				errno = 0;
 				goto _L10;
 				break;
@@ -1213,7 +1211,7 @@ _L22:
 _L10: ;
 }
 
-void fatal_error(int s)
+void fatal_error(str_number s)
 {
 	normalize_selector();
 	print_nl(262);
@@ -1228,7 +1226,7 @@ void fatal_error(int s)
 	jump_out();
 }
 
-void overflow(int s, int n)
+void overflow(str_number s, integer n)
 {
 	normalize_selector();
 	print_nl(262);
@@ -1248,7 +1246,7 @@ void overflow(int s, int n)
 	jump_out();
 }
 
-void confusion(int s)
+void confusion(str_number s)
 {
 	normalize_selector();
 	if (history < 2) {
@@ -1274,109 +1272,97 @@ void confusion(int s)
 	jump_out();
 }
 
-virtual bool a_open_in(alpha_file *f)
+virtual bool a_open_in(std::iostream *& f)
 {
-	strcpy(f->name, trim_name(name_of_file, file_name_size));
-	f->f = fopen(f->name, "rb");
-	if (!f->f)
-		io_error(errno, f->name);
-	RESETBUF(f->f, char);
-	return erstat(*f) == 0;
+	f = fopen(trim_name(name_of_file, file_name_size), "rb");
+	if (!f)
+		io_error(errno, trim_name(name_of_file, file_name_size));
+	return erstat(f) == 0;
 }
 
-virtual bool a_open_out(alpha_file *f)
+virtual bool a_open_out(std::iostream *& f)
 {
-	strcpy(f->name, trim_name(name_of_file, file_name_size));
-	f->f = fopen(f->name, "wb");
-	if (!f->f)
-		io_error(errno, f->name);
-	SETUPBUF(f->f, char);
-	return erstat(*f) == 0;
+	f = fopen(trim_name(name_of_file, file_name_size), "wb");
+	if (!f)
+		io_error(errno, trim_name(name_of_file, file_name_size));
+	return erstat(f) == 0;
 }
 
-virtual bool b_open_in(byte_file *f)
+virtual bool b_open_in(std::iostream *& f)
 {
-	strcpy(f->name, trim_name(name_of_file, file_name_size));
-	f->f = fopen(f->name, "rb");
-	if (!f->f)
-		io_error(errno, f->name);
-	RESETBUF(f->f, uint8_t);
-	return erstat(*f) == 0;
+	f = fopen(trim_name(name_of_file, file_name_size), "rb");
+	if (!f)
+		io_error(errno, trim_name(name_of_file, file_name_size));
+	return erstat(f) == 0;
 }
 
-virtual bool b_open_out(byte_file *f)
+virtual bool b_open_out(std::iostream *& f)
 {
-	strcpy(f->name, trim_name(name_of_file, file_name_size));
-	f->f = fopen(f->name, "wb");
-	if (!f->f)
-		io_error(errno, f->name);
-	SETUPBUF(f->f, uint8_t);
-	return erstat(*f) == 0;
+	f = fopen(trim_name(name_of_file, file_name_size), "wb");
+	if (!f)
+		io_error(errno, trim_name(name_of_file, file_name_size));
+	return erstat(f) == 0;
 }
 
-virtual bool w_open_in(word_file *f)
+virtual bool w_open_in(std::iostream *& f)
 {
-	strcpy(f->name, trim_name(name_of_file, file_name_size));
-	f->f = fopen(f->name, "rb");
-	if (!f->f)
-		io_error(errno, f->name);
-	RESETBUF(f->f, memory_word);
-	return erstat(*f) == 0;
+	f = fopen(trim_name(name_of_file, file_name_size), "rb");
+	if (!f)
+		io_error(errno, trim_name(name_of_file, file_name_size));
+	return erstat(f) == 0;
 }
 
-virtual bool w_open_out(word_file *f)
+virtual bool w_open_out(std::iostream *& f)
 {
-	strcpy(f->name, trim_name(name_of_file, file_name_size));
-	f->f = fopen(f->name, "wb");
-	if (!f->f)
-		io_error(errno, f->name);
-	SETUPBUF(f->f, memory_word);
-	return erstat(*f) == 0;
+	f = fopen(trim_name(name_of_file, file_name_size), "wb");
+	if (!f)
+		io_error(errno, trim_name(name_of_file, file_name_size));
+	return erstat(f) == 0;
 }
 
-void a_close(alpha_file *f)
+virtual void a_close(std::iostream *& f)
 {
-	if (f->f)
-		fclose(f->f);
-	f->f = nullptr;
+	if (f)
+		fclose(f);
+	f = nullptr;
 }
 
-void b_close(byte_file *f)
+virtual void b_close(std::iostream *& f)
 {
-	if (f->f)
-		fclose(f->f);
-	f->f = nullptr;
+	if (f)
+		fclose(f);
+	f = nullptr;
 }
 
-void w_close(word_file *f)
+virtual void w_close(std::iostream *& f)
 {
-	if (f->f)
-		fclose(f->f);
-	f->f = nullptr;
+	if (f)
+		fclose(f);
+	f = nullptr;
 }
 
 jmp_buf _JL9999;
 
-bool input_ln(alpha_file *f, bool bypass_eoln)
+bool input_ln(std::iostream *f, bool bypass_eoln)
 {
 	int last_nonblank;
 
 	if (bypass_eoln) {
-		if (!feof(f->f))
-			fgetc(f->f);
+		if (!f->eof())
+			f->get();
 	}
 	last = first;
-	if (feof(f->f)) {
+	if (f->eof()) {
 		return false;
 	}
 	else {
 		last_nonblank = first;
-		while (!eoln(f->f)) {
+		while (!eoln(f)) {
 			if (last >= max_buf_stack) {
 				max_buf_stack = last + 1;
 				if (max_buf_stack == buf_size) {
 					if (!format_ident) {
-						write_ln(term_out, "Buffer size exceeded!");
+						*term_out << "Buffer size exceeded!" << std::endl;
 						longjmp(_JL9999, 1);
 					}
 					else {
@@ -1386,8 +1372,8 @@ bool input_ln(alpha_file *f, bool bypass_eoln)
 					}
 				}
 			}
-			buffer[last] = xord[peek(f->f)];
-			fgetc(f->f);
+			buffer[last] = xord[f->peek()];
+			f->get();
 			++last;
 			if (buffer[last-1] != 32)
 				last_nonblank = last;
@@ -1400,22 +1386,17 @@ bool input_ln(alpha_file *f, bool bypass_eoln)
 bool init_terminal()
 {
 	bool result;
-	char character;
 
-	strcpy(term_in.name, "TTY:");
-	term_in.f = input_stream;
-	if (!term_in.f)
-		io_error(errno, term_in.name);
-	RESETBUF(term_in.f, char);
+	term_in = input_stream;
+	if (!term_in)
+		io_error(errno, "TTY:");
 	while (true) {
-		character = '*';
-		fwrite(&character, 1, 1, term_out.f);
-		fflush(term_out.f);
+		*term_out << "**";
+		term_out->flush();
 		errno = 0;
-		if (!input_ln(&term_in, true)) {
-			write_ln(term_out);
-			character = '!';
-			fwrite(&character, 1, 1, term_out.f);
+		if (!input_ln(term_in, true)) {
+			*term_out << std::endl;
+			*term_out << "! End of file on the terminal... why?";
 			result = false;
 			goto _L10;
 		}
@@ -1426,13 +1407,13 @@ bool init_terminal()
 			result = true;
 			goto _L10;
 		}
-		write_ln(term_out, "Please type the name of your input file.");
+		*term_out << "Please type the name of your input file." << std::endl;
 	}
 _L10:
 	return result;
 }
 
-int make_string()
+str_number make_string()
 {
 	if (str_ptr == max_strings)
 		overflow(258, max_strings - init_str_ptr);
@@ -1441,12 +1422,11 @@ int make_string()
 	return str_ptr - 1;
 }
 
-bool str_eq_buf(int s, int k)
+bool str_eq_buf(str_number s, integer k)
 {
-	int j;
 	bool result;
+	pool_pointer j = str_start[s];
 
-	j = str_start[s];
 	while (j < str_start[s+1]) {
 		if (str_pool[j] != buffer[k]) {
 			result = false;
@@ -1460,9 +1440,9 @@ _L45:
 	return result;
 }
 
-bool str_eq_str(int s, int t)
+bool str_eq_str(str_number s, str_number t)
 {
-	int j, k;
+	pool_pointer j, k;
 	bool result = false;
 
 	if (str_start[s+1] - str_start[s] != str_start[t+1] - str_start[t])
@@ -1485,7 +1465,8 @@ bool get_strings_started()
 	bool result;
 	uint8_t k, l;
 	char m, n;
-	int g, a;
+	str_number g;
+	integer a;
 	bool c = false;
 	short character;
 
@@ -1535,28 +1516,28 @@ bool get_strings_started()
 		g = make_string();
 	}
 	memcpy(name_of_file, pool_name, file_name_size);
-	if (!a_open_in(&pool_file)) {
-		write_ln(term_out, "! I can't read tex.pool.");
-		a_close(&pool_file);
+	if (!a_open_in(pool_file)) {
+		*term_out << "! I can't read tex.pool." << std::endl;
+		a_close(pool_file);
 		result = false;
 		goto _L10;
 	}
 	do {
-		if (feof(pool_file.f)) {
-			write_ln(term_out, "! tex.pool has no check sum.");
-			a_close(&pool_file);
+		if (pool_file->eof()) {
+			*term_out << "! tex.pool has no check sum." << std::endl;
+			a_close(pool_file);
 			result = false;
 			goto _L10;
 		}
-		fread(&m, 1, 1, pool_file.f);
-		fread(&n, 1, 1, pool_file.f);
+		pool_file->read(reinterpret_cast<char *>(&m), 1);
+		pool_file->read(reinterpret_cast<char *>(&n), 1);
 		if (m == '*') {
 			a = 0;
 			k = 1;
 			while (true) {
 				if ((xord[n] < 48) || (xord[n] > 57)) {
-					write_ln(term_out, "! tex.pool check sum doesn't have nine digits.");
-					a_close(&pool_file);
+					*term_out << "! tex.pool check sum doesn't have nine digits." << std::endl;
+					a_close(pool_file);
 					result = false;
 					goto _L10;
 				}
@@ -1564,12 +1545,12 @@ bool get_strings_started()
 				if (k == 9)
 					goto _L30;
 				++k;
-				fread(&n, 1, 1, pool_file.f);
+				pool_file->read(reinterpret_cast<char *>(&n), 1);
 			}
 _L30:
 			if (a != 117275187) {
-				write_ln(term_out, "! tex.pool doesn't match; TANGLE me again.");
-				a_close(&pool_file);
+				*term_out << "! tex.pool doesn't match; TANGLE me again." << std::endl;
+				a_close(pool_file);
 				result = false;
 				goto _L10;
 			}
@@ -1577,44 +1558,44 @@ _L30:
 		}
 		else {
 			if ((xord[m] < 48) || (xord[m] > 57) || (xord[n] < 48) || (xord[n] > 57)) {
-				write_ln(term_out, "! tex.pool line doesn't begin with two digits.");
-				a_close(&pool_file);
+				*term_out << "! tex.pool line doesn't begin with two digits." << std::endl;
+				a_close(pool_file);
 				result = false;
 				goto _L10;
 			}
 			l = (xord[m] * 10) + xord[n] - 528;
 			if (pool_ptr + l + string_vacancies > pool_size) {
-				write_ln(term_out, "! You have to increase POOLSIZE.");
-				a_close(&pool_file);
+				*term_out << "! You have to increase POOLSIZE." << std::endl;
+				a_close(pool_file);
 				result = false;
 				goto _L10;
 			}
 			for (k = 1; k <= l; ++k) {
-				if (eoln(pool_file.f))
+				if (eoln(pool_file))
 					m = ' ';
 				else
-					fread(&m, 1, 1, pool_file.f);
+					pool_file->read(reinterpret_cast<char *>(&m), 1);
 				str_pool[pool_ptr] = xord[m];
 				++pool_ptr;
 			}
-			read_ln(pool_file);
+			pool_file->ignore(); // skip the newline
 			g = make_string();
 		}
 	} while (!c);
-	a_close(&pool_file);
+	a_close(pool_file);
 	result = true;
 _L10:
 	return result;
 }
 
-void print_two(int n)
+void print_two(integer n)
 {
 	n = abs(n) % 100;
 	print_char((n / 10) + 48);
 	print_char((n % 10) + 48);
 }
 
-void print_hex(int n)
+void print_hex(integer n)
 {
 	char k = 0;
 
@@ -1627,11 +1608,12 @@ void print_hex(int n)
 	print_the_digs(k);
 }
 
-void print_roman_int(int n)
+void print_roman_int(integer n)
 {
-	int j, k, u, v = 1000;
+	pool_pointer k;
+	nonnegative_integer u, v = 1000;
+	pool_pointer j = str_start[260];
 
-	j = str_start[260];
 	while (true) {
 		while (n >= v) {
 			print_char(str_pool[j]);
@@ -1659,9 +1641,8 @@ _L10: ;
 
 void print_current_string()
 {
-	int j;
+	pool_pointer j = str_start[str_ptr];
 
-	j = str_start[str_ptr];
 	while (j < pool_ptr) {
 		print_char(str_pool[j]);
 		++j;
@@ -1672,9 +1653,9 @@ void term_input()
 {
 	int k, N;
 
-	fflush(term_out.f);
+	term_out->flush();
 	errno = 0;
-	if (!input_ln(&term_in, true))
+	if (!input_ln(term_in, true))
 		fatal_error(261);
 	term_offset = 0;
 	--selector;
@@ -1686,7 +1667,7 @@ void term_input()
 	++selector;
 }
 
-void int_error(int n)
+void int_error(integer n)
 {
 	print(286);
 	print_int(n);
@@ -1725,7 +1706,7 @@ void pause_for_instructions()
 	interrupt = 0;
 }
 
-int half(int x)
+integer half(integer x)
 {
 	if (x & 1)
 		return (x + 1) / 2;
@@ -1733,9 +1714,9 @@ int half(int x)
 		return x / 2;
 }
 
-int round_decimals(char k)
+scaled round_decimals(small_number k)
 {
-	int a = 0;
+	integer a = 0;
 
 	while (k > 0) {
 		--k;
@@ -1744,9 +1725,9 @@ int round_decimals(char k)
 	return (a + 1) / 2;
 }
 
-void print_scaled(int s)
+void print_scaled(scaled s)
 {
-	int delta = 10;
+	scaled delta = 10;
 
 	if (s < 0) {
 		print_char(45);
@@ -1764,7 +1745,7 @@ void print_scaled(int s)
 	} while (s > delta);
 }
 
-int mult_and_add(int n, int x, int y, int max_answer)
+scaled mult_and_add(integer n, scaled x, scaled y, scaled max_answer)
 {
 	if (n < 0) {
 		x = -x;
@@ -1782,7 +1763,7 @@ int mult_and_add(int n, int x, int y, int max_answer)
 	}
 }
 
-int x_over_n(int x, int n)
+scaled x_over_n(scaled x, integer n)
 {
 	int result;
 	bool negative = false;
@@ -1812,11 +1793,12 @@ int x_over_n(int x, int n)
 	return result;
 }
 
-int xn_over_d(int x, int n, int d)
+scaled xn_over_d(scaled x, integer n,
+				 integer d)
 {
 	int result;
 	bool positive;
-	int t, u, v;
+	nonnegative_integer t, u, v;
 
 	if (x >= 0) {
 		positive = true;
@@ -1843,9 +1825,9 @@ int xn_over_d(int x, int n, int d)
 	return result;
 }
 
-unsigned short badness(int t, int s)
+halfword badness(scaled t, scaled s)
 {
-	int r;
+	integer r;
 
 	if (!t) {
 		return 0;
@@ -1868,10 +1850,11 @@ unsigned short badness(int t, int s)
 	}
 }
 
-void show_token_list(int p, int q, int l)
+void show_token_list(integer p, integer q,
+					 integer l)
 {
-	int m, c;
-	uint8_t match_chr = 35, n = 48;
+	integer m, c;
+	ASCII_code match_chr = 35, n = 48;
 
 	tally = 0;
 	while (p && (tally < l)) {
@@ -1885,13 +1868,13 @@ void show_token_list(int p, int q, int l)
 			print_esc(309);
 			goto _L10;
 		}
-		if (mem[p - mem_min].hh.variant.lh >= 4095) {
-			print_cs(mem[p - mem_min].hh.variant.lh - 4095);
+		if (mem[p - mem_min].hh.lh >= 4095) {
+			print_cs(mem[p - mem_min].hh.lh - 4095);
 		}
 		else {
-			m = mem[p - mem_min].hh.variant.lh / 256;
-			c = mem[p - mem_min].hh.variant.lh & 255;
-			if (mem[p - mem_min].hh.variant.lh < 0) {
+			m = mem[p - mem_min].hh.lh / 256;
+			c = mem[p - mem_min].hh.lh & 255;
+			if (mem[p - mem_min].hh.lh < 0) {
 				print_esc(555);
 			}
 			else {
@@ -1943,7 +1926,7 @@ _L10: ;
 
 void runaway()
 {
-	unsigned short p;
+	halfword p;
 
 	if (scanner_status <= 1)
 		return;
@@ -1975,11 +1958,10 @@ void runaway()
 	show_token_list(mem[p - mem_min].hh.rh, 0, error_line - 10);
 }
 
-unsigned short get_avail()
+halfword get_avail()
 {
-	unsigned short p;
+	halfword p = avail;
 
-	p = avail;
 	if (p) {
 		avail = mem[avail - mem_min].hh.rh;
 	}
@@ -1999,9 +1981,9 @@ unsigned short get_avail()
 	return p;
 }
 
-void flush_list(unsigned short p)
+void flush_list(halfword p)
 {
-	unsigned short q, r;
+	halfword q, r;
 
 	if (!p)
 		return;
@@ -2014,39 +1996,39 @@ void flush_list(unsigned short p)
 	avail = p;
 }
 
-unsigned short get_node(int s)
+halfword get_node(integer s)
 {
-	unsigned short result, p, q;
-	int r, t;
+	halfword result, p, q;
+	integer r, t;
 
 _L20:
 	p = rover;
 	do {
-		q = p + mem[p - mem_min].hh.variant.lh;
+		q = p + mem[p - mem_min].hh.lh;
 		while (mem[q - mem_min].hh.rh == 65535) {
 			t = mem[q - mem_min + 1].hh.rh;
 			if (q == rover)
 				rover = t;
-			mem[t - mem_min + 1].hh.variant.lh = mem[q - mem_min + 1].hh.variant.lh;
-			mem[mem[q - mem_min + 1].hh.variant.lh - mem_min + 1].hh.rh = t;
-			q += mem[q - mem_min].hh.variant.lh;
+			mem[t - mem_min + 1].hh.lh = mem[q - mem_min + 1].hh.lh;
+			mem[mem[q - mem_min + 1].hh.lh - mem_min + 1].hh.rh = t;
+			q += mem[q - mem_min].hh.lh;
 		}
 		r = q - s;
 		if (r > (p + 1)) {
-			mem[p - mem_min].hh.variant.lh = r - p;
+			mem[p - mem_min].hh.lh = r - p;
 			rover = p;
 			goto _L40;
 		}
 		if (r == p) {
 			if (mem[p - mem_min + 1].hh.rh != p) {
 				rover = mem[p - mem_min + 1].hh.rh;
-				t = mem[p - mem_min + 1].hh.variant.lh;
-				mem[rover - mem_min + 1].hh.variant.lh = t;
+				t = mem[p - mem_min + 1].hh.lh;
+				mem[rover - mem_min + 1].hh.lh = t;
 				mem[t - mem_min + 1].hh.rh = rover;
 				goto _L40;
 			}
 		}
-		mem[p - mem_min].hh.variant.lh = q - p;
+		mem[p - mem_min].hh.lh = q - p;
 		p = mem[p - mem_min + 1].hh.rh;
 	} while (p != rover);
 	if (s == 1073741824) {
@@ -2059,19 +2041,19 @@ _L20:
 				t = lo_mem_max + 1000;
 			else
 				t = lo_mem_max + ((hi_mem_min - lo_mem_max) / 2) + 1;
-			p = mem[rover - mem_min + 1].hh.variant.lh;
+			p = mem[rover - mem_min + 1].hh.lh;
 			q = lo_mem_max;
 			mem[p - mem_min + 1].hh.rh = q;
-			mem[rover - mem_min + 1].hh.variant.lh = q;
+			mem[rover - mem_min + 1].hh.lh = q;
 			if (t > 65535)
 				t = 65535;
 			mem[q - mem_min + 1].hh.rh = rover;
-			mem[q - mem_min + 1].hh.variant.lh = p;
+			mem[q - mem_min + 1].hh.lh = p;
 			mem[q - mem_min].hh.rh = 65535;
-			mem[q - mem_min].hh.variant.lh = t - lo_mem_max;
+			mem[q - mem_min].hh.lh = t - lo_mem_max;
 			lo_mem_max = t;
 			mem[lo_mem_max - mem_min].hh.rh = 0;
-			mem[lo_mem_max - mem_min].hh.variant.lh = 0;
+			mem[lo_mem_max - mem_min].hh.lh = 0;
 			rover = q;
 			goto _L20;
 		}
@@ -2084,24 +2066,24 @@ _L10:
 	return result;
 }
 
-void free_node(unsigned short p, unsigned short s)
+void free_node(halfword p, halfword s)
 {
-	unsigned short q;
+	halfword q;
 
-	mem[p - mem_min].hh.variant.lh = s;
+	mem[p - mem_min].hh.lh = s;
 	mem[p - mem_min].hh.rh = 65535;
-	q = mem[rover - mem_min + 1].hh.variant.lh;
-	mem[p - mem_min + 1].hh.variant.lh = q;
+	q = mem[rover - mem_min + 1].hh.lh;
+	mem[p - mem_min + 1].hh.lh = q;
 	mem[p - mem_min + 1].hh.rh = rover;
-	mem[rover - mem_min + 1].hh.variant.lh = p;
+	mem[rover - mem_min + 1].hh.lh = p;
 	mem[q - mem_min + 1].hh.rh = p;
 }
 
 void sort_avail()
 {
-	unsigned short p, q, r, old_rover;
+	halfword q, r, old_rover;
+	halfword p = get_node(1073741824);
 
-	p = get_node(1073741824);
 	p = mem[rover - mem_min + 1].hh.rh;
 	mem[rover - mem_min + 1].hh.rh = 65535;
 	old_rover = rover;
@@ -2123,95 +2105,88 @@ void sort_avail()
 	}
 	p = rover;
 	while (mem[p - mem_min + 1].hh.rh != 65535) {
-		mem[mem[p - mem_min + 1].hh.rh - mem_min + 1].hh.variant.lh = p;
+		mem[mem[p - mem_min + 1].hh.rh - mem_min + 1].hh.lh = p;
 		p = mem[p - mem_min + 1].hh.rh;
 	}
 	mem[p - mem_min + 1].hh.rh = rover;
-	mem[rover - mem_min + 1].hh.variant.lh = p;
+	mem[rover - mem_min + 1].hh.lh = p;
 }
 
-unsigned short new_null_box()
+halfword new_null_box()
 {
-	unsigned short p;
+	halfword p = get_node(7);
 
-	p = get_node(7);
-	mem[p - mem_min].hh.variant.U2.b0 = 0;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b0 = 0;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	mem[p - mem_min + 1].int_ = 0;
 	mem[p - mem_min + 2].int_ = 0;
 	mem[p - mem_min + 3].int_ = 0;
 	mem[p - mem_min + 4].int_ = 0;
 	mem[p - mem_min + 5].hh.rh = 0;
-	mem[p - mem_min + 5].hh.variant.U2.b0 = 0;
-	mem[p - mem_min + 5].hh.variant.U2.b1 = 0;
+	mem[p - mem_min + 5].hh.U2.b0 = 0;
+	mem[p - mem_min + 5].hh.U2.b1 = 0;
 	mem[p - mem_min + 6].gr = 0.0;
 	return p;
 }
 
-unsigned short new_rule()
+halfword new_rule()
 {
-	unsigned short p;
+	halfword p = get_node(4);
 
-	p = get_node(4);
-	mem[p - mem_min].hh.variant.U2.b0 = 2;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b0 = 2;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	mem[p - mem_min + 1].int_ = -1073741824;
 	mem[p - mem_min + 2].int_ = -1073741824;
 	mem[p - mem_min + 3].int_ = -1073741824;
 	return p;
 }
 
-unsigned short new_ligature(uint8_t f, uint8_t c, unsigned short q)
+halfword new_ligature(quarterword f, quarterword c, halfword q)
 {
-	unsigned short p;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 6;
-	mem[p - mem_min + 1].hh.variant.U2.b0 = f;
-	mem[p - mem_min + 1].hh.variant.U2.b1 = c;
+	mem[p - mem_min].hh.U2.b0 = 6;
+	mem[p - mem_min + 1].hh.U2.b0 = f;
+	mem[p - mem_min + 1].hh.U2.b1 = c;
 	mem[p - mem_min + 1].hh.rh = q;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	return p;
 }
 
-unsigned short new_lig_item(uint8_t c)
+halfword new_lig_item(quarterword c)
 {
-	unsigned short p;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b1 = c;
+	mem[p - mem_min].hh.U2.b1 = c;
 	mem[p - mem_min + 1].hh.rh = 0;
 	return p;
 }
 
-unsigned short new_disc()
+halfword new_disc()
 {
-	unsigned short p;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 7;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
-	mem[p - mem_min + 1].hh.variant.lh = 0;
+	mem[p - mem_min].hh.U2.b0 = 7;
+	mem[p - mem_min].hh.U2.b1 = 0;
+	mem[p - mem_min + 1].hh.lh = 0;
 	mem[p - mem_min + 1].hh.rh = 0;
 	return p;
 }
 
-unsigned short new_math(int w, char s)
+halfword new_math(scaled w, small_number s)
 {
-	unsigned short p;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 9;
-	mem[p - mem_min].hh.variant.U2.b1 = s;
+	mem[p - mem_min].hh.U2.b0 = 9;
+	mem[p - mem_min].hh.U2.b1 = s;
 	mem[p - mem_min + 1].int_ = w;
 	return p;
 }
 
-unsigned short new_spec(unsigned short p)
+halfword new_spec(halfword p)
 {
-	unsigned short q;
+	halfword q = get_node(4);
 
-	q = get_node(4);
 	mem[q - mem_min] = mem[p - mem_min];
 	mem[q - mem_min].hh.rh = 0;
 	mem[q - mem_min + 1].int_ = mem[p - mem_min + 1].int_;
@@ -2220,86 +2195,83 @@ unsigned short new_spec(unsigned short p)
 	return q;
 }
 
-unsigned short new_param_glue(char n)
+halfword new_param_glue(small_number n)
 {
-	unsigned short p, q;
+	halfword q;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 10;
-	mem[p - mem_min].hh.variant.U2.b1 = n + 1;
+	mem[p - mem_min].hh.U2.b0 = 10;
+	mem[p - mem_min].hh.U2.b1 = n + 1;
 	mem[p - mem_min + 1].hh.rh = 0;
 	q = eqtb[n+2882].hh.rh;
-	mem[p - mem_min + 1].hh.variant.lh = q;
+	mem[p - mem_min + 1].hh.lh = q;
 	++mem[q - mem_min].hh.rh;
 	return p;
 }
 
-unsigned short new_glue(unsigned short q)
+halfword new_glue(halfword q)
 {
-	unsigned short p;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 10;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b0 = 10;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	mem[p - mem_min + 1].hh.rh = 0;
-	mem[p - mem_min + 1].hh.variant.lh = q;
+	mem[p - mem_min + 1].hh.lh = q;
 	++mem[q - mem_min].hh.rh;
 	return p;
 }
 
-unsigned short new_skip_param(char n)
+halfword new_skip_param(small_number n)
 {
-	unsigned short p;
+	halfword p;
 
 	temp_ptr = new_spec(eqtb[n+2882].hh.rh);
 	p = new_glue(temp_ptr);
 	mem[temp_ptr - mem_min].hh.rh = 0;
-	mem[p - mem_min].hh.variant.U2.b1 = n + 1;
+	mem[p - mem_min].hh.U2.b1 = n + 1;
 	return p;
 }
 
-unsigned short new_kern(int w)
+halfword new_kern(scaled w)
 {
-	unsigned short p;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 11;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b0 = 11;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	mem[p - mem_min + 1].int_ = w;
 	return p;
 }
 
-unsigned short new_penalty(int m)
+halfword new_penalty(integer m)
 {
-	unsigned short p;
+	halfword p = get_node(2);
 
-	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 12;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b0 = 12;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	mem[p - mem_min + 1].int_ = m;
 	return p;
 }
 
-void short_display(int p)
+void short_display(integer p)
 {
-	int n;
+	integer n;
 
 	while (p > mem_min) {
 		if (p >= hi_mem_min) {
 			if (p <= mem_end) {
-				if (mem[p - mem_min].hh.variant.U2.b0 != font_in_short_display) {
-					if (mem[p - mem_min].hh.variant.U2.b0 > font_max)
+				if (mem[p - mem_min].hh.U2.b0 != font_in_short_display) {
+					if (mem[p - mem_min].hh.U2.b0 > font_max)
 						print_char(42);
 					else
-						print_esc(hash[mem[p - mem_min].hh.variant.U2.b0 + 2110].rh);
+						print_esc(hash[mem[p - mem_min].hh.U2.b0 + 2110].rh);
 					print_char(32);
-					font_in_short_display = mem[p - mem_min].hh.variant.U2.b0;
+					font_in_short_display = mem[p - mem_min].hh.U2.b0;
 				}
-				print(mem[p - mem_min].hh.variant.U2.b1);
+				print(mem[p - mem_min].hh.U2.b1);
 			}
 		}
 		else {
-			switch (mem[p - mem_min].hh.variant.U2.b0) {
+			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1: case 3: case 8: case 4: case 5: case 13:
 				print(308);
@@ -2310,7 +2282,7 @@ void short_display(int p)
 				break;
 
 			case 10:
-				if (mem[p - mem_min + 1].hh.variant.lh)
+				if (mem[p - mem_min + 1].hh.lh)
 					print_char(32);
 				break;
 
@@ -2323,9 +2295,9 @@ void short_display(int p)
 				break;
 
 			case 7:
-				short_display(mem[p - mem_min + 1].hh.variant.lh);
+				short_display(mem[p - mem_min + 1].hh.lh);
 				short_display(mem[p - mem_min + 1].hh.rh);
-				n = mem[p - mem_min].hh.variant.U2.b1;
+				n = mem[p - mem_min].hh.U2.b1;
 				while (n > 0) {
 					if (mem[p - mem_min].hh.rh)
 						p = mem[p - mem_min].hh.rh;
@@ -2341,21 +2313,21 @@ void short_display(int p)
 	}
 }
 
-void print_font_and_char(int p)
+void print_font_and_char(integer p)
 {
 	if (p > mem_end) {
 		print_esc(309);
 		return;
 	}
-	if (mem[p - mem_min].hh.variant.U2.b0 > font_max)
+	if (mem[p - mem_min].hh.U2.b0 > font_max)
 		print_char(42);
 	else
-		print_esc(hash[mem[p - mem_min].hh.variant.U2.b0 + 2110].rh);
+		print_esc(hash[mem[p - mem_min].hh.U2.b0 + 2110].rh);
 	print_char(32);
-	print(mem[p - mem_min].hh.variant.U2.b1);
+	print(mem[p - mem_min].hh.U2.b1);
 }
 
-void print_mark(int p)
+void print_mark(integer p)
 {
 	print_char(123);
 	if ((p < hi_mem_min) || (p > mem_end))
@@ -2365,7 +2337,7 @@ void print_mark(int p)
 	print_char(125);
 }
 
-void print_rule_dimen(int d)
+void print_rule_dimen(scaled d)
 {
 	if (d == (-1073741824))
 		print_char(42);
@@ -2373,7 +2345,7 @@ void print_rule_dimen(int d)
 		print_scaled(d);
 }
 
-void print_glue(int d, int order, int s)
+void print_glue(scaled d, integer order, str_number s)
 {
 	print_scaled(d);
 	if (((unsigned)order) > 3) {
@@ -2392,7 +2364,7 @@ void print_glue(int d, int order, int s)
 	}
 }
 
-void print_spec(int p, int s)
+void print_spec(integer p, str_number s)
 {
 	if ((p < mem_min) || (p >= lo_mem_max)) {
 		print_char(42);
@@ -2403,27 +2375,26 @@ void print_spec(int p, int s)
 		print(s);
 	if (mem[p - mem_min + 2].int_) {
 		print(312);
-		print_glue(mem[p - mem_min + 2].int_, mem[p - mem_min].hh.variant.U2.b0, s);
+		print_glue(mem[p - mem_min + 2].int_, mem[p - mem_min].hh.U2.b0, s);
 	}
 	if (mem[p - mem_min + 3].int_) {
 		print(313);
-		print_glue(mem[p - mem_min + 3].int_, mem[p - mem_min].hh.variant.U2.b1, s);
+		print_glue(mem[p - mem_min + 3].int_, mem[p - mem_min].hh.U2.b1, s);
 	}
 }
 
-void print_fam_and_char(unsigned short p)
+void print_fam_and_char(halfword p)
 {
 	print_esc(464);
-	print_int(mem[p - mem_min].hh.variant.U2.b0);
+	print_int(mem[p - mem_min].hh.U2.b0);
 	print_char(32);
-	print(mem[p - mem_min].hh.variant.U2.b1);
+	print(mem[p - mem_min].hh.U2.b1);
 }
 
-void print_delimiter(unsigned short p)
+void print_delimiter(halfword p)
 {
-	int a;
+	integer a = (mem[p - mem_min].qqqq.b0 * 256) + mem[p - mem_min].qqqq.b1;
 
-	a = (mem[p - mem_min].qqqq.b0 * 256) + mem[p - mem_min].qqqq.b1;
 	a = (a * 4096) + (mem[p - mem_min].qqqq.b2 * 256) + mem[p - mem_min].qqqq.b3;
 	if (a < 0)
 		print_int(a);
@@ -2431,7 +2402,7 @@ void print_delimiter(unsigned short p)
 		print_hex(a);
 }
 
-void print_subsidiary_data(unsigned short p, uint8_t c)
+void print_subsidiary_data(halfword p, ASCII_code c)
 {
 	if (pool_ptr - str_start[str_ptr] >= depth_threshold) {
 		if (mem[p - mem_min].hh.rh)
@@ -2454,7 +2425,7 @@ void print_subsidiary_data(unsigned short p, uint8_t c)
 		break;
 
 	case 3:
-		if (!mem[p - mem_min].hh.variant.lh) {
+		if (!mem[p - mem_min].hh.lh) {
 			print_ln();
 			print_current_string();
 			print(859);
@@ -2470,7 +2441,7 @@ void print_subsidiary_data(unsigned short p, uint8_t c)
 	--pool_ptr;
 }
 
-void print_style(int c)
+void print_style(integer c)
 {
 	switch (c / 2) {
 
@@ -2496,7 +2467,7 @@ void print_style(int c)
 	}
 }
 
-void print_skip_param(int n)
+void print_skip_param(integer n)
 {
 	switch (n) {
 
@@ -2578,9 +2549,9 @@ void print_skip_param(int n)
 	}
 }
 
-void show_node_list(int p)
+void show_node_list(integer p)
 {
-	int n = 0;
+	integer n = 0;
 	double g;
 
 	if (pool_ptr - str_start[str_ptr] > depth_threshold) {
@@ -2604,13 +2575,13 @@ void show_node_list(int p)
 			print_font_and_char(p);
 		}
 		else {
-			switch (mem[p - mem_min].hh.variant.U2.b0) {
+			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1: case 13:
-				if (!mem[p - mem_min].hh.variant.U2.b0) {
+				if (!mem[p - mem_min].hh.U2.b0) {
 					print_esc(104);
 				}
-				else if (mem[p - mem_min].hh.variant.U2.b0 == 1)
+				else if (mem[p - mem_min].hh.U2.b0 == 1)
 					print_esc(118);
 				else
 					print_esc(318);
@@ -2620,26 +2591,26 @@ void show_node_list(int p)
 				print_scaled(mem[p - mem_min + 2].int_);
 				print(320);
 				print_scaled(mem[p - mem_min + 1].int_);
-				if (mem[p - mem_min].hh.variant.U2.b0 == 13) {
-					if (mem[p - mem_min].hh.variant.U2.b1) {
+				if (mem[p - mem_min].hh.U2.b0 == 13) {
+					if (mem[p - mem_min].hh.U2.b1) {
 						print(286);
-						print_int(mem[p - mem_min].hh.variant.U2.b1 + 1);
+						print_int(mem[p - mem_min].hh.U2.b1 + 1);
 						print(322);
 					}
 					if (mem[p - mem_min + 6].int_) {
 						print(323);
-						print_glue(mem[p - mem_min + 6].int_, mem[p - mem_min + 5].hh.variant.U2.b1, 0);
+						print_glue(mem[p - mem_min + 6].int_, mem[p - mem_min + 5].hh.U2.b1, 0);
 					}
 					if (mem[p - mem_min + 4].int_) {
 						print(324);
-						print_glue(mem[p - mem_min + 4].int_, mem[p - mem_min + 5].hh.variant.U2.b0, 0);
+						print_glue(mem[p - mem_min + 4].int_, mem[p - mem_min + 5].hh.U2.b0, 0);
 					}
 				}
 				else {
 					g = mem[p - mem_min + 6].gr;
-					if (g && mem[p - mem_min + 5].hh.variant.U2.b0) {
+					if (g && mem[p - mem_min + 5].hh.U2.b0) {
 						print(325);
-						if (mem[p - mem_min + 5].hh.variant.U2.b0 == 2)
+						if (mem[p - mem_min + 5].hh.U2.b0 == 2)
 							print(326);
 						if (abs(mem[p - mem_min + 6].int_) < 1048576) {
 							print(327);
@@ -2649,10 +2620,10 @@ void show_node_list(int p)
 								print_char(62);
 							else
 								print(328);
-							print_glue(1310720000, mem[p - mem_min + 5].hh.variant.U2.b1, 0);
+							print_glue(1310720000, mem[p - mem_min + 5].hh.U2.b1, 0);
 						}
 						else {
-							print_glue(lround(65536 * g), mem[p - mem_min + 5].hh.variant.U2.b1, 0);
+							print_glue(lround(65536 * g), mem[p - mem_min + 5].hh.U2.b1, 0);
 						}
 					}
 					if (mem[p - mem_min + 4].int_) {
@@ -2677,7 +2648,7 @@ void show_node_list(int p)
 
 			case 3:
 				print_esc(330);
-				print_int(mem[p - mem_min].hh.variant.U2.b1);
+				print_int(mem[p - mem_min].hh.U2.b1);
 				print(331);
 				print_scaled(mem[p - mem_min + 3].int_);
 				print(332);
@@ -2688,17 +2659,17 @@ void show_node_list(int p)
 				print_int(mem[p - mem_min + 1].int_);
 				str_pool[pool_ptr] = 46;
 				++pool_ptr;
-				show_node_list(mem[p - mem_min + 4].hh.variant.lh);
+				show_node_list(mem[p - mem_min + 4].hh.lh);
 				--pool_ptr;
 				break;
 
 			case 8:
-				switch (mem[p - mem_min].hh.variant.U2.b1) {
+				switch (mem[p - mem_min].hh.U2.b1) {
 
 				case 0:
 					print_write_whatsit(1284, p);
 					print_char(61);
-					print_file_name(mem[p - mem_min + 1].hh.rh, mem[p - mem_min + 2].hh.variant.lh, mem[p - mem_min + 2].hh.rh);
+					print_file_name(mem[p - mem_min + 1].hh.rh, mem[p - mem_min + 2].hh.lh, mem[p - mem_min + 2].hh.rh);
 					break;
 
 				case 1:
@@ -2719,9 +2690,9 @@ void show_node_list(int p)
 					print_esc(1288);
 					print_int(mem[p - mem_min + 1].hh.rh);
 					print(1291);
-					print_int(mem[p - mem_min + 1].hh.variant.U2.b0);
+					print_int(mem[p - mem_min + 1].hh.U2.b0);
 					print_char(44);
-					print_int(mem[p - mem_min + 1].hh.variant.U2.b1);
+					print_int(mem[p - mem_min + 1].hh.U2.b1);
 					print_char(41);
 					break;
 
@@ -2732,15 +2703,15 @@ void show_node_list(int p)
 				break;
 
 			case 10:
-				if (mem[p - mem_min].hh.variant.U2.b1 >= 100) {
+				if (mem[p - mem_min].hh.U2.b1 >= 100) {
 					print_esc(338);
-					if (mem[p - mem_min].hh.variant.U2.b1 == 101) {
+					if (mem[p - mem_min].hh.U2.b1 == 101) {
 						print_char(99);
 					}
-					else if (mem[p - mem_min].hh.variant.U2.b1 == 102)
+					else if (mem[p - mem_min].hh.U2.b1 == 102)
 						print_char(120);
 					print(339);
-					print_spec(mem[p - mem_min + 1].hh.variant.lh, 0);
+					print_spec(mem[p - mem_min + 1].hh.lh, 0);
 					str_pool[pool_ptr] = 46;
 					++pool_ptr;
 					show_node_list(mem[p - mem_min + 1].hh.rh);
@@ -2748,34 +2719,34 @@ void show_node_list(int p)
 				}
 				else {
 					print_esc(334);
-					if (mem[p - mem_min].hh.variant.U2.b1) {
+					if (mem[p - mem_min].hh.U2.b1) {
 						print_char(40);
-						if (mem[p - mem_min].hh.variant.U2.b1 < 98) {
-							print_skip_param(mem[p - mem_min].hh.variant.U2.b1 - 1);
+						if (mem[p - mem_min].hh.U2.b1 < 98) {
+							print_skip_param(mem[p - mem_min].hh.U2.b1 - 1);
 						}
-						else if (mem[p - mem_min].hh.variant.U2.b1 == 98)
+						else if (mem[p - mem_min].hh.U2.b1 == 98)
 							print_esc(335);
 						else
 							print_esc(336);
 						print_char(41);
 					}
-					if (mem[p - mem_min].hh.variant.U2.b1 != 98) {
+					if (mem[p - mem_min].hh.U2.b1 != 98) {
 						print_char(32);
-						if (mem[p - mem_min].hh.variant.U2.b1 < 98)
-							print_spec(mem[p - mem_min + 1].hh.variant.lh, 0);
+						if (mem[p - mem_min].hh.U2.b1 < 98)
+							print_spec(mem[p - mem_min + 1].hh.lh, 0);
 						else
-							print_spec(mem[p - mem_min + 1].hh.variant.lh, 337);
+							print_spec(mem[p - mem_min + 1].hh.lh, 337);
 					}
 				}
 				break;
 
 			case 11:
-				if (mem[p - mem_min].hh.variant.U2.b1 != 99) {
+				if (mem[p - mem_min].hh.U2.b1 != 99) {
 					print_esc(340);
-					if (mem[p - mem_min].hh.variant.U2.b1)
+					if (mem[p - mem_min].hh.U2.b1)
 						print_char(32);
 					print_scaled(mem[p - mem_min + 1].int_);
-					if (mem[p - mem_min].hh.variant.U2.b1 == 2)
+					if (mem[p - mem_min].hh.U2.b1 == 2)
 						print(341);
 				}
 				else {
@@ -2787,7 +2758,7 @@ void show_node_list(int p)
 
 			case 9:
 				print_esc(343);
-				if (!mem[p - mem_min].hh.variant.U2.b1)
+				if (!mem[p - mem_min].hh.U2.b1)
 					print(344);
 				else
 					print(345);
@@ -2800,11 +2771,11 @@ void show_node_list(int p)
 			case 6:
 				print_font_and_char(p + 1);
 				print(347);
-				if (mem[p - mem_min].hh.variant.U2.b1 > 1)
+				if (mem[p - mem_min].hh.U2.b1 > 1)
 					print_char(124);
-				font_in_short_display = mem[p - mem_min + 1].hh.variant.U2.b0;
+				font_in_short_display = mem[p - mem_min + 1].hh.U2.b0;
 				short_display(mem[p - mem_min + 1].hh.rh);
-				if (mem[p - mem_min].hh.variant.U2.b1 & 1)
+				if (mem[p - mem_min].hh.U2.b1 & 1)
 					print_char(124);
 				print_char(41);
 				break;
@@ -2816,13 +2787,13 @@ void show_node_list(int p)
 
 			case 7:
 				print_esc(349);
-				if (mem[p - mem_min].hh.variant.U2.b1 > 0) {
+				if (mem[p - mem_min].hh.U2.b1 > 0) {
 					print(350);
-					print_int(mem[p - mem_min].hh.variant.U2.b1);
+					print_int(mem[p - mem_min].hh.U2.b1);
 				}
 				str_pool[pool_ptr] = 46;
 				++pool_ptr;
-				show_node_list(mem[p - mem_min + 1].hh.variant.lh);
+				show_node_list(mem[p - mem_min + 1].hh.lh);
 				--pool_ptr;
 				str_pool[pool_ptr] = 124;
 				++pool_ptr;
@@ -2844,14 +2815,14 @@ void show_node_list(int p)
 				break;
 
 			case 14:
-				print_style(mem[p - mem_min].hh.variant.U2.b1);
+				print_style(mem[p - mem_min].hh.U2.b1);
 				break;
 
 			case 15:
 				print_esc(525);
 				str_pool[pool_ptr] = 68;
 				++pool_ptr;
-				show_node_list(mem[p - mem_min + 1].hh.variant.lh);
+				show_node_list(mem[p - mem_min + 1].hh.lh);
 				--pool_ptr;
 				str_pool[pool_ptr] = 84;
 				++pool_ptr;
@@ -2859,7 +2830,7 @@ void show_node_list(int p)
 				--pool_ptr;
 				str_pool[pool_ptr] = 83;
 				++pool_ptr;
-				show_node_list(mem[p - mem_min + 2].hh.variant.lh);
+				show_node_list(mem[p - mem_min + 2].hh.lh);
 				--pool_ptr;
 				str_pool[pool_ptr] = 115;
 				++pool_ptr;
@@ -2869,7 +2840,7 @@ void show_node_list(int p)
 
 			case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 27: case 26: case 29: case 28:
 			case 30: case 31:
-				switch (mem[p - mem_min].hh.variant.U2.b0) {
+				switch (mem[p - mem_min].hh.U2.b0) {
 
 				case 16:
 					print_esc(865);
@@ -2935,13 +2906,13 @@ void show_node_list(int p)
 					print_delimiter(p + 1);
 					break;
 				}
-				if (mem[p - mem_min].hh.variant.U2.b1) {
-					if (mem[p - mem_min].hh.variant.U2.b1 == 1)
+				if (mem[p - mem_min].hh.U2.b1) {
+					if (mem[p - mem_min].hh.U2.b1 == 1)
 						print_esc(877);
 					else
 						print_esc(878);
 				}
-				if (mem[p - mem_min].hh.variant.U2.b0 < 30)
+				if (mem[p - mem_min].hh.U2.b0 < 30)
 					print_subsidiary_data(p + 1, 46);
 				print_subsidiary_data(p + 2, 94);
 				print_subsidiary_data(p + 3, 95);
@@ -2977,7 +2948,7 @@ void show_node_list(int p)
 _L10: ;
 }
 
-void show_box(unsigned short p)
+void show_box(halfword p)
 {
 	depth_threshold = eqtb[5288].int_;
 	breadth_max = eqtb[5287].int_;
@@ -2989,15 +2960,15 @@ void show_box(unsigned short p)
 	print_ln();
 }
 
-void delete_token_ref(unsigned short p)
+void delete_token_ref(halfword p)
 {
-	if (!mem[p - mem_min].hh.variant.lh)
+	if (!mem[p - mem_min].hh.lh)
 		flush_list(p);
 	else
-		--mem[p - mem_min].hh.variant.lh;
+		--mem[p - mem_min].hh.lh;
 }
 
-void delete_glue_ref(unsigned short p)
+void delete_glue_ref(halfword p)
 {
 	if (!mem[p - mem_min].hh.rh)
 		free_node(p, 4);
@@ -3005,9 +2976,9 @@ void delete_glue_ref(unsigned short p)
 		--mem[p - mem_min].hh.rh;
 }
 
-void flush_node_list(unsigned short p)
+void flush_node_list(halfword p)
 {
-	unsigned short q;
+	halfword q;
 
 	while (p) {
 		q = mem[p - mem_min].hh.rh;
@@ -3016,7 +2987,7 @@ void flush_node_list(unsigned short p)
 			avail = p;
 		}
 		else {
-			switch (mem[p - mem_min].hh.variant.U2.b0) {
+			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1: case 13:
 				flush_node_list(mem[p - mem_min + 5].hh.rh);
@@ -3030,14 +3001,14 @@ void flush_node_list(unsigned short p)
 				break;
 
 			case 3:
-				flush_node_list(mem[p - mem_min + 4].hh.variant.lh);
+				flush_node_list(mem[p - mem_min + 4].hh.lh);
 				delete_glue_ref(mem[p - mem_min + 4].hh.rh);
 				free_node(p, 5);
 				goto _L30;
 				break;
 
 			case 8:
-				switch (mem[p - mem_min].hh.variant.U2.b1) {
+				switch (mem[p - mem_min].hh.U2.b1) {
 
 				case 0:
 					free_node(p, 3);
@@ -3061,10 +3032,10 @@ void flush_node_list(unsigned short p)
 				break;
 
 			case 10:
-				if (!mem[mem[p - mem_min + 1].hh.variant.lh - mem_min].hh.rh)
-					free_node(mem[p - mem_min + 1].hh.variant.lh, 4);
+				if (!mem[mem[p - mem_min + 1].hh.lh - mem_min].hh.rh)
+					free_node(mem[p - mem_min + 1].hh.lh, 4);
 				else
-					--mem[mem[p - mem_min + 1].hh.variant.lh - mem_min].hh.rh;
+					--mem[mem[p - mem_min + 1].hh.lh - mem_min].hh.rh;
 				if (mem[p - mem_min + 1].hh.rh)
 					flush_node_list(mem[p - mem_min + 1].hh.rh);
 				break;
@@ -3082,7 +3053,7 @@ void flush_node_list(unsigned short p)
 				break;
 
 			case 7:
-				flush_node_list(mem[p - mem_min + 1].hh.variant.lh);
+				flush_node_list(mem[p - mem_min + 1].hh.lh);
 				flush_node_list(mem[p - mem_min + 1].hh.rh);
 				break;
 
@@ -3096,9 +3067,9 @@ void flush_node_list(unsigned short p)
 				break;
 
 			case 15:
-				flush_node_list(mem[p - mem_min + 1].hh.variant.lh);
+				flush_node_list(mem[p - mem_min + 1].hh.lh);
 				flush_node_list(mem[p - mem_min + 1].hh.rh);
-				flush_node_list(mem[p - mem_min + 2].hh.variant.lh);
+				flush_node_list(mem[p - mem_min + 2].hh.lh);
 				flush_node_list(mem[p - mem_min + 2].hh.rh);
 				free_node(p, 3);
 				goto _L30;
@@ -3106,15 +3077,15 @@ void flush_node_list(unsigned short p)
 
 			case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 23: case 24: case 27: case 26: case 29: case 28:
 				if (mem[p - mem_min + 1].hh.rh >= 2)
-					flush_node_list(mem[p - mem_min + 1].hh.variant.lh);
+					flush_node_list(mem[p - mem_min + 1].hh.lh);
 				if (mem[p - mem_min + 2].hh.rh >= 2)
-					flush_node_list(mem[p - mem_min + 2].hh.variant.lh);
+					flush_node_list(mem[p - mem_min + 2].hh.lh);
 				if (mem[p - mem_min + 3].hh.rh >= 2)
-					flush_node_list(mem[p - mem_min + 3].hh.variant.lh);
-				if (mem[p - mem_min].hh.variant.U2.b0 == 24) {
+					flush_node_list(mem[p - mem_min + 3].hh.lh);
+				if (mem[p - mem_min].hh.U2.b0 == 24) {
 					free_node(p, 5);
 				}
-				else if (mem[p - mem_min].hh.variant.U2.b0 == 28)
+				else if (mem[p - mem_min].hh.U2.b0 == 28)
 					free_node(p, 5);
 				else
 					free_node(p, 4);
@@ -3127,8 +3098,8 @@ void flush_node_list(unsigned short p)
 				break;
 
 			case 25:
-				flush_node_list(mem[p - mem_min + 2].hh.variant.lh);
-				flush_node_list(mem[p - mem_min + 3].hh.variant.lh);
+				flush_node_list(mem[p - mem_min + 2].hh.lh);
+				flush_node_list(mem[p - mem_min + 3].hh.lh);
 				free_node(p, 6);
 				goto _L30;
 				break;
@@ -3144,20 +3115,20 @@ _L30: ;
 	}
 }
 
-unsigned short copy_node_list(unsigned short p)
+halfword copy_node_list(halfword p)
 {
-	unsigned short h, q, r;
+	halfword r;
 	char words;
+	halfword h = get_avail();
+	halfword q = h;
 
-	h = get_avail();
-	q = h;
 	while (p) {
 		words = 1;
 		if (p >= hi_mem_min) {
 			r = get_avail();
 		}
 		else {
-			switch (mem[p - mem_min].hh.variant.U2.b0) {
+			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1: case 13:
 				r = get_node(7);
@@ -3176,12 +3147,12 @@ unsigned short copy_node_list(unsigned short p)
 				r = get_node(5);
 				mem[r - mem_min + 4] = mem[p - mem_min + 4];
 				++mem[mem[p - mem_min + 4].hh.rh - mem_min].hh.rh;
-				mem[r - mem_min + 4].hh.variant.lh = copy_node_list(mem[p - mem_min + 4].hh.variant.lh);
+				mem[r - mem_min + 4].hh.lh = copy_node_list(mem[p - mem_min + 4].hh.lh);
 				words = 4;
 				break;
 
 			case 8:
-				switch (mem[p - mem_min].hh.variant.U2.b1) {
+				switch (mem[p - mem_min].hh.U2.b1) {
 
 				case 0:
 					r = get_node(3);
@@ -3190,7 +3161,7 @@ unsigned short copy_node_list(unsigned short p)
 
 				case 1: case 3:
 					r = get_node(2);
-					++mem[mem[p - mem_min + 1].hh.rh - mem_min].hh.variant.lh;
+					++mem[mem[p - mem_min + 1].hh.rh - mem_min].hh.lh;
 					words = 2;
 					break;
 
@@ -3207,8 +3178,8 @@ unsigned short copy_node_list(unsigned short p)
 
 			case 10:
 				r = get_node(2);
-				++mem[mem[p - mem_min + 1].hh.variant.lh - mem_min].hh.rh;
-				mem[r - mem_min + 1].hh.variant.lh = mem[p - mem_min + 1].hh.variant.lh;
+				++mem[mem[p - mem_min + 1].hh.lh - mem_min].hh.rh;
+				mem[r - mem_min + 1].hh.lh = mem[p - mem_min + 1].hh.lh;
 				mem[r - mem_min + 1].hh.rh = copy_node_list(mem[p - mem_min + 1].hh.rh);
 				break;
 
@@ -3225,13 +3196,13 @@ unsigned short copy_node_list(unsigned short p)
 
 			case 7:
 				r = get_node(2);
-				mem[r - mem_min + 1].hh.variant.lh = copy_node_list(mem[p - mem_min + 1].hh.variant.lh);
+				mem[r - mem_min + 1].hh.lh = copy_node_list(mem[p - mem_min + 1].hh.lh);
 				mem[r - mem_min + 1].hh.rh = copy_node_list(mem[p - mem_min + 1].hh.rh);
 				break;
 
 			case 4:
 				r = get_node(2);
-				++mem[mem[p - mem_min + 1].int_ - mem_min].hh.variant.lh;
+				++mem[mem[p - mem_min + 1].int_ - mem_min].hh.lh;
 				words = 2;
 				break;
 
@@ -3260,7 +3231,7 @@ unsigned short copy_node_list(unsigned short p)
 	return q;
 }
 
-void print_mode(int m)
+void print_mode(integer m)
 {
 	if (m > 0) {
 		switch (m / 101) {
@@ -3328,8 +3299,8 @@ void show_activities()
 	int p;
 	short m;
 	memory_word a;
-	unsigned short q, r;
-	int t;
+	halfword q, r;
+	integer t;
 
 	nest[nest_ptr] = cur_list;
 	print_nl(338);
@@ -3369,7 +3340,7 @@ void show_activities()
 					while (r != 30000) {
 						print_ln();
 						print_esc(330);
-						t = mem[r - mem_min].hh.variant.U2.b1;
+						t = mem[r - mem_min].hh.U2.b1;
 						print_int(t);
 						print(983);
 						if (eqtb[t+5318].int_ == 1000)
@@ -3377,15 +3348,14 @@ void show_activities()
 						else
 							t = x_over_n(mem[r - mem_min + 3].int_, 1000) * eqtb[t+5318].int_;
 						print_scaled(t);
-						if (mem[r - mem_min].hh.variant.U2.b0 == 1) {
+						if (mem[r - mem_min].hh.U2.b0 == 1) {
 							q = 29998;
 							t = 0;
 							do {
 								q = mem[q - mem_min].hh.rh;
-								if ((mem[q - mem_min].hh.variant.U2.b0 == 3)
-										&& (mem[q - mem_min].hh.variant.U2.b1 == mem[r - mem_min].hh.variant.U2.b1))
+								if ((mem[q - mem_min].hh.U2.b0 == 3) && (mem[q - mem_min].hh.U2.b1 == mem[r - mem_min].hh.U2.b1))
 									++t;
-							} while (q != mem[r - mem_min + 1].hh.variant.lh);
+							} while (q != mem[r - mem_min + 1].hh.lh);
 							print(984);
 							print_int(t);
 							print(985);
@@ -3417,7 +3387,7 @@ void show_activities()
 
 		case 1:
 			print_nl(373);
-			print_int(a.hh.variant.lh);
+			print_int(a.hh.lh);
 			if (m > 0) {
 				if (a.hh.rh > 0) {
 					print(374);
@@ -3436,7 +3406,7 @@ void show_activities()
 	}
 }
 
-void print_param(int n)
+void print_param(integer n)
 {
 	switch (n) {
 
@@ -3692,7 +3662,7 @@ void end_diagnostic(bool blank_line)
 	selector = old_setting;
 }
 
-void print_length_param(int n)
+void print_length_param(integer n)
 {
 	switch (n) {
 
@@ -3786,7 +3756,7 @@ void print_length_param(int n)
 	}
 }
 
-void print_cmd_chr(uint8_t cmd, unsigned short chr_code)
+void print_cmd_chr(quarterword cmd, halfword chr_code)
 {
 	switch (cmd) {
 
@@ -4872,12 +4842,12 @@ void print_cmd_chr(uint8_t cmd, unsigned short chr_code)
 	}
 }
 
-unsigned short id_lookup(int j, int l)
+halfword id_lookup(integer j, integer l)
 {
-	int h, d;
-	unsigned short p, k;
+	integer d;
+	halfword p, k;
+	integer h = buffer[j];
 
-	h = buffer[j];
 	for (k = j + 1; k <= (j + l - 1); ++k) {
 		h += h + buffer[k];
 		while (h >= 1777)
@@ -4891,7 +4861,7 @@ unsigned short id_lookup(int j, int l)
 					goto _L40;
 			}
 		}
-		if (!hash[p-514].variant.lh) {
+		if (!hash[p-514].lh) {
 			if (no_new_control_sequence) {
 				p = 2881;
 			}
@@ -4902,7 +4872,7 @@ unsigned short id_lookup(int j, int l)
 							overflow(503, 2100);
 						--hash_used;
 					} while (hash[hash_used-514].rh);
-					hash[p-514].variant.lh = hash_used;
+					hash[p-514].lh = hash_used;
 					p = hash_used;
 				}
 				if (pool_ptr + l > pool_size)
@@ -4921,16 +4891,16 @@ unsigned short id_lookup(int j, int l)
 			}
 			goto _L40;
 		}
-		p = hash[p-514].variant.lh;
+		p = hash[p-514].lh;
 	}
 _L40:
 	return p;
 }
 
-void primitive(int s, uint8_t c, unsigned short o)
+void primitive(str_number s, quarterword c, halfword o)
 {
-	int k;
-	char j, l;
+	pool_pointer k;
+	small_number j, l;
 
 	if (s < 256) {
 		cur_val = s + 257;
@@ -4945,20 +4915,20 @@ void primitive(int s, uint8_t c, unsigned short o)
 		pool_ptr = str_start[str_ptr];
 		hash[cur_val-514].rh = s;
 	}
-	eqtb[cur_val].hh.variant.U2.b1 = 1;
-	eqtb[cur_val].hh.variant.U2.b0 = c;
+	eqtb[cur_val].hh.U2.b1 = 1;
+	eqtb[cur_val].hh.U2.b0 = c;
 	eqtb[cur_val].hh.rh = o;
 }
 
-void new_save_level(char c)
+void new_save_level(group_code c)
 {
 	if (save_ptr > max_save_stack) {
 		max_save_stack = save_ptr;
 		if (max_save_stack > (save_size - 6))
 			overflow(541, save_size);
 	}
-	save_stack[save_ptr].hh.variant.U2.b0 = 3;
-	save_stack[save_ptr].hh.variant.U2.b1 = cur_group;
+	save_stack[save_ptr].hh.U2.b0 = 3;
+	save_stack[save_ptr].hh.U2.b1 = cur_group;
 	save_stack[save_ptr].hh.rh = cur_boundary;
 	if (cur_level == 255)
 		overflow(542, 255);
@@ -4970,9 +4940,9 @@ void new_save_level(char c)
 
 void eq_destroy(memory_word w)
 {
-	unsigned short q;
+	halfword q;
 
-	switch (w.hh.variant.U2.b0) {
+	switch (w.hh.U2.b0) {
 
 	case 111: case 112: case 113: case 114:
 		delete_token_ref(w.hh.rh);
@@ -4985,7 +4955,7 @@ void eq_destroy(memory_word w)
 	case 118:
 		q = w.hh.rh;
 		if (q)
-			free_node(q, mem[q - mem_min].hh.variant.lh + mem[q - mem_min].hh.variant.lh + 1);
+			free_node(q, mem[q - mem_min].hh.lh + mem[q - mem_min].hh.lh + 1);
 		break;
 
 	case 119:
@@ -4997,7 +4967,7 @@ void eq_destroy(memory_word w)
 	}
 }
 
-void eq_save(unsigned short p, uint8_t l)
+void eq_save(halfword p, quarterword l)
 {
 	if (save_ptr > max_save_stack) {
 		max_save_stack = save_ptr;
@@ -5005,31 +4975,31 @@ void eq_save(unsigned short p, uint8_t l)
 			overflow(541, save_size);
 	}
 	if (!l) {
-		save_stack[save_ptr].hh.variant.U2.b0 = 1;
+		save_stack[save_ptr].hh.U2.b0 = 1;
 	}
 	else {
 		save_stack[save_ptr] = eqtb[p];
 		++save_ptr;
-		save_stack[save_ptr].hh.variant.U2.b0 = 0;
+		save_stack[save_ptr].hh.U2.b0 = 0;
 	}
-	save_stack[save_ptr].hh.variant.U2.b1 = l;
+	save_stack[save_ptr].hh.U2.b1 = l;
 	save_stack[save_ptr].hh.rh = p;
 	++save_ptr;
 }
 
-void eq_define(unsigned short p, uint8_t t, unsigned short e)
+void eq_define(halfword p, quarterword t, halfword e)
 {
-	if (eqtb[p].hh.variant.U2.b1 == cur_level) {
+	if (eqtb[p].hh.U2.b1 == cur_level) {
 		eq_destroy(eqtb[p]);
 	}
 	else if (cur_level > 1)
-		eq_save(p, eqtb[p].hh.variant.U2.b1);
-	eqtb[p].hh.variant.U2.b1 = cur_level;
-	eqtb[p].hh.variant.U2.b0 = t;
+		eq_save(p, eqtb[p].hh.U2.b1);
+	eqtb[p].hh.U2.b1 = cur_level;
+	eqtb[p].hh.U2.b0 = t;
 	eqtb[p].hh.rh = e;
 }
 
-void eq_word_define(unsigned short p, int w)
+void eq_word_define(halfword p, integer w)
 {
 	if (xeq_level[p-5263] != cur_level) {
 		eq_save(p, xeq_level[p-5263]);
@@ -5038,21 +5008,21 @@ void eq_word_define(unsigned short p, int w)
 	eqtb[p].int_ = w;
 }
 
-void geq_define(unsigned short p, uint8_t t, unsigned short e)
+void geq_define(halfword p, quarterword t, halfword e)
 {
 	eq_destroy(eqtb[p]);
-	eqtb[p].hh.variant.U2.b1 = 1;
-	eqtb[p].hh.variant.U2.b0 = t;
+	eqtb[p].hh.U2.b1 = 1;
+	eqtb[p].hh.U2.b0 = t;
 	eqtb[p].hh.rh = e;
 }
 
-void geq_word_define(unsigned short p, int w)
+void geq_word_define(halfword p, integer w)
 {
 	eqtb[p].int_ = w;
 	xeq_level[p-5263] = 1;
 }
 
-void save_for_after(unsigned short t)
+void save_for_after(halfword t)
 {
 	if (cur_level <= 1)
 		return;
@@ -5061,17 +5031,17 @@ void save_for_after(unsigned short t)
 		if (max_save_stack > (save_size - 6))
 			overflow(541, save_size);
 	}
-	save_stack[save_ptr].hh.variant.U2.b0 = 2;
-	save_stack[save_ptr].hh.variant.U2.b1 = 0;
+	save_stack[save_ptr].hh.U2.b0 = 2;
+	save_stack[save_ptr].hh.U2.b1 = 0;
 	save_stack[save_ptr].hh.rh = t;
 	++save_ptr;
 }
 
 void unsave()
 {
-	unsigned short p;
-	uint8_t l;
-	unsigned short t;
+	halfword p;
+	quarterword l;
+	halfword t;
 
 	if (cur_level <= 1) {
 		confusion(543);
@@ -5080,25 +5050,25 @@ void unsave()
 	--cur_level;
 	while (true) {
 		--save_ptr;
-		if (save_stack[save_ptr].hh.variant.U2.b0 == 3)
+		if (save_stack[save_ptr].hh.U2.b0 == 3)
 			goto _L30;
 		p = save_stack[save_ptr].hh.rh;
-		if (save_stack[save_ptr].hh.variant.U2.b0 == 2) {
+		if (save_stack[save_ptr].hh.U2.b0 == 2) {
 			t = cur_tok;
 			cur_tok = p;
 			back_input();
 			cur_tok = t;
 			continue;
 		}
-		if (!save_stack[save_ptr].hh.variant.U2.b0) {
-			l = save_stack[save_ptr].hh.variant.U2.b1;
+		if (!save_stack[save_ptr].hh.U2.b0) {
+			l = save_stack[save_ptr].hh.U2.b1;
 			--save_ptr;
 		}
 		else {
 			save_stack[save_ptr] = eqtb[2881];
 		}
 		if (p < 5263) {
-			if (eqtb[p].hh.variant.U2.b1 == 1) {
+			if (eqtb[p].hh.U2.b1 == 1) {
 				eq_destroy(save_stack[save_ptr]);
 			}
 			else {
@@ -5112,7 +5082,7 @@ void unsave()
 		}
 	}
 _L30:
-	cur_group = save_stack[save_ptr].hh.variant.U2.b1;
+	cur_group = save_stack[save_ptr].hh.U2.b1;
 	cur_boundary = save_stack[save_ptr].hh.rh;
 }
 
@@ -5141,7 +5111,7 @@ void prepare_mag()
 	mag_set = eqtb[5280].int_;
 }
 
-void token_show(unsigned short p)
+void token_show(halfword p)
 {
 	if (p)
 		show_token_list(mem[p - mem_min].hh.rh, 0, 10000000);
@@ -5180,9 +5150,9 @@ void show_cur_cmd_chr()
 void show_context()
 {
 	char old_setting;
-	int nn = -1;
+	integer nn = -1, m, p, q;
 	bool bottom_line = false;
-	int i, j, l, m, n, p, q, N1;
+	int i, j, l, n, N1;
 
 	base_ptr = input_ptr;
 	input_stack[base_ptr] = cur_input;
@@ -5366,7 +5336,7 @@ _L30:
 	cur_input = input_stack[input_ptr];
 }
 
-void begin_token_list(unsigned short p, uint8_t t)
+void begin_token_list(halfword p, quarterword t)
 {
 	if (input_ptr > max_in_stack) {
 		max_in_stack = input_ptr;
@@ -5382,7 +5352,7 @@ void begin_token_list(unsigned short p, uint8_t t)
 		cur_input.loc_field = p;
 		return;
 	}
-	++mem[p - mem_min].hh.variant.lh;
+	++mem[p - mem_min].hh.lh;
 	if (t == 5) {
 		cur_input.limit_field = param_ptr;
 		return;
@@ -5441,12 +5411,12 @@ void end_token_list()
 
 void back_input()
 {
-	unsigned short p;
+	halfword p;
 
 	while ((!cur_input.state_field) && (!cur_input.loc_field) && (cur_input.index_field != 2))
 		end_token_list();
 	p = get_avail();
-	mem[p - mem_min].hh.variant.lh = cur_tok;
+	mem[p - mem_min].hh.lh = cur_tok;
 	if (cur_tok < 768) {
 		if (cur_tok < 512)
 			--align_state;
@@ -5509,7 +5479,7 @@ void end_file_reading()
 	first = cur_input.start_field;
 	line = line_stack[cur_input.index_field];
 	if (cur_input.name_field > 17)
-		a_close(&input_file[cur_input.index_field]);
+		a_close(input_file[cur_input.index_field]);
 	--input_ptr;
 	cur_input = input_stack[input_ptr];
 	--in_open;
@@ -5525,7 +5495,7 @@ void clear_for_error_prompt()
 
 void check_outer_validity()
 {
-	unsigned short p, q;
+	halfword p, q;
 
 	if (!scanner_status)
 		return;
@@ -5533,7 +5503,7 @@ void check_outer_validity()
 	if (cur_cs) {
 		if ((!cur_input.state_field) || (cur_input.name_field < 1) || (cur_input.name_field > 17)) {
 			p = get_avail();
-			mem[p - mem_min].hh.variant.lh = cur_cs + 4095;
+			mem[p - mem_min].hh.lh = cur_cs + 4095;
 			begin_token_list(p, 3);
 		}
 		cur_cmd = 10;
@@ -5556,28 +5526,28 @@ void check_outer_validity()
 
 		case 2:
 			print(570);
-			mem[p - mem_min].hh.variant.lh = 637;
+			mem[p - mem_min].hh.lh = 637;
 			break;
 
 		case 3:
 			print(612);
-			mem[p - mem_min].hh.variant.lh = par_token;
+			mem[p - mem_min].hh.lh = par_token;
 			long_state = 113;
 			break;
 
 		case 4:
 			print(572);
-			mem[p - mem_min].hh.variant.lh = 637;
+			mem[p - mem_min].hh.lh = 637;
 			q = p;
 			p = get_avail();
 			mem[p - mem_min].hh.rh = q;
-			mem[p - mem_min].hh.variant.lh = 6710;
+			mem[p - mem_min].hh.lh = 6710;
 			align_state = -1000000;
 			break;
 
 		case 5:
 			print(573);
-			mem[p - mem_min].hh.variant.lh = 637;
+			mem[p - mem_min].hh.lh = 637;
 			break;
 		}
 		begin_token_list(p, 4);
@@ -5613,9 +5583,9 @@ void check_outer_validity()
 void get_next()
 {
 	int k;
-	unsigned short t;
+	halfword t;
 	char cat;
-	uint8_t c, cc;
+	ASCII_code c, cc;
 	char d;
 
 _L20:
@@ -5628,7 +5598,7 @@ _L25:
 				++line;
 				first = cur_input.start_field;
 				if (!force_eof) {
-					if (input_ln(&input_file[cur_input.index_field], true))
+					if (input_ln(input_file[cur_input.index_field], true))
 						firm_up_the_line();
 					else
 						force_eof = true;
@@ -5636,7 +5606,7 @@ _L25:
 				if (force_eof) {
 					print_char(41);
 					--open_parens;
-					fflush(term_out.f);
+					term_out->flush();
 					errno = 0;
 					force_eof = false;
 					end_file_reading();
@@ -5810,7 +5780,7 @@ _L26:
 				++cur_input.loc_field;
 			}
 _L40:
-			cur_cmd = eqtb[cur_cs].hh.variant.U2.b0;
+			cur_cmd = eqtb[cur_cs].hh.U2.b0;
 			cur_chr = eqtb[cur_cs].hh.rh;
 			if (cur_cmd >= 113)
 				check_outer_validity();
@@ -5818,7 +5788,7 @@ _L40:
 
 		case 14: case 30: case 46:
 			cur_cs = cur_chr + 1;
-			cur_cmd = eqtb[cur_cs].hh.variant.U2.b0;
+			cur_cmd = eqtb[cur_cs].hh.U2.b0;
 			cur_chr = eqtb[cur_cs].hh.rh;
 			cur_input.state_field = 1;
 			if (cur_cmd >= 113)
@@ -5890,7 +5860,7 @@ _L40:
 		case 38:
 			cur_input.loc_field = cur_input.limit_field + 1;
 			cur_cs = par_loc;
-			cur_cmd = eqtb[cur_cs].hh.variant.U2.b0;
+			cur_cmd = eqtb[cur_cs].hh.U2.b0;
 			cur_chr = eqtb[cur_cs].hh.rh;
 			if (cur_cmd >= 113)
 				check_outer_validity();
@@ -5923,17 +5893,17 @@ _L40:
 		}
 	}
 	else if (cur_input.loc_field) {
-		t = mem[cur_input.loc_field - mem_min].hh.variant.lh;
+		t = mem[cur_input.loc_field - mem_min].hh.lh;
 		cur_input.loc_field = mem[cur_input.loc_field - mem_min].hh.rh;
 		if (t >= 4095) {
 			cur_cs = t - 4095;
-			cur_cmd = eqtb[cur_cs].hh.variant.U2.b0;
+			cur_cmd = eqtb[cur_cs].hh.U2.b0;
 			cur_chr = eqtb[cur_cs].hh.rh;
 			if (cur_cmd >= 113) {
 				if (cur_cmd == 116) {
-					cur_cs = mem[cur_input.loc_field - mem_min].hh.variant.lh - 4095;
+					cur_cs = mem[cur_input.loc_field - mem_min].hh.lh - 4095;
 					cur_input.loc_field = 0;
-					cur_cmd = eqtb[cur_cs].hh.variant.U2.b0;
+					cur_cmd = eqtb[cur_cs].hh.U2.b0;
 					cur_chr = eqtb[cur_cs].hh.rh;
 					if (cur_cmd > 100) {
 						cur_cmd = 0;
@@ -5977,8 +5947,8 @@ _L40:
 			if (!align_state) {
 				if ((scanner_status == 4) || (!cur_align))
 					fatal_error(595);
-				cur_cmd = mem[cur_align - mem_min + 5].hh.variant.lh;
-				mem[cur_align - mem_min + 5].hh.variant.lh = cur_chr;
+				cur_cmd = mem[cur_align - mem_min + 5].hh.lh;
+				mem[cur_align - mem_min + 5].hh.lh = cur_chr;
 				if (cur_cmd == 63)
 					begin_token_list(29990, 2);
 				else
@@ -6028,15 +5998,13 @@ void get_token()
 
 void macro_call()
 {
-	unsigned short r, p, q, s, t, u, v, rbrace_ptr;
-	char n = 0;
-	unsigned short unbalance, m, ref_count;
-	char save_scanner_status;
-	unsigned short save_warning_index;
-	uint8_t match_chr;
+	halfword r, p, q, s, t, u, v, rbrace_ptr;
+	small_number n = 0;
+	halfword unbalance, m, ref_count;
+	ASCII_code match_chr;
+	small_number save_scanner_status = scanner_status;
+	halfword save_warning_index = warning_index;
 
-	save_scanner_status = scanner_status;
-	save_warning_index = warning_index;
 	warning_index = cur_cs;
 	ref_count = cur_chr;
 	r = mem[ref_count - mem_min].hh.rh;
@@ -6047,19 +6015,19 @@ void macro_call()
 		token_show(ref_count);
 		end_diagnostic(false);
 	}
-	if (mem[r - mem_min].hh.variant.lh != 3584) {
+	if (mem[r - mem_min].hh.lh != 3584) {
 		scanner_status = 3;
 		unbalance = 0;
-		long_state = eqtb[cur_cs].hh.variant.U2.b0;
+		long_state = eqtb[cur_cs].hh.U2.b0;
 		if (long_state >= 113)
 			long_state -= 2;
 		do {
 			mem[29997 - mem_min].hh.rh = 0;
-			if ((mem[r - mem_min].hh.variant.lh > 3583) || (mem[r - mem_min].hh.variant.lh < 3328)) {
+			if ((mem[r - mem_min].hh.lh > 3583) || (mem[r - mem_min].hh.lh < 3328)) {
 				s = 0;
 			}
 			else {
-				match_chr = mem[r - mem_min].hh.variant.lh - 3328;
+				match_chr = mem[r - mem_min].hh.lh - 3328;
 				s = mem[r - mem_min].hh.rh;
 				r = s;
 				p = 29997;
@@ -6067,9 +6035,9 @@ void macro_call()
 			}
 _L22:
 			get_token();
-			if (cur_tok == mem[r - mem_min].hh.variant.lh) {
+			if (cur_tok == mem[r - mem_min].hh.lh) {
 				r = mem[r - mem_min].hh.rh;
-				if ((mem[r - mem_min].hh.variant.lh >= 3328) && (mem[r - mem_min].hh.variant.lh <= 3584)) {
+				if ((mem[r - mem_min].hh.lh >= 3328) && (mem[r - mem_min].hh.lh <= 3584)) {
 					if (cur_tok < 512)
 						--align_state;
 					goto _L40;
@@ -6096,14 +6064,14 @@ _L22:
 				do {
 					q = get_avail();
 					mem[p - mem_min].hh.rh = q;
-					mem[q - mem_min].hh.variant.lh = mem[t - mem_min].hh.variant.lh;
+					mem[q - mem_min].hh.lh = mem[t - mem_min].hh.lh;
 					p = q;
 					++m;
 					u = mem[t - mem_min].hh.rh;
 					v = s;
 					while (true) {
 						if (u == r) {
-							if (cur_tok != mem[v - mem_min].hh.variant.lh) {
+							if (cur_tok != mem[v - mem_min].hh.lh) {
 								goto _L30;
 							}
 							else {
@@ -6111,7 +6079,7 @@ _L22:
 								goto _L22;
 							}
 						}
-						if (mem[u - mem_min].hh.variant.lh != mem[v - mem_min].hh.variant.lh)
+						if (mem[u - mem_min].hh.lh != mem[v - mem_min].hh.lh)
 							goto _L30;
 						u = mem[u - mem_min].hh.rh;
 						v = mem[v - mem_min].hh.rh;
@@ -6173,7 +6141,7 @@ _L30:
 						mem[q - mem_min].hh.rh = 0;
 					}
 					mem[p - mem_min].hh.rh = q;
-					mem[q - mem_min].hh.variant.lh = cur_tok;
+					mem[q - mem_min].hh.lh = cur_tok;
 					p = q;
 					get_token();
 					if (cur_tok == par_token) {
@@ -6212,29 +6180,29 @@ _L31:
 				rbrace_ptr = p;
 				q = get_avail();
 				mem[p - mem_min].hh.rh = q;
-				mem[q - mem_min].hh.variant.lh = cur_tok;
+				mem[q - mem_min].hh.lh = cur_tok;
 				p = q;
 			}
 			else {
 				if (cur_tok == 2592) {
-					if (mem[r - mem_min].hh.variant.lh <= 3584) {
-						if (mem[r - mem_min].hh.variant.lh >= 3328)
+					if (mem[r - mem_min].hh.lh <= 3584) {
+						if (mem[r - mem_min].hh.lh >= 3328)
 							goto _L22;
 					}
 				}
 				q = get_avail();
 				mem[p - mem_min].hh.rh = q;
-				mem[q - mem_min].hh.variant.lh = cur_tok;
+				mem[q - mem_min].hh.lh = cur_tok;
 				p = q;
 			}
 			++m;
-			if (mem[r - mem_min].hh.variant.lh > 3584)
+			if (mem[r - mem_min].hh.lh > 3584)
 				goto _L22;
-			if (mem[r - mem_min].hh.variant.lh < 3328)
+			if (mem[r - mem_min].hh.lh < 3328)
 				goto _L22;
 _L40:
 			if (s) {
-				if ((m == 1) && (mem[p - mem_min].hh.variant.lh < 768) && (p != 29997)) {
+				if ((m == 1) && (mem[p - mem_min].hh.lh < 768) && (p != 29997)) {
 					mem[rbrace_ptr - mem_min].hh.rh = 0;
 					mem[p - mem_min].hh.rh = avail;
 					avail = p;
@@ -6256,7 +6224,7 @@ _L40:
 					end_diagnostic(false);
 				}
 			}
-		} while (mem[r - mem_min].hh.variant.lh != 3584);
+		} while (mem[r - mem_min].hh.lh != 3584);
 	}
 	while ((!cur_input.state_field) && (!cur_input.loc_field) && (cur_input.index_field != 2))
 		end_token_list();
@@ -6289,17 +6257,15 @@ void insert_relax()
 
 void expand()
 {
-	unsigned short t, p, q, r;
-	int j, cv_backup;
-	char cvl_backup, radix_backup, co_backup;
-	unsigned short backup_backup;
-	char save_scanner_status;
+	halfword t, p, q, r;
+	int j;
+	small_number save_scanner_status;
+	integer cv_backup = cur_val;
+	small_number cvl_backup = cur_val_level;
+	small_number radix_backup = radix;
+	small_number co_backup = cur_order;
+	halfword backup_backup = mem[29987 - mem_min].hh.rh;
 
-	cv_backup = cur_val;
-	cvl_backup = cur_val_level;
-	radix_backup = radix;
-	co_backup = cur_order;
-	backup_backup = mem[29987 - mem_min].hh.rh;
 	if (cur_cmd < 111) {
 		if (eqtb[5299].int_ > 1)
 			show_cur_cmd_chr();
@@ -6331,7 +6297,7 @@ void expand()
 			back_input();
 			if (t >= 4095) {
 				p = get_avail();
-				mem[p - mem_min].hh.variant.lh = 6718;
+				mem[p - mem_min].hh.lh = 6718;
 				mem[p - mem_min].hh.rh = cur_input.loc_field;
 				cur_input.start_field = p;
 				cur_input.loc_field = p;
@@ -6346,7 +6312,7 @@ void expand()
 				if (!cur_cs) {
 					q = get_avail();
 					mem[p - mem_min].hh.rh = q;
-					mem[q - mem_min].hh.variant.lh = cur_tok;
+					mem[q - mem_min].hh.lh = cur_tok;
 					p = q;
 				}
 			} while (!cur_cs);
@@ -6368,7 +6334,7 @@ void expand()
 					if (max_buf_stack == buf_size)
 						overflow(256, buf_size);
 				}
-				buffer[j] = mem[p - mem_min].hh.variant.lh & 255;
+				buffer[j] = mem[p - mem_min].hh.lh & 255;
 				++j;
 				p = mem[p - mem_min].hh.rh;
 			}
@@ -6382,7 +6348,7 @@ void expand()
 			else
 				cur_cs = buffer[first] + 257;
 			flush_list(r);
-			if (eqtb[cur_cs].hh.variant.U2.b0 == 101)
+			if (eqtb[cur_cs].hh.U2.b0 == 101)
 				eq_define(cur_cs, 0, 256);
 			cur_tok = cur_cs + 4095;
 			back_input();
@@ -6419,8 +6385,8 @@ void expand()
 					pass_text();
 				p = cond_ptr;
 				if_line = mem[p - mem_min + 1].int_;
-				cur_if = mem[p - mem_min].hh.variant.U2.b1;
-				if_limit = mem[p - mem_min].hh.variant.U2.b0;
+				cur_if = mem[p - mem_min].hh.U2.b1;
+				if_limit = mem[p - mem_min].hh.U2.b0;
 				cond_ptr = mem[p - mem_min].hh.rh;
 				free_node(p, 2);
 			}
@@ -6530,11 +6496,11 @@ void scan_optional_equals()
 		back_input();
 }
 
-bool scan_keyword(int s)
+bool scan_keyword(str_number s)
 {
 	bool result;
-	unsigned short p = 29987, q;
-	int k;
+	halfword p = 29987, q;
+	pool_pointer k;
 
 	mem[p - mem_min].hh.rh = 0;
 	k = str_start[s];
@@ -6543,7 +6509,7 @@ bool scan_keyword(int s)
 		if ((!cur_cs) && ((cur_chr == str_pool[k]) || (cur_chr == (str_pool[k] - 32)))) {
 			q = get_avail();
 			mem[p - mem_min].hh.rh = q;
-			mem[q - mem_min].hh.variant.lh = cur_tok;
+			mem[q - mem_min].hh.lh = cur_tok;
 			p = q;
 			++k;
 			continue;
@@ -6645,8 +6611,8 @@ void scan_twenty_seven_bit_int()
 
 void scan_font_ident()
 {
-	int f;
-	unsigned short m;
+	internal_font_number f;
+	halfword m;
 
 	do {
 		get_x_token();
@@ -6676,7 +6642,8 @@ void scan_font_ident()
 
 void find_font_dimen(bool writing)
 {
-	int f, n;
+	internal_font_number f;
+	integer n;
 
 	scan_int();
 	n = cur_val;
@@ -6723,12 +6690,11 @@ void find_font_dimen(bool writing)
 	error();
 }
 
-void scan_something_internal(char level, bool negative)
+void scan_something_internal(small_number level, bool negative)
 {
-	unsigned short m;
 	int p;
+	halfword m = cur_chr;
 
-	m = cur_chr;
 	switch (cur_cmd) {
 
 	case 85:
@@ -6820,7 +6786,7 @@ void scan_something_internal(char level, bool negative)
 			cur_val_level = 1;
 		}
 		else {
-			cur_val = cur_list.aux_field.hh.variant.lh;
+			cur_val = cur_list.aux_field.hh.lh;
 			cur_val_level = 0;
 		}
 		break;
@@ -6865,7 +6831,7 @@ void scan_something_internal(char level, bool negative)
 		if (!eqtb[3412].hh.rh)
 			cur_val = 0;
 		else
-			cur_val = mem[eqtb[3412].hh.rh - mem_min].hh.variant.lh;
+			cur_val = mem[eqtb[3412].hh.rh - mem_min].hh.lh;
 		cur_val_level = 0;
 		break;
 
@@ -6943,19 +6909,19 @@ void scan_something_internal(char level, bool negative)
 				switch (cur_chr) {
 
 				case 0:
-					if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == 12)
+					if (mem[cur_list.tail_field - mem_min].hh.U2.b0 == 12)
 						cur_val = mem[cur_list.tail_field - mem_min + 1].int_;
 					break;
 
 				case 1:
-					if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == 11)
+					if (mem[cur_list.tail_field - mem_min].hh.U2.b0 == 11)
 						cur_val = mem[cur_list.tail_field - mem_min + 1].int_;
 					break;
 
 				case 2:
-					if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == 10) {
-						cur_val = mem[cur_list.tail_field - mem_min + 1].hh.variant.lh;
-						if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 == 99)
+					if (mem[cur_list.tail_field - mem_min].hh.U2.b0 == 10) {
+						cur_val = mem[cur_list.tail_field - mem_min + 1].hh.lh;
+						if (mem[cur_list.tail_field - mem_min].hh.U2.b1 == 99)
 							cur_val_level = 3;
 					}
 					break;
@@ -7026,8 +6992,8 @@ void scan_something_internal(char level, bool negative)
 void scan_int()
 {
 	bool negative = false;
-	int m;
-	char d;
+	integer m;
+	small_number d;
 	bool vacuous, OK_so_far = true;
 
 	radix = 0;
@@ -7142,10 +7108,11 @@ _L30:
 void scan_dimen(bool mu, bool inf, bool shortcut)
 {
 	bool negative = false;
-	int f = 0, num, denom;
-	char k, kk;
-	unsigned short p, q;
-	int v, save_cur_val;
+	integer f = 0, save_cur_val;
+	int num, denom;
+	small_number k, kk;
+	halfword p, q;
+	scaled v;
 
 	arith_error = false;
 	cur_order = 0;
@@ -7203,13 +7170,13 @@ void scan_dimen(bool mu, bool inf, bool shortcut)
 						continue;
 					q = get_avail();
 					mem[q - mem_min].hh.rh = p;
-					mem[q - mem_min].hh.variant.lh = cur_tok - 3120;
+					mem[q - mem_min].hh.lh = cur_tok - 3120;
 					p = q;
 					++k;
 				}
 _L31:
 				for (kk = k; kk >= 1; --kk) {
-					dig[kk-1] = mem[p - mem_min].hh.variant.lh;
+					dig[kk-1] = mem[p - mem_min].hh.lh;
 					q = p;
 					p = mem[p - mem_min].hh.rh;
 					mem[q - mem_min].hh.rh = avail;
@@ -7383,13 +7350,12 @@ _L89:
 		cur_val = -cur_val;
 }
 
-void scan_glue(char level)
+void scan_glue(small_number level)
 {
 	bool negative = false;
-	unsigned short q;
-	bool mu;
+	halfword q;
+	bool mu = level == 3;
 
-	mu = (level == 3);
 	do {
 		do {
 			get_x_token();
@@ -7423,22 +7389,21 @@ void scan_glue(char level)
 	if (scan_keyword(730)) {
 		scan_dimen(mu, true, false);
 		mem[q - mem_min + 2].int_ = cur_val;
-		mem[q - mem_min].hh.variant.U2.b0 = cur_order;
+		mem[q - mem_min].hh.U2.b0 = cur_order;
 	}
 	if (scan_keyword(731)) {
 		scan_dimen(mu, true, false);
 		mem[q - mem_min + 3].int_ = cur_val;
-		mem[q - mem_min].hh.variant.U2.b1 = cur_order;
+		mem[q - mem_min].hh.U2.b1 = cur_order;
 	}
 	cur_val = q;
 _L10: ;
 }
 
-unsigned short scan_rule_spec()
+halfword scan_rule_spec()
 {
-	unsigned short q;
+	halfword q = new_rule();
 
-	q = new_rule();
 	if (cur_cmd == 35) {
 		mem[q - mem_min + 1].int_ = 26214;
 	}
@@ -7464,10 +7429,10 @@ _L21:
 	goto _L21;
 }
 
-unsigned short str_toks(int b)
+halfword str_toks(pool_pointer b)
 {
-	unsigned short p = 29997, q, t;
-	int k;
+	halfword p = 29997, q, t;
+	pool_pointer k;
 
 	if (pool_ptr + 1 > pool_size)
 		overflow(257, pool_size - init_pool_ptr);
@@ -7488,7 +7453,7 @@ unsigned short str_toks(int b)
 			mem[q - mem_min].hh.rh = 0;
 		}
 		mem[p - mem_min].hh.rh = q;
-		mem[q - mem_min].hh.variant.lh = t;
+		mem[q - mem_min].hh.lh = t;
 		p = q;
 		++k;
 	}
@@ -7496,11 +7461,11 @@ unsigned short str_toks(int b)
 	return p;
 }
 
-unsigned short the_toks()
+halfword the_toks()
 {
 	char old_setting;
-	unsigned short p, q, r;
-	int b;
+	halfword p, q, r;
+	pool_pointer b;
 
 	get_x_token();
 	scan_something_internal(5, false);
@@ -7510,7 +7475,7 @@ unsigned short the_toks()
 		if (cur_val_level == 4) {
 			q = get_avail();
 			mem[p - mem_min].hh.rh = q;
-			mem[q - mem_min].hh.variant.lh = cur_val + 4095;
+			mem[q - mem_min].hh.lh = cur_val + 4095;
 			p = q;
 			return p;
 		}
@@ -7527,7 +7492,7 @@ unsigned short the_toks()
 				mem[q - mem_min].hh.rh = 0;
 			}
 			mem[p - mem_min].hh.rh = q;
-			mem[q - mem_min].hh.variant.lh = mem[r - mem_min].hh.variant.lh;
+			mem[q - mem_min].hh.lh = mem[r - mem_min].hh.lh;
 			p = q;
 			r = mem[r - mem_min].hh.rh;
 		}
@@ -7571,10 +7536,11 @@ void ins_the_toks()
 
 void conv_toks()
 {
-	char old_setting, c, save_scanner_status;
-	int b;
+	char old_setting;
+	small_number save_scanner_status;
+	pool_pointer b;
+	char c = cur_chr;
 
-	c = cur_chr;
 	switch (c) {
 
 	case 0: case 1:
@@ -7639,9 +7605,9 @@ void conv_toks()
 	begin_token_list(mem[29997 - mem_min].hh.rh, 4);
 }
 
-unsigned short scan_toks(bool macro_def, bool xpand)
+halfword scan_toks(bool macro_def, bool xpand)
 {
-	unsigned short t = 3120, s, p, q, unbalance = 1, hash_brace = 0;
+	halfword t = 3120, s, p, q, unbalance = 1, hash_brace = 0;
 
 	if (macro_def)
 		scanner_status = 2;
@@ -7649,7 +7615,7 @@ unsigned short scan_toks(bool macro_def, bool xpand)
 		scanner_status = 5;
 	warning_index = cur_cs;
 	def_ref = get_avail();
-	mem[def_ref - mem_min].hh.variant.lh = 0;
+	mem[def_ref - mem_min].hh.lh = 0;
 	p = def_ref;
 	if (macro_def) {
 		while (true) {
@@ -7663,11 +7629,11 @@ unsigned short scan_toks(bool macro_def, bool xpand)
 					hash_brace = cur_tok;
 					q = get_avail();
 					mem[p - mem_min].hh.rh = q;
-					mem[q - mem_min].hh.variant.lh = cur_tok;
+					mem[q - mem_min].hh.lh = cur_tok;
 					p = q;
 					q = get_avail();
 					mem[p - mem_min].hh.rh = q;
-					mem[q - mem_min].hh.variant.lh = 3584;
+					mem[q - mem_min].hh.lh = 3584;
 					p = q;
 					goto _L30;
 				}
@@ -7693,13 +7659,13 @@ unsigned short scan_toks(bool macro_def, bool xpand)
 			}
 			q = get_avail();
 			mem[p - mem_min].hh.rh = q;
-			mem[q - mem_min].hh.variant.lh = cur_tok;
+			mem[q - mem_min].hh.lh = cur_tok;
 			p = q;
 		}
 _L31:
 		q = get_avail();
 		mem[p - mem_min].hh.rh = q;
-		mem[q - mem_min].hh.variant.lh = 3584;
+		mem[q - mem_min].hh.lh = 3584;
 		p = q;
 		if (cur_cmd == 2) {
 			print_nl(262);
@@ -7776,7 +7742,7 @@ _L32:
 		}
 		q = get_avail();
 		mem[p - mem_min].hh.rh = q;
-		mem[q - mem_min].hh.variant.lh = cur_tok;
+		mem[q - mem_min].hh.lh = cur_tok;
 		p = q;
 	}
 _L40:
@@ -7785,25 +7751,25 @@ _L40:
 		return p;
 	q = get_avail();
 	mem[p - mem_min].hh.rh = q;
-	mem[q - mem_min].hh.variant.lh = hash_brace;
+	mem[q - mem_min].hh.lh = hash_brace;
 	p = q;
 	return p;
 }
 
-void read_toks(int n, unsigned short r)
+void read_toks(integer n, halfword r)
 {
-	unsigned short p, q;
-	int s;
-	char m;
+	halfword p, q;
+	integer s;
+	small_number m;
 
 	scanner_status = 2;
 	warning_index = r;
 	def_ref = get_avail();
-	mem[def_ref - mem_min].hh.variant.lh = 0;
+	mem[def_ref - mem_min].hh.lh = 0;
 	p = def_ref;
 	q = get_avail();
 	mem[p - mem_min].hh.rh = q;
-	mem[q - mem_min].hh.variant.lh = 3584;
+	mem[q - mem_min].hh.lh = 3584;
 	p = q;
 	if (((unsigned)n) > 15)
 		m = 16;
@@ -7833,16 +7799,16 @@ void read_toks(int n, unsigned short r)
 			}
 		}
 		else if (read_open[m] == 1) {
-			if (input_ln(&read_file[m], false)) {
+			if (input_ln(read_file[m], false)) {
 				read_open[m] = 0;
 			}
 			else {
-				a_close(&read_file[m]);
+				a_close(read_file[m]);
 				read_open[m] = 2;
 			}
 		}
-		else if (!input_ln(&read_file[m], true)) {
-			a_close(&read_file[m]);
+		else if (!input_ln(read_file[m], true)) {
+			a_close(read_file[m]);
 			read_open[m] = 2;
 			if (align_state != 1000000) {
 				runaway();
@@ -7876,7 +7842,7 @@ void read_toks(int n, unsigned short r)
 			}
 			q = get_avail();
 			mem[p - mem_min].hh.rh = q;
-			mem[q - mem_min].hh.variant.lh = cur_tok;
+			mem[q - mem_min].hh.lh = cur_tok;
 			p = q;
 		}
 _L30:
@@ -7889,10 +7855,9 @@ _L30:
 
 void pass_text()
 {
-	int l = 0;
-	char save_scanner_status;
+	integer l = 0;
+	small_number save_scanner_status = scanner_status;
 
-	save_scanner_status = scanner_status;
 	scanner_status = 1;
 	skip_line = line;
 	while (true) {
@@ -7910,9 +7875,9 @@ _L30:
 	scanner_status = save_scanner_status;
 }
 
-void change_if_limit(char l, unsigned short p)
+void change_if_limit(small_number l, halfword p)
 {
-	unsigned short q;
+	halfword q;
 
 	if (p == cond_ptr) {
 		if_limit = l;
@@ -7923,7 +7888,7 @@ void change_if_limit(char l, unsigned short p)
 			if (!q)
 				confusion(756);
 			if (mem[q - mem_min].hh.rh == p) {
-				mem[q - mem_min].hh.variant.U2.b0 = l;
+				mem[q - mem_min].hh.U2.b0 = l;
 				goto _L10;
 			}
 			q = mem[q - mem_min].hh.rh;
@@ -7936,16 +7901,16 @@ void conditional()
 {
 	bool b;
 	char r;
-	int m, n;
-	unsigned short p, q;
-	char save_scanner_status;
-	unsigned short save_cond_ptr;
-	char this_if;
+	integer m, n;
+	halfword q;
+	small_number save_scanner_status;
+	halfword save_cond_ptr;
+	small_number this_if;
+	halfword p = get_node(2);
 
-	p = get_node(2);
 	mem[p - mem_min].hh.rh = cond_ptr;
-	mem[p - mem_min].hh.variant.U2.b0 = if_limit;
-	mem[p - mem_min].hh.variant.U2.b1 = cur_if;
+	mem[p - mem_min].hh.U2.b0 = if_limit;
+	mem[p - mem_min].hh.U2.b1 = cur_if;
 	mem[p - mem_min + 1].int_ = if_line;
 	cond_ptr = p;
 	cur_if = cur_chr;
@@ -8060,9 +8025,9 @@ void conditional()
 			b = false;
 		}
 		else if (this_if == 10)
-			b = (mem[p - mem_min].hh.variant.U2.b0 == 0);
+			b = (mem[p - mem_min].hh.U2.b0 == 0);
 		else
-			b = (mem[p - mem_min].hh.variant.U2.b0 == 1);
+			b = (mem[p - mem_min].hh.U2.b0 == 1);
 		break;
 
 	case 12:
@@ -8087,7 +8052,7 @@ void conditional()
 			}
 			else {
 				while (p && q) {
-					if (mem[p - mem_min].hh.variant.lh != mem[q - mem_min].hh.variant.lh) {
+					if (mem[p - mem_min].hh.lh != mem[q - mem_min].hh.lh) {
 						p = 0;
 					}
 					else {
@@ -8136,8 +8101,8 @@ void conditional()
 				continue;
 			p = cond_ptr;
 			if_line = mem[p - mem_min + 1].int_;
-			cur_if = mem[p - mem_min].hh.variant.U2.b1;
-			if_limit = mem[p - mem_min].hh.variant.U2.b0;
+			cur_if = mem[p - mem_min].hh.U2.b1;
+			if_limit = mem[p - mem_min].hh.U2.b0;
 			cond_ptr = mem[p - mem_min].hh.rh;
 			free_node(p, 2);
 		}
@@ -8174,8 +8139,8 @@ void conditional()
 			continue;
 		p = cond_ptr;
 		if_line = mem[p - mem_min + 1].int_;
-		cur_if = mem[p - mem_min].hh.variant.U2.b1;
-		if_limit = mem[p - mem_min].hh.variant.U2.b0;
+		cur_if = mem[p - mem_min].hh.U2.b1;
+		if_limit = mem[p - mem_min].hh.U2.b0;
 		cond_ptr = mem[p - mem_min].hh.rh;
 		free_node(p, 2);
 	}
@@ -8183,8 +8148,8 @@ _L50:
 	if (cur_chr == 2) {
 		p = cond_ptr;
 		if_line = mem[p - mem_min + 1].int_;
-		cur_if = mem[p - mem_min].hh.variant.U2.b1;
-		if_limit = mem[p - mem_min].hh.variant.U2.b0;
+		cur_if = mem[p - mem_min].hh.U2.b1;
+		if_limit = mem[p - mem_min].hh.U2.b0;
 		cond_ptr = mem[p - mem_min].hh.rh;
 		free_node(p, 2);
 	}
@@ -8200,7 +8165,7 @@ void begin_name()
 	ext_delimiter = 0;
 }
 
-bool more_name(uint8_t c)
+bool more_name(ASCII_code c)
 {
 	if (c == 32) {
 		return false;
@@ -8243,11 +8208,11 @@ void end_name()
 	cur_ext = make_string();
 }
 
-void pack_file_name(int n, int a, int e)
+void pack_file_name(str_number n, str_number a, str_number e)
 {
-	int k = 0;
-	uint8_t c;
-	int j, N1;
+	integer k = 0;
+	ASCII_code c;
+	pool_pointer j, N1;
 
 	for (N1 = str_start[a+1], j = str_start[a]; j <= (N1 - 1); ++j) {
 		c = str_pool[j];
@@ -8275,11 +8240,11 @@ void pack_file_name(int n, int a, int e)
 		name_of_file[k-1] = ' ';
 }
 
-void pack_buffered_name(char n, int a, int b)
+void pack_buffered_name(small_number n, integer a,
+						integer b)
 {
-	int k = 0;
-	uint8_t c;
-	int j;
+	integer k = 0, j;
+	ASCII_code c;
 
 	if (n + b - a + 5 > file_name_size)
 		b = a + file_name_size - n - 5;
@@ -8309,7 +8274,7 @@ void pack_buffered_name(char n, int a, int b)
 		name_of_file[k-1] = ' ';
 }
 
-int make_name_string()
+str_number make_name_string()
 {
 	int k, N;
 
@@ -8325,17 +8290,17 @@ int make_name_string()
 	}
 }
 
-int a_make_name_string(alpha_file *f)
+str_number a_make_name_string(std::iostream *f)
 {
 	return make_name_string();
 }
 
-int b_make_name_string(byte_file *f)
+str_number b_make_name_string(std::iostream *f)
 {
 	return make_name_string();
 }
 
-int w_make_name_string(word_file *f)
+str_number w_make_name_string(std::iostream *f)
 {
 	return make_name_string();
 }
@@ -8361,7 +8326,7 @@ _L30:
 	name_in_progress = false;
 }
 
-void pack_job_name(int s)
+void pack_job_name(str_number s)
 {
 	cur_area = 338;
 	cur_ext = s;
@@ -8369,7 +8334,7 @@ void pack_job_name(int s)
 	pack_file_name(cur_name, cur_area, cur_ext);
 }
 
-void prompt_file_name(int s, int e)
+void prompt_file_name(str_number s, str_number e)
 {
 	int k;
 
@@ -8410,32 +8375,31 @@ _L30:
 	pack_file_name(cur_name, cur_area, cur_ext);
 }
 
-void open_log_file()
+virtual void open_log_file()
 {
-	char old_setting;
 	int k, l;
-	char months[36], character = 'T';
+	char months[36];
 	int N;
+	char old_setting = selector;
 
-	old_setting = selector;
 	if (!job_name)
 		job_name = 795;
 	pack_job_name(796);
-	while (!a_open_out(&log_file)) {
+	while (!a_open_out(log_file)) {
 		selector = 17;
 		prompt_file_name(798, 796);
 	}
-	log_name = a_make_name_string(&log_file);
+	log_name = a_make_name_string(log_file);
 	selector = 18;
 	log_opened = true;
-	fwrite(&character, 1, 1, log_file.f);
+	*log_file << "This is TeX, Version 3.1415926";
 	slow_print(format_ident);
 	print(799);
 	print_int(eqtb[5284].int_);
 	print_char(32);
 	memcpy(months, "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC", 36);
 	for (N = eqtb[5285].int_ * 3, k = (eqtb[5285].int_ * 3) - 2; k <= N; ++k)
-		fwrite(&months[k-1], 1, 1, log_file.f);
+		*log_file << months[k-1];
 	print_char(32);
 	print_int(eqtb[5286].int_);
 	print_char(32);
@@ -8461,18 +8425,18 @@ void start_input()
 	pack_file_name(cur_name, cur_area, cur_ext);
 	while (true) {
 		begin_file_reading();
-		if (a_open_in(&input_file[cur_input.index_field]))
+		if (a_open_in(input_file[cur_input.index_field]))
 			goto _L30;
 		if (cur_area == 338) {
 			pack_file_name(cur_name, 783, cur_ext);
-			if (a_open_in(&input_file[cur_input.index_field]))
+			if (a_open_in(input_file[cur_input.index_field]))
 				goto _L30;
 		}
 		end_file_reading();
 		prompt_file_name(786, 790);
 	}
 _L30:
-	cur_input.name_field = a_make_name_string(&input_file[cur_input.index_field]);
+	cur_input.name_field = a_make_name_string(input_file[cur_input.index_field]);
 	if (!job_name) {
 		job_name = cur_name;
 		open_log_file();
@@ -8485,7 +8449,7 @@ _L30:
 	print_char(40);
 	++open_parens;
 	slow_print(cur_input.name_field);
-	fflush(term_out.f);
+	term_out->flush();
 	errno = 0;
 	cur_input.state_field = 33;
 	if (cur_input.name_field == (str_ptr - 1)) {
@@ -8494,7 +8458,7 @@ _L30:
 		cur_input.name_field = cur_name;
 	}
 	line = 1;
-	input_ln(&input_file[cur_input.index_field], false);
+	input_ln(input_file[cur_input.index_field], false);
 	firm_up_the_line();
 	if (((unsigned)eqtb[5311].int_) > 255)
 		--cur_input.limit_field;
@@ -8504,104 +8468,104 @@ _L30:
 	cur_input.loc_field = cur_input.start_field;
 }
 
-int read_font_info(unsigned short u, int nom, int aire, int s)
+internal_font_number read_font_info(halfword u, str_number nom, str_number aire, scaled s)
 {
-	int k;
+	font_index k;
 	bool file_opened = false;
-	unsigned short lf, lh, bc, ec, nw, nh, nd, ni, nl, nk, ne, np;
-	int f, g = 0;
-	uint8_t a, b, c, d;
+	halfword lf, lh, bc, ec, nw, nh, nd, ni, nl, nk, ne, np;
+	internal_font_number f, g = 0;
+	eight_bits a, b, c, d;
 	four_quarters qw;
-	int sw, bch_label = 32767;
+	scaled sw, z;
+	integer bch_label = 32767, alpha = 16;
 	short bchar = 256;
-	int z, alpha = 16;
 	char beta;
-	int N;
+	font_index N;
 
 	if (aire == 338)
 		pack_file_name(nom, 784, 810);
 	else
 		pack_file_name(nom, aire, 810);
-	if (!b_open_in(&tfm_file))
+	if (!b_open_in(tfm_file))
 		goto _L11;
-	file_opened = true;
-	lf = GETFBUF(tfm_file.f, uint8_t);
+	file_opened = true; tfm_file_mode = 1;
+	lf = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (lf > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	lf = (lf * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	lh = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	lf = (lf * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	lh = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (lh > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	lh = (lh * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	bc = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	lh = (lh * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	bc = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (bc > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	bc = (bc * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	ec = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	bc = (bc * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	ec = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (ec > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	ec = (ec * 256) + GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	ec = (ec * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if ((bc > (ec + 1)) || (ec > 255))
 		goto _L11;
 	if (bc > 255) {
 		bc = 1;
 		ec = 0;
 	}
-	GET(tfm_file.f, uint8_t);
-	nw = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nw = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (nw > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	nw = (nw * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	nh = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nw = (nw * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nh = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (nh > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	nh = (nh * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	nd = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nh = (nh * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nd = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (nd > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	nd = (nd * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	ni = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nd = (nd * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	ni = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (ni > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	ni = (ni * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	nl = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	ni = (ni * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nl = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (nl > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	nl = (nl * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	nk = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nl = (nl * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nk = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (nk > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	nk = (nk * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	ne = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	nk = (nk * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	ne = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (ne > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	ne = (ne * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	np = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	ne = (ne * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	np = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (np > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	np = (np * 256) + GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	np = (np * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (lf != (lh + ec - bc + nw + nh + nd + ni + nl + nk + ne + np + 7))
 		goto _L11;
 	if ((!nw) || (!nh) || (!nd) || (!ni))
@@ -8645,36 +8609,36 @@ int read_font_info(unsigned short u, int nom, int aire, int s)
 	param_base[f] = exten_base[f] + ne;
 	if (lh < 2)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	a = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	a = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	qw.b0 = a;
-	GET(tfm_file.f, uint8_t);
-	b = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	b = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	qw.b1 = b;
-	GET(tfm_file.f, uint8_t);
-	c = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	c = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	qw.b2 = c;
-	GET(tfm_file.f, uint8_t);
-	d = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	d = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	qw.b3 = d;
 	font_check[f] = qw;
-	GET(tfm_file.f, uint8_t);
-	z = GETFBUF(tfm_file.f, uint8_t);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	z = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 	if (z > 127)
 		goto _L11;
-	GET(tfm_file.f, uint8_t);
-	z = (z * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	z = (z * 256) + GETFBUF(tfm_file.f, uint8_t);
-	GET(tfm_file.f, uint8_t);
-	z = (z * 16) + (GETFBUF(tfm_file.f, uint8_t) / 16);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	z = (z * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	z = (z * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+	z = (z * 16) + (getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value) / 16);
 	if (z < 65536)
 		goto _L11;
 	while (lh > 2) {
-		GET(tfm_file.f, uint8_t);
-		GET(tfm_file.f, uint8_t);
-		GET(tfm_file.f, uint8_t);
-		GET(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		--lh;
 	}
 	font_dsize[f] = z;
@@ -8686,17 +8650,17 @@ int read_font_info(unsigned short u, int nom, int aire, int s)
 	}
 	font_size[f] = z;
 	for (N = width_base[f], k = fmem_ptr; k <= (N - 1); ++k) {
-		GET(tfm_file.f, uint8_t);
-		a = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		a = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b0 = a;
-		GET(tfm_file.f, uint8_t);
-		b = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		b = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b1 = b;
-		GET(tfm_file.f, uint8_t);
-		c = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		c = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b2 = c;
-		GET(tfm_file.f, uint8_t);
-		d = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		d = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b3 = d;
 		font_info[k].qqqq = qw;
 		if ((a >= nw) || (b / 16 >= nh) || ((b & 15) >= nd) || (c / 4 >= ni))
@@ -8738,11 +8702,11 @@ _L45: ;
 	beta = 256 / alpha;
 	alpha *= z;
 	for (N = lig_kern_base[f], k = width_base[f]; k <= (N - 1); ++k) {
-		GET(tfm_file.f, uint8_t);
-		fread(&a, sizeof(uint8_t), 1, tfm_file.f);
-		fread(&b, sizeof(uint8_t), 1, tfm_file.f);
-		fread(&c, sizeof(uint8_t), 1, tfm_file.f);
-		d = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		tfm_file->read(reinterpret_cast<char *>(&a), sizeof(eight_bits));
+		tfm_file->read(reinterpret_cast<char *>(&b), sizeof(eight_bits));
+		tfm_file->read(reinterpret_cast<char *>(&c), sizeof(eight_bits));
+		d = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		sw = ((((d * z / 256) + (c * z)) / 256) + (b * z)) / beta;
 		if (!a) {
 			font_info[k].int_ = sw;
@@ -8762,17 +8726,17 @@ _L45: ;
 		goto _L11;
 	if (nl > 0) {
 		for (N = kern_base[f] + 32767, k = lig_kern_base[f]; k <= N; ++k) {
-			GET(tfm_file.f, uint8_t);
-			a = GETFBUF(tfm_file.f, uint8_t);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			a = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 			qw.b0 = a;
-			GET(tfm_file.f, uint8_t);
-			b = GETFBUF(tfm_file.f, uint8_t);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			b = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 			qw.b1 = b;
-			GET(tfm_file.f, uint8_t);
-			c = GETFBUF(tfm_file.f, uint8_t);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			c = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 			qw.b2 = c;
-			GET(tfm_file.f, uint8_t);
-			d = GETFBUF(tfm_file.f, uint8_t);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			d = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 			qw.b3 = d;
 			font_info[k].qqqq = qw;
 			if (a > 128) {
@@ -8810,11 +8774,11 @@ _L45: ;
 			bch_label = (c * 256) + d;
 	}
 	for (N = exten_base[f], k = kern_base[f] + 32768; k <= (N - 1); ++k) {
-		GET(tfm_file.f, uint8_t);
-		fread(&a, sizeof(uint8_t), 1, tfm_file.f);
-		fread(&b, sizeof(uint8_t), 1, tfm_file.f);
-		fread(&c, sizeof(uint8_t), 1, tfm_file.f);
-		d = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		tfm_file->read(reinterpret_cast<char *>(&a), sizeof(eight_bits));
+		tfm_file->read(reinterpret_cast<char *>(&b), sizeof(eight_bits));
+		tfm_file->read(reinterpret_cast<char *>(&c), sizeof(eight_bits));
+		d = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		sw = ((((d * z / 256) + (c * z)) / 256) + (b * z)) / beta;
 		if (!a) {
 			font_info[k].int_ = sw;
@@ -8825,17 +8789,17 @@ _L45: ;
 			goto _L11;
 	}
 	for (N = param_base[f], k = exten_base[f]; k <= (N - 1); ++k) {
-		GET(tfm_file.f, uint8_t);
-		a = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		a = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b0 = a;
-		GET(tfm_file.f, uint8_t);
-		b = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		b = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b1 = b;
-		GET(tfm_file.f, uint8_t);
-		c = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		c = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b2 = c;
-		GET(tfm_file.f, uint8_t);
-		d = GETFBUF(tfm_file.f, uint8_t);
+		get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+		d = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 		qw.b3 = d;
 		font_info[k].qqqq = qw;
 		if (a) {
@@ -8867,23 +8831,23 @@ _L45: ;
 	}
 	for (k = 1; k <= np; ++k) {
 		if (k == 1) {
-			GET(tfm_file.f, uint8_t);
-			sw = GETFBUF(tfm_file.f, uint8_t);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			sw = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 			if (sw > 127)
 				sw -= 256;
-			GET(tfm_file.f, uint8_t);
-			sw = (sw * 256) + GETFBUF(tfm_file.f, uint8_t);
-			GET(tfm_file.f, uint8_t);
-			sw = (sw * 256) + GETFBUF(tfm_file.f, uint8_t);
-			GET(tfm_file.f, uint8_t);
-			font_info[param_base[f]].int_ = (sw * 16) + (GETFBUF(tfm_file.f, uint8_t) / 16);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			sw = (sw * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			sw = (sw * 256) + getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			font_info[param_base[f]].int_ = (sw * 16) + (getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value) / 16);
 		}
 		else {
-			GET(tfm_file.f, uint8_t);
-			fread(&a, sizeof(uint8_t), 1, tfm_file.f);
-			fread(&b, sizeof(uint8_t), 1, tfm_file.f);
-			fread(&c, sizeof(uint8_t), 1, tfm_file.f);
-			d = GETFBUF(tfm_file.f, uint8_t);
+			get< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
+			tfm_file->read(reinterpret_cast<char *>(&a), sizeof(eight_bits));
+			tfm_file->read(reinterpret_cast<char *>(&b), sizeof(eight_bits));
+			tfm_file->read(reinterpret_cast<char *>(&c), sizeof(eight_bits));
+			d = getfbuf< eight_bits>(tfm_file, tfm_file_mode, &tfm_file_value);
 			sw = ((((d * z / 256) + (c * z)) / 256) + (b * z)) / beta;
 			if (!a) {
 				font_info[param_base[f] + k - 1].int_ = sw;
@@ -8894,7 +8858,7 @@ _L45: ;
 				goto _L11;
 		}
 	}
-	if (feof(tfm_file.f))
+	if (tfm_file->eof())
 		goto _L11;
 	for (k = np + 1; k <= 7; ++k)
 		font_info[param_base[f] + k - 1].int_ = 0;
@@ -8955,11 +8919,11 @@ _L11:
 	error();
 _L30:
 	if (file_opened)
-		b_close(&tfm_file);
+		b_close(tfm_file);
 	return g;
 }
 
-void char_warning(int f, uint8_t c)
+void char_warning(internal_font_number f, eight_bits c)
 {
 	if (eqtb[5298].int_ <= 0)
 		return;
@@ -8972,16 +8936,16 @@ void char_warning(int f, uint8_t c)
 	end_diagnostic(false);
 }
 
-unsigned short new_character(int f, uint8_t c)
+halfword new_character(internal_font_number f, eight_bits c)
 {
-	unsigned short result, p;
+	halfword result, p;
 
 	if (font_bc[f] <= c) {
 		if (font_ec[f] >= c) {
 			if (font_info[char_base[f] + c].qqqq.b0 > 0) {
 				p = get_avail();
-				mem[p - mem_min].hh.variant.U2.b0 = f;
-				mem[p - mem_min].hh.variant.U2.b1 = c;
+				mem[p - mem_min].hh.U2.b0 = f;
+				mem[p - mem_min].hh.U2.b1 = c;
 				result = p;
 				goto _L10;
 			}
@@ -8993,12 +8957,12 @@ _L10:
 	return result;
 }
 
-void write_dvi(int a, int b)
+void write_dvi(dvi_index a, dvi_index b)
 {
-	int k;
+	dvi_index k;
 
 	for (k = a; k <= b; ++k)
-		fwrite(&dvi_buf[k], sizeof(uint8_t), 1, dvi_file.f);
+		*dvi_file << dvi_buf[k];
 }
 
 void dvi_swap()
@@ -9016,7 +8980,7 @@ void dvi_swap()
 	dvi_gone += half_buf;
 }
 
-void dvi_four(int x)
+void dvi_four(integer x)
 {
 	if (x >= 0) {
 		dvi_buf[dvi_ptr] = x / 16777216;
@@ -9048,7 +9012,7 @@ void dvi_four(int x)
 		dvi_swap();
 }
 
-void dvi_pop(int l)
+void dvi_pop(integer l)
 {
 	if ((l == (dvi_offset + dvi_ptr)) && (dvi_ptr > 0)) {
 		--dvi_ptr;
@@ -9060,9 +9024,9 @@ void dvi_pop(int l)
 		dvi_swap();
 }
 
-void dvi_font_def(int f)
+void dvi_font_def(internal_font_number f)
 {
-	int k, N;
+	pool_pointer k, N;
 
 	dvi_buf[dvi_ptr] = 243;
 	++dvi_ptr;
@@ -9112,13 +9076,13 @@ void dvi_font_def(int f)
 	}
 }
 
-void movement(int w, uint8_t o)
+void movement(scaled w, eight_bits o)
 {
-	char mstate = 0;
-	unsigned short p, q;
-	int k;
+	small_number mstate = 0;
+	halfword p;
+	integer k;
+	halfword q = get_node(3);
 
-	q = get_node(3);
 	mem[q - mem_min + 1].int_ = w;
 	mem[q - mem_min + 2].int_ = dvi_offset + dvi_ptr;
 	if (o == 157) {
@@ -9132,7 +9096,7 @@ void movement(int w, uint8_t o)
 	p = mem[q - mem_min].hh.rh;
 	while (p) {
 		if (mem[p - mem_min + 1].int_ == w) {
-			switch (mstate + mem[p - mem_min].hh.variant.lh) {
+			switch (mstate + mem[p - mem_min].hh.lh) {
 
 			case 3: case 4: case 15: case 16:
 				if (mem[p - mem_min + 2].int_ < dvi_gone) {
@@ -9143,7 +9107,7 @@ void movement(int w, uint8_t o)
 					if (k < 0)
 						k += dvi_buf_size;
 					dvi_buf[k] += 5;
-					mem[p - mem_min].hh.variant.lh = 1;
+					mem[p - mem_min].hh.lh = 1;
 					goto _L40;
 				}
 				break;
@@ -9157,7 +9121,7 @@ void movement(int w, uint8_t o)
 					if (k < 0)
 						k += dvi_buf_size;
 					dvi_buf[k] += 10;
-					mem[p - mem_min].hh.variant.lh = 2;
+					mem[p - mem_min].hh.lh = 2;
 					goto _L40;
 				}
 				break;
@@ -9171,7 +9135,7 @@ void movement(int w, uint8_t o)
 			}
 		}
 		else {
-			switch (mstate + mem[p - mem_min].hh.variant.lh) {
+			switch (mstate + mem[p - mem_min].hh.lh) {
 
 			case 1:
 				mstate = 6;
@@ -9192,7 +9156,7 @@ void movement(int w, uint8_t o)
 		p = mem[p - mem_min].hh.rh;
 	}
 _L45:
-	mem[q - mem_min].hh.variant.lh = 3;
+	mem[q - mem_min].hh.lh = 3;
 	if (abs(w) >= 8388608) {
 		dvi_buf[dvi_ptr] = o + 3;
 		++dvi_ptr;
@@ -9243,22 +9207,22 @@ _L1:
 		dvi_swap();
 	goto _L10;
 _L40:
-	mem[q - mem_min].hh.variant.lh = mem[p - mem_min].hh.variant.lh;
-	if (mem[q - mem_min].hh.variant.lh == 1) {
+	mem[q - mem_min].hh.lh = mem[p - mem_min].hh.lh;
+	if (mem[q - mem_min].hh.lh == 1) {
 		dvi_buf[dvi_ptr] = o + 4;
 		++dvi_ptr;
 		if (dvi_ptr == dvi_limit)
 			dvi_swap();
 		while (mem[q - mem_min].hh.rh != p) {
 			q = mem[q - mem_min].hh.rh;
-			switch (mem[q - mem_min].hh.variant.lh) {
+			switch (mem[q - mem_min].hh.lh) {
 
 			case 3:
-				mem[q - mem_min].hh.variant.lh = 5;
+				mem[q - mem_min].hh.lh = 5;
 				break;
 
 			case 4:
-				mem[q - mem_min].hh.variant.lh = 6;
+				mem[q - mem_min].hh.lh = 6;
 				break;
 
 			default:
@@ -9273,14 +9237,14 @@ _L40:
 			dvi_swap();
 		while (mem[q - mem_min].hh.rh != p) {
 			q = mem[q - mem_min].hh.rh;
-			switch (mem[q - mem_min].hh.variant.lh) {
+			switch (mem[q - mem_min].hh.lh) {
 
 			case 3:
-				mem[q - mem_min].hh.variant.lh = 4;
+				mem[q - mem_min].hh.lh = 4;
 				break;
 
 			case 5:
-				mem[q - mem_min].hh.variant.lh = 6;
+				mem[q - mem_min].hh.lh = 6;
 				break;
 
 			default:
@@ -9291,9 +9255,9 @@ _L40:
 _L10: ;
 }
 
-void prune_movements(int l)
+void prune_movements(integer l)
 {
-	unsigned short p;
+	halfword p;
 
 	while (down_ptr) {
 		if (mem[down_ptr - mem_min + 2].int_ < l)
@@ -9313,10 +9277,10 @@ _L30:
 _L10: ;
 }
 
-void special_out(unsigned short p)
+void special_out(halfword p)
 {
 	char old_setting;
-	int k, N;
+	pool_pointer k, N;
 
 	if (cur_h != dvi_h) {
 		movement(cur_h - dvi_h, 143);
@@ -9358,22 +9322,22 @@ void special_out(unsigned short p)
 	pool_ptr = str_start[str_ptr];
 }
 
-void write_out(unsigned short p)
+void write_out(halfword p)
 {
 	char old_setting;
-	int old_mode;
-	char j;
-	unsigned short q, r;
+	integer old_mode;
+	small_number j;
+	halfword r;
+	halfword q = get_avail();
 
-	q = get_avail();
-	mem[q - mem_min].hh.variant.lh = 637;
+	mem[q - mem_min].hh.lh = 637;
 	r = get_avail();
 	mem[q - mem_min].hh.rh = r;
-	mem[r - mem_min].hh.variant.lh = 6717;
+	mem[r - mem_min].hh.lh = 6717;
 	begin_token_list(q, 4);
 	begin_token_list(mem[p - mem_min + 1].hh.rh, 15);
 	q = get_avail();
-	mem[q - mem_min].hh.variant.lh = 379;
+	mem[q - mem_min].hh.lh = 379;
 	begin_token_list(q, 4);
 	old_mode = cur_list.mode_field;
 	cur_list.mode_field = 0;
@@ -9394,7 +9358,7 @@ void write_out(unsigned short p)
 	cur_list.mode_field = old_mode;
 	end_token_list();
 	old_setting = selector;
-	j = mem[p - mem_min + 1].hh.variant.lh;
+	j = mem[p - mem_min + 1].hh.lh;
 	if (write_open[j]) {
 		selector = j;
 	}
@@ -9409,32 +9373,32 @@ void write_out(unsigned short p)
 	selector = old_setting;
 }
 
-void out_what(unsigned short p)
+void out_what(halfword p)
 {
-	char j;
+	small_number j;
 
-	switch (mem[p - mem_min].hh.variant.U2.b1) {
+	switch (mem[p - mem_min].hh.U2.b1) {
 
 	case 0: case 1: case 2:
 		if (!doing_leaders) {
-			j = mem[p - mem_min + 1].hh.variant.lh;
-			if (mem[p - mem_min].hh.variant.U2.b1 == 1) {
+			j = mem[p - mem_min + 1].hh.lh;
+			if (mem[p - mem_min].hh.U2.b1 == 1) {
 				write_out(p);
 			}
 			else {
 				if (write_open[j])
-					a_close(&write_file[j]);
-				if (mem[p - mem_min].hh.variant.U2.b1 == 2) {
+					a_close(write_file[j]);
+				if (mem[p - mem_min].hh.U2.b1 == 2) {
 					write_open[j] = false;
 				}
 				else if (j < 16) {
 					cur_name = mem[p - mem_min + 1].hh.rh;
-					cur_area = mem[p - mem_min + 2].hh.variant.lh;
+					cur_area = mem[p - mem_min + 2].hh.lh;
 					cur_ext = mem[p - mem_min + 2].hh.rh;
 					if (cur_ext == 338)
 						cur_ext = 790;
 					pack_file_name(cur_name, cur_area, cur_ext);
-					while (!a_open_out(&write_file[j]))
+					while (!a_open_out(write_file[j]))
 						prompt_file_name(1299, 790);
 					write_open[j] = true;
 				}
@@ -9458,22 +9422,16 @@ void out_what(unsigned short p)
 
 void hlist_out()
 {
-	int base_line, left_edge, save_h, save_v;
-	unsigned short this_box;
-	char g_order, g_sign;
-	unsigned short p;
-	int save_loc;
-	unsigned short leader_box;
-	int leader_wd, lx;
+	scaled base_line, left_edge, save_h, save_v, leader_wd, lx, edge, cur_g = 0;
+	integer save_loc;
+	halfword leader_box;
 	bool outer_doing_leaders;
-	int edge;
 	double glue_temp, cur_glue = 0.0;
-	int cur_g = 0;
+	halfword this_box = temp_ptr;
+	glue_ord g_order = mem[this_box - mem_min + 5].hh.U2.b1;
+	char g_sign = mem[this_box - mem_min + 5].hh.U2.b0;
+	halfword p = mem[this_box - mem_min + 5].hh.rh;
 
-	this_box = temp_ptr;
-	g_order = mem[this_box - mem_min + 5].hh.variant.U2.b1;
-	g_sign = mem[this_box - mem_min + 5].hh.variant.U2.b0;
-	p = mem[this_box - mem_min + 5].hh.rh;
 	++cur_s;
 	if (cur_s > 0) {
 		dvi_buf[dvi_ptr] = 141;
@@ -9498,8 +9456,8 @@ _L21:
 				dvi_v = cur_v;
 			}
 			do {
-				f = mem[p - mem_min].hh.variant.U2.b0;
-				c = mem[p - mem_min].hh.variant.U2.b1;
+				f = mem[p - mem_min].hh.U2.b0;
+				c = mem[p - mem_min].hh.U2.b1;
 				if (f != dvi_f) {
 					if (!font_used[f]) {
 						dvi_font_def(f);
@@ -9539,7 +9497,7 @@ _L21:
 			dvi_h = cur_h;
 			continue;
 		}
-		switch (mem[p - mem_min].hh.variant.U2.b0) {
+		switch (mem[p - mem_min].hh.U2.b0) {
 
 		case 0: case 1:
 			if (!mem[p - mem_min + 5].hh.rh) {
@@ -9551,7 +9509,7 @@ _L21:
 				cur_v = base_line + mem[p - mem_min + 4].int_;
 				temp_ptr = p;
 				edge = cur_h;
-				if (mem[p - mem_min].hh.variant.U2.b0 == 1)
+				if (mem[p - mem_min].hh.U2.b0 == 1)
 					vlist_out();
 				else
 					hlist_out();
@@ -9574,11 +9532,11 @@ _L21:
 			break;
 
 		case 10:
-			g = mem[p - mem_min + 1].hh.variant.lh;
+			g = mem[p - mem_min + 1].hh.lh;
 			rule_wd = mem[g - mem_min + 1].int_ - cur_g;
 			if (g_sign) {
 				if (g_sign == 1) {
-					if (mem[g - mem_min].hh.variant.U2.b0 == g_order) {
+					if (mem[g - mem_min].hh.U2.b0 == g_order) {
 						cur_glue += mem[g - mem_min + 2].int_;
 						glue_temp = mem[this_box - mem_min + 6].gr * cur_glue;
 						if (glue_temp > 1000000000.0) {
@@ -9589,7 +9547,7 @@ _L21:
 						cur_g = lround(glue_temp);
 					}
 				}
-				else if (mem[g - mem_min].hh.variant.U2.b1 == g_order) {
+				else if (mem[g - mem_min].hh.U2.b1 == g_order) {
 					cur_glue -= mem[g - mem_min + 3].int_;
 					glue_temp = mem[this_box - mem_min + 6].gr * cur_glue;
 					if (glue_temp > 1000000000.0) {
@@ -9601,9 +9559,9 @@ _L21:
 				}
 			}
 			rule_wd += cur_g;
-			if (mem[p - mem_min].hh.variant.U2.b1 >= 100) {
+			if (mem[p - mem_min].hh.U2.b1 >= 100) {
 				leader_box = mem[p - mem_min + 1].hh.rh;
-				if (mem[leader_box - mem_min].hh.variant.U2.b0 == 2) {
+				if (mem[leader_box - mem_min].hh.U2.b0 == 2) {
 					rule_ht = mem[leader_box - mem_min + 3].int_;
 					rule_dp = mem[leader_box - mem_min + 2].int_;
 					goto _L14;
@@ -9613,7 +9571,7 @@ _L21:
 					rule_wd += 10;
 					edge = cur_h + rule_wd;
 					lx = 0;
-					if (mem[p - mem_min].hh.variant.U2.b1 == 100) {
+					if (mem[p - mem_min].hh.U2.b1 == 100) {
 						save_h = cur_h;
 						cur_h = left_edge + (leader_wd * ((cur_h - left_edge) / leader_wd));
 						if (cur_h < save_h)
@@ -9622,7 +9580,7 @@ _L21:
 					else {
 						lq = rule_wd / leader_wd;
 						lr = rule_wd % leader_wd;
-						if (mem[p - mem_min].hh.variant.U2.b1 == 101) {
+						if (mem[p - mem_min].hh.U2.b1 == 101) {
 							cur_h += lr / 2;
 						}
 						else {
@@ -9645,7 +9603,7 @@ _L21:
 						temp_ptr = leader_box;
 						outer_doing_leaders = doing_leaders;
 						doing_leaders = true;
-						if (mem[leader_box - mem_min].hh.variant.U2.b0 == 1)
+						if (mem[leader_box - mem_min].hh.U2.b0 == 1)
 							vlist_out();
 						else
 							hlist_out();
@@ -9715,22 +9673,16 @@ _L15:
 
 void vlist_out()
 {
-	int left_edge, top_edge, save_h, save_v;
-	unsigned short this_box;
-	char g_order, g_sign;
-	unsigned short p;
-	int save_loc;
-	unsigned short leader_box;
-	int leader_ht, lx;
+	scaled left_edge, top_edge, save_h, save_v, leader_ht, lx, edge, cur_g = 0;
+	integer save_loc;
+	halfword leader_box;
 	bool outer_doing_leaders;
-	int edge;
 	double glue_temp, cur_glue = 0.0;
-	int cur_g = 0;
+	halfword this_box = temp_ptr;
+	glue_ord g_order = mem[this_box - mem_min + 5].hh.U2.b1;
+	char g_sign = mem[this_box - mem_min + 5].hh.U2.b0;
+	halfword p = mem[this_box - mem_min + 5].hh.rh;
 
-	this_box = temp_ptr;
-	g_order = mem[this_box - mem_min + 5].hh.variant.U2.b1;
-	g_sign = mem[this_box - mem_min + 5].hh.variant.U2.b0;
-	p = mem[this_box - mem_min + 5].hh.rh;
 	++cur_s;
 	if (cur_s > 0) {
 		dvi_buf[dvi_ptr] = 141;
@@ -9749,7 +9701,7 @@ void vlist_out()
 			confusion(827);
 		}
 		else {
-			switch (mem[p - mem_min].hh.variant.U2.b0) {
+			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1:
 				if (!mem[p - mem_min + 5].hh.rh) {
@@ -9765,7 +9717,7 @@ void vlist_out()
 					save_v = dvi_v;
 					cur_h = left_edge + mem[p - mem_min + 4].int_;
 					temp_ptr = p;
-					if (mem[p - mem_min].hh.variant.U2.b0 == 1)
+					if (mem[p - mem_min].hh.U2.b0 == 1)
 						vlist_out();
 					else
 						hlist_out();
@@ -9788,11 +9740,11 @@ void vlist_out()
 				break;
 
 			case 10:
-				g = mem[p - mem_min + 1].hh.variant.lh;
+				g = mem[p - mem_min + 1].hh.lh;
 				rule_ht = mem[g - mem_min + 1].int_ - cur_g;
 				if (g_sign) {
 					if (g_sign == 1) {
-						if (mem[g - mem_min].hh.variant.U2.b0 == g_order) {
+						if (mem[g - mem_min].hh.U2.b0 == g_order) {
 							cur_glue += mem[g - mem_min + 2].int_;
 							glue_temp = mem[this_box - mem_min + 6].gr * cur_glue;
 							if (glue_temp > 1000000000.0) {
@@ -9803,7 +9755,7 @@ void vlist_out()
 							cur_g = lround(glue_temp);
 						}
 					}
-					else if (mem[g - mem_min].hh.variant.U2.b1 == g_order) {
+					else if (mem[g - mem_min].hh.U2.b1 == g_order) {
 						cur_glue -= mem[g - mem_min + 3].int_;
 						glue_temp = mem[this_box - mem_min + 6].gr * cur_glue;
 						if (glue_temp > 1000000000.0) {
@@ -9815,9 +9767,9 @@ void vlist_out()
 					}
 				}
 				rule_ht += cur_g;
-				if (mem[p - mem_min].hh.variant.U2.b1 >= 100) {
+				if (mem[p - mem_min].hh.U2.b1 >= 100) {
 					leader_box = mem[p - mem_min + 1].hh.rh;
-					if (mem[leader_box - mem_min].hh.variant.U2.b0 == 2) {
+					if (mem[leader_box - mem_min].hh.U2.b0 == 2) {
 						rule_wd = mem[leader_box - mem_min + 1].int_;
 						rule_dp = 0;
 						goto _L14;
@@ -9827,7 +9779,7 @@ void vlist_out()
 						rule_ht += 10;
 						edge = cur_v + rule_ht;
 						lx = 0;
-						if (mem[p - mem_min].hh.variant.U2.b1 == 100) {
+						if (mem[p - mem_min].hh.U2.b1 == 100) {
 							save_v = cur_v;
 							cur_v = top_edge + (leader_ht * ((cur_v - top_edge) / leader_ht));
 							if (cur_v < save_v)
@@ -9836,7 +9788,7 @@ void vlist_out()
 						else {
 							lq = rule_ht / leader_ht;
 							lr = rule_ht % leader_ht;
-							if (mem[p - mem_min].hh.variant.U2.b1 == 101) {
+							if (mem[p - mem_min].hh.U2.b1 == 101) {
 								cur_v += lr / 2;
 							}
 							else {
@@ -9860,7 +9812,7 @@ void vlist_out()
 							temp_ptr = leader_box;
 							outer_doing_leaders = doing_leaders;
 							doing_leaders = true;
-							if (mem[leader_box - mem_min].hh.variant.U2.b0 == 1)
+							if (mem[leader_box - mem_min].hh.U2.b0 == 1)
 								vlist_out();
 							else
 								hlist_out();
@@ -9919,13 +9871,13 @@ _L15:
 	--cur_s;
 }
 
-void ship_out(unsigned short p)
+void ship_out(halfword p)
 {
-	int page_loc;
+	integer page_loc;
 	char j = 9, k;
-	int s;
+	pool_pointer s;
 	char old_setting;
-	int N;
+	pool_pointer N;
 
 	if (eqtb[5297].int_ > 0) {
 		print_nl(338);
@@ -9945,7 +9897,7 @@ void ship_out(unsigned short p)
 		if (k < j)
 			print_char(46);
 	}
-	fflush(term_out.f);
+	term_out->flush();
 	errno = 0;
 	if (eqtb[5297].int_ > 0) {
 		print_char(93);
@@ -9982,9 +9934,9 @@ void ship_out(unsigned short p)
 		if (!job_name)
 			open_log_file();
 		pack_job_name(793);
-		while (!b_open_out(&dvi_file))
+		while (!dvi_file and !b_open_out(dvi_file))
 			prompt_file_name(794, 793);
-		output_file_name = b_make_name_string(&dvi_file);
+		output_file_name = b_make_name_string(dvi_file);
 	}
 	if (!total_pages) {
 		dvi_buf[dvi_ptr] = 247;
@@ -10034,7 +9986,7 @@ void ship_out(unsigned short p)
 	last_bop = page_loc;
 	cur_v = mem[p - mem_min + 3].int_ + eqtb[5849].int_;
 	temp_ptr = p;
-	if (mem[p - mem_min].hh.variant.U2.b0 == 1)
+	if (mem[p - mem_min].hh.U2.b0 == 1)
 		vlist_out();
 	else
 		hlist_out();
@@ -10048,14 +10000,14 @@ _L30:
 	if (eqtb[5297].int_ <= 0)
 		print_char(93);
 	dead_cycles = 0;
-	fflush(term_out.f);
+	term_out->flush();
 	errno = 0;
 	flush_node_list(p);
 }
 
-void scan_spec(char c, bool three_codes)
+void scan_spec(group_code c, bool three_codes)
 {
-	int s;
+	integer s;
 	char spec_code;
 
 	if (three_codes)
@@ -10084,20 +10036,19 @@ _L40:
 	scan_left_brace();
 }
 
-unsigned short hpack(unsigned short p, int w, char m)
+halfword hpack(halfword p, scaled w, small_number m)
 {
-	unsigned short r, q;
-	int h = 0, d = 0, x = 0, s;
-	unsigned short g;
-	char o;
-	int f;
+	halfword r, q, g;
+	scaled h = 0, d = 0, x = 0, s;
+	glue_ord o;
+	internal_font_number f;
 	four_quarters i;
-	uint8_t hd;
+	eight_bits hd;
 
 	last_badness = 0;
 	r = get_node(7);
-	mem[r - mem_min].hh.variant.U2.b0 = 0;
-	mem[r - mem_min].hh.variant.U2.b1 = 0;
+	mem[r - mem_min].hh.U2.b0 = 0;
+	mem[r - mem_min].hh.U2.b1 = 0;
 	mem[r - mem_min + 4].int_ = 0;
 	q = r + 5;
 	mem[q - mem_min].hh.rh = p;
@@ -10112,8 +10063,8 @@ unsigned short hpack(unsigned short p, int w, char m)
 	while (p) {
 _L21:
 		while (p >= hi_mem_min) {
-			f = mem[p - mem_min].hh.variant.U2.b0;
-			i = font_info[char_base[f] + mem[p - mem_min].hh.variant.U2.b1].qqqq;
+			f = mem[p - mem_min].hh.U2.b0;
+			i = font_info[char_base[f] + mem[p - mem_min].hh.U2.b1].qqqq;
 			hd = i.b1;
 			x += font_info[width_base[f] + i.b0].int_;
 			s = font_info[height_base[f] + (hd / 16)].int_;
@@ -10126,11 +10077,11 @@ _L21:
 		}
 		if (!p)
 			break;
-		switch (mem[p - mem_min].hh.variant.U2.b0) {
+		switch (mem[p - mem_min].hh.U2.b0) {
 
 		case 0: case 1: case 2: case 13:
 			x += mem[p - mem_min + 1].int_;
-			if (mem[p - mem_min].hh.variant.U2.b0 >= 2)
+			if (mem[p - mem_min].hh.U2.b0 >= 2)
 				s = 0;
 			else
 				s = mem[p - mem_min + 4].int_;
@@ -10144,7 +10095,7 @@ _L21:
 			if (adjust_tail) {
 				while (mem[q - mem_min].hh.rh != p)
 					q = mem[q - mem_min].hh.rh;
-				if (mem[p - mem_min].hh.variant.U2.b0 == 5) {
+				if (mem[p - mem_min].hh.U2.b0 == 5) {
 					mem[adjust_tail - mem_min].hh.rh = mem[p - mem_min + 1].int_;
 					while (mem[adjust_tail - mem_min].hh.rh)
 						adjust_tail = mem[adjust_tail - mem_min].hh.rh;
@@ -10166,13 +10117,13 @@ _L21:
 			break;
 
 		case 10:
-			g = mem[p - mem_min + 1].hh.variant.lh;
+			g = mem[p - mem_min + 1].hh.lh;
 			x += mem[g - mem_min + 1].int_;
-			o = mem[g - mem_min].hh.variant.U2.b0;
+			o = mem[g - mem_min].hh.U2.b0;
 			total_stretch[o] += mem[g - mem_min + 2].int_;
-			o = mem[g - mem_min].hh.variant.U2.b1;
+			o = mem[g - mem_min].hh.U2.b1;
 			total_shrink[o] += mem[g - mem_min + 3].int_;
-			if (mem[p - mem_min].hh.variant.U2.b1 >= 100) {
+			if (mem[p - mem_min].hh.U2.b1 >= 100) {
 				g = mem[p - mem_min + 1].hh.rh;
 				if (mem[g - mem_min + 3].int_ > h)
 					h = mem[g - mem_min + 3].int_;
@@ -10206,8 +10157,8 @@ _L21:
 	mem[r - mem_min + 1].int_ = w;
 	x = w - x;
 	if (!x) {
-		mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
-		mem[r - mem_min + 5].hh.variant.U2.b1 = 0;
+		mem[r - mem_min + 5].hh.U2.b0 = 0;
+		mem[r - mem_min + 5].hh.U2.b1 = 0;
 		mem[r - mem_min + 6].gr = 0.0;
 		goto _L10;
 	}
@@ -10222,13 +10173,13 @@ _L21:
 			o = 1;
 		else
 			o = 0;
-		mem[r - mem_min + 5].hh.variant.U2.b1 = o;
-		mem[r - mem_min + 5].hh.variant.U2.b0 = 1;
+		mem[r - mem_min + 5].hh.U2.b1 = o;
+		mem[r - mem_min + 5].hh.U2.b0 = 1;
 		if (total_stretch[o]) {
 			mem[r - mem_min + 6].gr = ((double)x) / total_stretch[o];
 		}
 		else {
-			mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
+			mem[r - mem_min + 5].hh.U2.b0 = 0;
 			mem[r - mem_min + 6].gr = 0.0;
 		}
 		if (!o) {
@@ -10259,13 +10210,13 @@ _L21:
 			o = 1;
 		else
 			o = 0;
-		mem[r - mem_min + 5].hh.variant.U2.b1 = o;
-		mem[r - mem_min + 5].hh.variant.U2.b0 = 2;
+		mem[r - mem_min + 5].hh.U2.b1 = o;
+		mem[r - mem_min + 5].hh.U2.b0 = 2;
 		if (total_shrink[o]) {
 			mem[r - mem_min + 6].gr = ((double)(-x)) / total_shrink[o];
 		}
 		else {
-			mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
+			mem[r - mem_min + 5].hh.U2.b0 = 0;
 			mem[r - mem_min + 6].gr = 0.0;
 		}
 		if ((total_shrink[o] < (-x)) && (!o) && mem[r - mem_min + 5].hh.rh) {
@@ -10327,17 +10278,16 @@ _L10:
 	return r;
 }
 
-unsigned short vpackage(unsigned short p, int h, char m, int l)
+halfword vpackage(halfword p, scaled h, small_number m, scaled l)
 {
-	unsigned short r;
-	int w = 0, d = 0, x = 0, s;
-	unsigned short g;
-	char o;
+	halfword r, g;
+	scaled w = 0, d = 0, x = 0, s;
+	glue_ord o;
 
 	last_badness = 0;
 	r = get_node(7);
-	mem[r - mem_min].hh.variant.U2.b0 = 1;
-	mem[r - mem_min].hh.variant.U2.b1 = 0;
+	mem[r - mem_min].hh.U2.b0 = 1;
+	mem[r - mem_min].hh.U2.b1 = 0;
 	mem[r - mem_min + 4].int_ = 0;
 	mem[r - mem_min + 5].hh.rh = p;
 	total_stretch[0] = 0;
@@ -10353,12 +10303,12 @@ unsigned short vpackage(unsigned short p, int h, char m, int l)
 			confusion(854);
 		}
 		else {
-			switch (mem[p - mem_min].hh.variant.U2.b0) {
+			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1: case 2: case 13:
 				x += d + mem[p - mem_min + 3].int_;
 				d = mem[p - mem_min + 2].int_;
-				if (mem[p - mem_min].hh.variant.U2.b0 >= 2)
+				if (mem[p - mem_min].hh.U2.b0 >= 2)
 					s = 0;
 				else
 					s = mem[p - mem_min + 4].int_;
@@ -10373,13 +10323,13 @@ unsigned short vpackage(unsigned short p, int h, char m, int l)
 			case 10:
 				x += d;
 				d = 0;
-				g = mem[p - mem_min + 1].hh.variant.lh;
+				g = mem[p - mem_min + 1].hh.lh;
 				x += mem[g - mem_min + 1].int_;
-				o = mem[g - mem_min].hh.variant.U2.b0;
+				o = mem[g - mem_min].hh.U2.b0;
 				total_stretch[o] += mem[g - mem_min + 2].int_;
-				o = mem[g - mem_min].hh.variant.U2.b1;
+				o = mem[g - mem_min].hh.U2.b1;
 				total_shrink[o] += mem[g - mem_min + 3].int_;
-				if (mem[p - mem_min].hh.variant.U2.b1 >= 100) {
+				if (mem[p - mem_min].hh.U2.b1 >= 100) {
 					g = mem[p - mem_min + 1].hh.rh;
 					if (mem[g - mem_min + 1].int_ > w)
 						w = mem[g - mem_min + 1].int_;
@@ -10410,8 +10360,8 @@ unsigned short vpackage(unsigned short p, int h, char m, int l)
 	mem[r - mem_min + 3].int_ = h;
 	x = h - x;
 	if (!x) {
-		mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
-		mem[r - mem_min + 5].hh.variant.U2.b1 = 0;
+		mem[r - mem_min + 5].hh.U2.b0 = 0;
+		mem[r - mem_min + 5].hh.U2.b1 = 0;
 		mem[r - mem_min + 6].gr = 0.0;
 		goto _L10;
 	}
@@ -10426,13 +10376,13 @@ unsigned short vpackage(unsigned short p, int h, char m, int l)
 			o = 1;
 		else
 			o = 0;
-		mem[r - mem_min + 5].hh.variant.U2.b1 = o;
-		mem[r - mem_min + 5].hh.variant.U2.b0 = 1;
+		mem[r - mem_min + 5].hh.U2.b1 = o;
+		mem[r - mem_min + 5].hh.U2.b0 = 1;
 		if (total_stretch[o]) {
 			mem[r - mem_min + 6].gr = ((double)x) / total_stretch[o];
 		}
 		else {
-			mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
+			mem[r - mem_min + 5].hh.U2.b0 = 0;
 			mem[r - mem_min + 6].gr = 0.0;
 		}
 		if (!o) {
@@ -10463,13 +10413,13 @@ unsigned short vpackage(unsigned short p, int h, char m, int l)
 			o = 1;
 		else
 			o = 0;
-		mem[r - mem_min + 5].hh.variant.U2.b1 = o;
-		mem[r - mem_min + 5].hh.variant.U2.b0 = 2;
+		mem[r - mem_min + 5].hh.U2.b1 = o;
+		mem[r - mem_min + 5].hh.U2.b0 = 2;
 		if (total_shrink[o]) {
 			mem[r - mem_min + 6].gr = ((double)(-x)) / total_shrink[o];
 		}
 		else {
-			mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
+			mem[r - mem_min + 5].hh.U2.b0 = 0;
 			mem[r - mem_min + 6].gr = 0.0;
 		}
 		if ((total_shrink[o] < (-x)) && (!o) && mem[r - mem_min + 5].hh.rh) {
@@ -10519,10 +10469,10 @@ _L10:
 	return r;
 }
 
-void append_to_vlist(unsigned short b)
+void append_to_vlist(halfword b)
 {
-	int d;
-	unsigned short p;
+	scaled d;
+	halfword p;
 
 	if (cur_list.aux_field.int_ > (-65536000)) {
 		d = mem[eqtb[2883].hh.rh - mem_min + 1].int_ - cur_list.aux_field.int_ - mem[b - mem_min + 3].int_;
@@ -10541,65 +10491,61 @@ void append_to_vlist(unsigned short b)
 	cur_list.aux_field.int_ = mem[b - mem_min + 2].int_;
 }
 
-unsigned short new_noad()
+halfword new_noad()
 {
-	unsigned short p;
+	halfword p = get_node(4);
 
-	p = get_node(4);
-	mem[p - mem_min].hh.variant.U2.b0 = 16;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b0 = 16;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	mem[p - mem_min + 1].hh = empty_field;
 	mem[p - mem_min + 3].hh = empty_field;
 	mem[p - mem_min + 2].hh = empty_field;
 	return p;
 }
 
-unsigned short new_style(char s)
+halfword new_style(small_number s)
 {
-	unsigned short p;
+	halfword p = get_node(3);
 
-	p = get_node(3);
-	mem[p - mem_min].hh.variant.U2.b0 = 14;
-	mem[p - mem_min].hh.variant.U2.b1 = s;
+	mem[p - mem_min].hh.U2.b0 = 14;
+	mem[p - mem_min].hh.U2.b1 = s;
 	mem[p - mem_min + 1].int_ = 0;
 	mem[p - mem_min + 2].int_ = 0;
 	return p;
 }
 
-unsigned short new_choice()
+halfword new_choice()
 {
-	unsigned short p;
+	halfword p = get_node(3);
 
-	p = get_node(3);
-	mem[p - mem_min].hh.variant.U2.b0 = 15;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
-	mem[p - mem_min + 1].hh.variant.lh = 0;
+	mem[p - mem_min].hh.U2.b0 = 15;
+	mem[p - mem_min].hh.U2.b1 = 0;
+	mem[p - mem_min + 1].hh.lh = 0;
 	mem[p - mem_min + 1].hh.rh = 0;
-	mem[p - mem_min + 2].hh.variant.lh = 0;
+	mem[p - mem_min + 2].hh.lh = 0;
 	mem[p - mem_min + 2].hh.rh = 0;
 	return p;
 }
 
 void show_info()
 {
-	show_node_list(mem[temp_ptr - mem_min].hh.variant.lh);
+	show_node_list(mem[temp_ptr - mem_min].hh.lh);
 }
 
-unsigned short fraction_rule(int t)
+halfword fraction_rule(scaled t)
 {
-	unsigned short p;
+	halfword p = new_rule();
 
-	p = new_rule();
 	mem[p - mem_min + 3].int_ = t;
 	mem[p - mem_min + 2].int_ = 0;
 	return p;
 }
 
-unsigned short overbar(unsigned short b, int k, int t)
+halfword overbar(halfword b, scaled k, scaled t)
 {
-	unsigned short p, q;
+	halfword q;
+	halfword p = new_kern(k);
 
-	p = new_kern(k);
 	mem[p - mem_min].hh.rh = b;
 	q = fraction_rule(t);
 	mem[q - mem_min].hh.rh = p;
@@ -10608,59 +10554,54 @@ unsigned short overbar(unsigned short b, int k, int t)
 	return vpackage(p, 0, 1, 1073741823);
 }
 
-unsigned short char_box(int f, uint8_t c)
+halfword char_box(internal_font_number f, quarterword c)
 {
-	four_quarters q;
-	uint8_t hd;
-	unsigned short b, p;
+	halfword p;
+	four_quarters q = font_info[char_base[f] + c].qqqq;
+	eight_bits hd = q.b1;
+	halfword b = new_null_box();
 
-	q = font_info[char_base[f] + c].qqqq;
-	hd = q.b1;
-	b = new_null_box();
 	mem[b - mem_min + 1].int_ = font_info[width_base[f] + q.b0].int_ + font_info[italic_base[f] + (q.b2 / 4)].int_;
 	mem[b - mem_min + 3].int_ = font_info[height_base[f] + (hd / 16)].int_;
 	mem[b - mem_min + 2].int_ = font_info[depth_base[f] + (hd & 15)].int_;
 	p = get_avail();
-	mem[p - mem_min].hh.variant.U2.b1 = c;
-	mem[p - mem_min].hh.variant.U2.b0 = f;
+	mem[p - mem_min].hh.U2.b1 = c;
+	mem[p - mem_min].hh.U2.b0 = f;
 	mem[b - mem_min + 5].hh.rh = p;
 	return b;
 }
 
-void stack_into_box(unsigned short b, int f, uint8_t c)
+void stack_into_box(halfword b, internal_font_number f, quarterword c)
 {
-	unsigned short p;
+	halfword p = char_box(f, c);
 
-	p = char_box(f, c);
 	mem[p - mem_min].hh.rh = mem[b - mem_min + 5].hh.rh;
 	mem[b - mem_min + 5].hh.rh = p;
 	mem[b - mem_min + 3].int_ = mem[p - mem_min + 3].int_;
 }
 
-int height_plus_depth(int f, uint8_t c)
+scaled height_plus_depth(internal_font_number f, quarterword c)
 {
-	four_quarters q;
-	uint8_t hd;
+	four_quarters q = font_info[char_base[f] + c].qqqq;
+	eight_bits hd = q.b1;
 
-	q = font_info[char_base[f] + c].qqqq;
-	hd = q.b1;
 	return font_info[height_base[f] + (hd / 16)].int_ + font_info[depth_base[f] + (hd & 15)].int_;
 }
 
-unsigned short var_delimiter(unsigned short d, char s, int v)
+halfword var_delimiter(halfword d, small_number s, scaled v)
 {
-	unsigned short b;
-	int f = 0, g;
-	uint8_t c, x, y;
-	int m, n, u, w = 0;
+	halfword b;
+	internal_font_number f = 0, g;
+	quarterword c, y;
+	integer m, n;
+	scaled u, w = 0;
 	four_quarters q;
-	uint8_t hd;
+	eight_bits hd;
 	four_quarters r;
-	char z;
 	bool large_attempt = false;
+	small_number z = mem[d - mem_min].qqqq.b0;
+	quarterword x = mem[d - mem_min].qqqq.b1;
 
-	z = mem[d - mem_min].qqqq.b0;
-	x = mem[d - mem_min].qqqq.b1;
 	while (true) {
 		if (z || x) {
 			z += s + 16;
@@ -10706,7 +10647,7 @@ _L40:
 	if (f) {
 		if ((q.b2 & 3) == 3) {
 			b = new_null_box();
-			mem[b - mem_min].hh.variant.U2.b0 = 1;
+			mem[b - mem_min].hh.U2.b0 = 1;
 			r = font_info[exten_base[f] + q.b3].qqqq;
 			c = r.b3;
 			u = height_plus_depth(f, c);
@@ -10761,18 +10702,19 @@ _L40:
 	return b;
 }
 
-unsigned short rebox(unsigned short b, int w)
+halfword rebox(halfword b, scaled w)
 {
-	unsigned short p;
-	int f, v;
+	halfword p;
+	internal_font_number f;
+	scaled v;
 
 	if ((mem[b - mem_min + 1].int_ != w) && mem[b - mem_min + 5].hh.rh) {
-		if (mem[b - mem_min].hh.variant.U2.b0 == 1)
+		if (mem[b - mem_min].hh.U2.b0 == 1)
 			b = hpack(b, 0, 1);
 		p = mem[b - mem_min + 5].hh.rh;
 		if ((p >= hi_mem_min) && (!mem[p - mem_min].hh.rh)) {
-			f = mem[p - mem_min].hh.variant.U2.b0;
-			v = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.variant.U2.b1].qqqq.b0].int_;
+			f = mem[p - mem_min].hh.U2.b0;
+			v = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.U2.b1].qqqq.b0].int_;
 			if (v != mem[b - mem_min + 1].int_)
 				mem[p - mem_min].hh.rh = new_kern(mem[b - mem_min + 1].int_ - v);
 		}
@@ -10790,13 +10732,12 @@ unsigned short rebox(unsigned short b, int w)
 	}
 }
 
-unsigned short math_glue(unsigned short g, int m)
+halfword math_glue(halfword g, scaled m)
 {
-	unsigned short p;
-	int n, f;
+	halfword p;
+	integer n = x_over_n(m, 65536);
+	scaled f = remainder_;
 
-	n = x_over_n(m, 65536);
-	f = remainder_;
 	if (f < 0) {
 		--n;
 		f += 65536;
@@ -10804,26 +10745,27 @@ unsigned short math_glue(unsigned short g, int m)
 	p = get_node(4);
 	(mem[p - mem_min + 1].int_ = mult_and_add(n, mem[g - mem_min + 1].int_, xn_over_d(mem[g - mem_min + 1].int_, f, 65536),
 											  1073741823));
-	mem[p - mem_min].hh.variant.U2.b0 = mem[g - mem_min].hh.variant.U2.b0;
-	if (!mem[p - mem_min].hh.variant.U2.b0)
+	mem[p - mem_min].hh.U2.b0 = mem[g - mem_min].hh.U2.b0;
+	if (!mem[p - mem_min].hh.U2.b0)
 		(mem[p - mem_min + 2].int_ = mult_and_add(n, mem[g - mem_min + 2].int_, xn_over_d(mem[g - mem_min + 2].int_, f, 65536),
-												  1073741823));
+	1073741823));
 	else
 		mem[p - mem_min + 2].int_ = mem[g - mem_min + 2].int_;
-	mem[p - mem_min].hh.variant.U2.b1 = mem[g - mem_min].hh.variant.U2.b1;
-	if (!mem[p - mem_min].hh.variant.U2.b1)
+	mem[p - mem_min].hh.U2.b1 = mem[g - mem_min].hh.U2.b1;
+	if (!mem[p - mem_min].hh.U2.b1)
 		(mem[p - mem_min + 3].int_ = mult_and_add(n, mem[g - mem_min + 3].int_, xn_over_d(mem[g - mem_min + 3].int_, f, 65536),
-												  1073741823));
+	1073741823));
 	else
 		mem[p - mem_min + 3].int_ = mem[g - mem_min + 3].int_;
 	return p;
 }
 
-void math_kern(unsigned short p, int m)
+void math_kern(halfword p, scaled m)
 {
-	int n, f;
+	integer n;
+	scaled f;
 
-	if (mem[p - mem_min].hh.variant.U2.b1 != 99)
+	if (mem[p - mem_min].hh.U2.b1 != 99)
 		return;
 	n = x_over_n(m, 65536);
 	f = remainder_;
@@ -10833,7 +10775,7 @@ void math_kern(unsigned short p, int m)
 	}
 	(mem[p - mem_min + 1].int_ = mult_and_add(n, mem[p - mem_min + 1].int_, xn_over_d(mem[p - mem_min + 1].int_, f, 65536),
 											  1073741823));
-	mem[p - mem_min].hh.variant.U2.b1 = 1;
+	mem[p - mem_min].hh.U2.b1 = 1;
 }
 
 void flush_math()
@@ -10845,11 +10787,11 @@ void flush_math()
 	cur_list.aux_field.int_ = 0;
 }
 
-unsigned short clean_box(unsigned short p, char s)
+halfword clean_box(halfword p, small_number s)
 {
-	unsigned short q;
-	char save_style;
-	unsigned short x, r;
+	halfword q;
+	small_number save_style;
+	halfword x, r;
 
 	switch (mem[p - mem_min].hh.rh) {
 
@@ -10859,12 +10801,12 @@ unsigned short clean_box(unsigned short p, char s)
 		break;
 
 	case 2:
-		q = mem[p - mem_min].hh.variant.lh;
+		q = mem[p - mem_min].hh.lh;
 		goto _L40;
 		break;
 
 	case 3:
-		cur_mlist = mem[p - mem_min].hh.variant.lh;
+		cur_mlist = mem[p - mem_min].hh.lh;
 		break;
 
 	default:
@@ -10887,7 +10829,7 @@ _L40:
 	if ((q >= hi_mem_min) || (!q)) {
 		x = hpack(q, 0, 1);
 	}
-	else if ((!mem[q - mem_min].hh.rh) && (mem[q - mem_min].hh.variant.U2.b0 <= 1) && (!mem[q - mem_min + 4].int_))
+	else if ((!mem[q - mem_min].hh.rh) && (mem[q - mem_min].hh.U2.b0 <= 1) && (!mem[q - mem_min + 4].int_))
 		x = q;
 	else
 		x = hpack(q, 0, 1);
@@ -10901,23 +10843,23 @@ _L40:
 		return x;
 	if (r >= hi_mem_min)
 		return x;
-	if (mem[r - mem_min].hh.variant.U2.b0 == 11) {
+	if (mem[r - mem_min].hh.U2.b0 == 11) {
 		free_node(r, 2);
 		mem[q - mem_min].hh.rh = 0;
 	}
 	return x;
 }
 
-void fetch(unsigned short a)
+void fetch(halfword a)
 {
-	cur_c = mem[a - mem_min].hh.variant.U2.b1;
-	cur_f = eqtb[mem[a - mem_min].hh.variant.U2.b0 + cur_size + 3935].hh.rh;
+	cur_c = mem[a - mem_min].hh.U2.b1;
+	cur_f = eqtb[mem[a - mem_min].hh.U2.b0 + cur_size + 3935].hh.rh;
 	if (!cur_f) {
 		print_nl(262);
 		print(338);
 		print_size(cur_size);
 		print_char(32);
-		print_int(mem[a - mem_min].hh.variant.U2.b0);
+		print_int(mem[a - mem_min].hh.U2.b0);
 		print(883);
 		print(cur_c);
 		print_char(41);
@@ -10941,50 +10883,49 @@ void fetch(unsigned short a)
 	}
 }
 
-void make_over(unsigned short q)
+void make_over(halfword q)
 {
-	(mem[q - mem_min + 1].hh.variant.lh = overbar(clean_box(q + 1, ((cur_style / 2) * 2) + 1),
-			 font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 3,
-			 font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_));
+	(mem[q - mem_min + 1].hh.lh = overbar(clean_box(q + 1, ((cur_style / 2) * 2) + 1),
+										  font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 3,
+										  font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_));
 	mem[q - mem_min + 1].hh.rh = 2;
 }
 
-void make_under(unsigned short q)
+void make_under(halfword q)
 {
-	unsigned short p, x, y;
-	int delta;
+	halfword y;
+	scaled delta;
+	halfword x = clean_box(q + 1, cur_style);
+	halfword p = new_kern(font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 3);
 
-	x = clean_box(q + 1, cur_style);
-	p = new_kern(font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 3);
 	mem[x - mem_min].hh.rh = p;
 	mem[p - mem_min].hh.rh = fraction_rule(font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_);
 	y = vpackage(x, 0, 1, 1073741823);
 	delta = mem[y - mem_min + 3].int_ + mem[y - mem_min + 2].int_ + font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_;
 	mem[y - mem_min + 3].int_ = mem[x - mem_min + 3].int_;
 	mem[y - mem_min + 2].int_ = delta - mem[y - mem_min + 3].int_;
-	mem[q - mem_min + 1].hh.variant.lh = y;
+	mem[q - mem_min + 1].hh.lh = y;
 	mem[q - mem_min + 1].hh.rh = 2;
 }
 
-void make_vcenter(unsigned short q)
+void make_vcenter(halfword q)
 {
-	unsigned short v;
-	int delta;
+	scaled delta;
+	halfword v = mem[q - mem_min + 1].hh.lh;
 
-	v = mem[q - mem_min + 1].hh.variant.lh;
-	if (mem[v - mem_min].hh.variant.U2.b0 != 1)
+	if (mem[v - mem_min].hh.U2.b0 != 1)
 		confusion(539);
 	delta = mem[v - mem_min + 3].int_ + mem[v - mem_min + 2].int_;
 	mem[v - mem_min + 3].int_ = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 22].int_ + half(delta);
 	mem[v - mem_min + 2].int_ = delta - mem[v - mem_min + 3].int_;
 }
 
-void make_radical(unsigned short q)
+void make_radical(halfword q)
 {
-	unsigned short x, y;
-	int delta, clr;
+	halfword y;
+	scaled delta, clr;
+	halfword x = clean_box(q + 1, ((cur_style / 2) * 2) + 1);
 
-	x = clean_box(q + 1, ((cur_style / 2) * 2) + 1);
 	if (cur_style < 2) {
 		(clr = (font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ + (abs(
 								font_info[param_base[eqtb[cur_size+3937].hh.rh] + 5].int_) / 4)));
@@ -11000,18 +10941,18 @@ void make_radical(unsigned short q)
 		clr += half(delta);
 	mem[y - mem_min + 4].int_ = -(mem[x - mem_min + 3].int_ + clr);
 	mem[y - mem_min].hh.rh = overbar(x, clr, mem[y - mem_min + 3].int_);
-	mem[q - mem_min + 1].hh.variant.lh = hpack(y, 0, 1);
+	mem[q - mem_min + 1].hh.lh = hpack(y, 0, 1);
 	mem[q - mem_min + 1].hh.rh = 2;
 }
 
-void make_math_accent(unsigned short q)
+void make_math_accent(halfword q)
 {
-	unsigned short p, x, y;
-	int a;
-	uint8_t c;
-	int f;
+	halfword p, x, y;
+	integer a;
+	quarterword c;
+	internal_font_number f;
 	four_quarters i;
-	int s = 0, h, delta, w;
+	scaled s = 0, h, delta, w;
 
 	fetch(q + 4);
 	if (cur_i.b0 <= 0)
@@ -11073,7 +11014,7 @@ _L30:
 			mem[q - mem_min + 2].hh = empty_field;
 			mem[q - mem_min + 3].hh = empty_field;
 			mem[q - mem_min + 1].hh.rh = 3;
-			mem[q - mem_min + 1].hh.variant.lh = x;
+			mem[q - mem_min + 1].hh.lh = x;
 			x = clean_box(q + 1, cur_style);
 			delta += mem[x - mem_min + 3].int_ - h;
 			h = mem[x - mem_min + 3].int_;
@@ -11093,14 +11034,14 @@ _L30:
 		mem[y - mem_min + 5].hh.rh = p;
 		mem[y - mem_min + 3].int_ = h;
 	}
-	mem[q - mem_min + 1].hh.variant.lh = y;
+	mem[q - mem_min + 1].hh.lh = y;
 	mem[q - mem_min + 1].hh.rh = 2;
 }
 
-void make_fraction(unsigned short q)
+void make_fraction(halfword q)
 {
-	unsigned short p, v, x, y, z;
-	int delta, delta1, delta2, shift_up, shift_down, clr;
+	halfword p, v, x, y, z;
+	scaled delta, delta1, delta2, shift_up, shift_down, clr;
 
 	if (mem[q - mem_min + 1].int_ == 1073741824)
 		mem[q - mem_min + 1].int_ = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_;
@@ -11146,7 +11087,7 @@ void make_fraction(unsigned short q)
 			shift_down += delta2;
 	}
 	v = new_null_box();
-	mem[v - mem_min].hh.variant.U2.b0 = 1;
+	mem[v - mem_min].hh.U2.b0 = 1;
 	mem[v - mem_min + 3].int_ = shift_up + mem[x - mem_min + 3].int_;
 	mem[v - mem_min + 2].int_ = mem[z - mem_min + 2].int_ + shift_down;
 	mem[v - mem_min + 1].int_ = mem[x - mem_min + 1].int_;
@@ -11176,16 +11117,15 @@ void make_fraction(unsigned short q)
 	mem[q - mem_min + 1].int_ = hpack(x, 0, 1);
 }
 
-int make_op(unsigned short q)
+scaled make_op(halfword q)
 {
-	int delta;
-	unsigned short p, v, x, y, z;
-	uint8_t c;
+	scaled delta, shift_up, shift_down;
+	halfword p, v, x, y, z;
+	quarterword c;
 	four_quarters i;
-	int shift_up, shift_down;
 
-	if ((!mem[q - mem_min].hh.variant.U2.b1) && (cur_style < 2))
-		mem[q - mem_min].hh.variant.U2.b1 = 1;
+	if ((!mem[q - mem_min].hh.U2.b1) && (cur_style < 2))
+		mem[q - mem_min].hh.U2.b1 = 1;
 	if (mem[q - mem_min + 1].hh.rh == 1) {
 		fetch(q + 1);
 		if ((cur_style < 2) && ((cur_i.b2 & 3) == 2)) {
@@ -11194,27 +11134,27 @@ int make_op(unsigned short q)
 			if (i.b0 > 0) {
 				cur_c = c;
 				cur_i = i;
-				mem[q - mem_min + 1].hh.variant.U2.b1 = c;
+				mem[q - mem_min + 1].hh.U2.b1 = c;
 			}
 		}
 		delta = font_info[italic_base[cur_f] + (cur_i.b2 / 4)].int_;
 		x = clean_box(q + 1, cur_style);
-		if (mem[q - mem_min + 3].hh.rh && (mem[q - mem_min].hh.variant.U2.b1 != 1))
+		if (mem[q - mem_min + 3].hh.rh && (mem[q - mem_min].hh.U2.b1 != 1))
 			mem[x - mem_min + 1].int_ -= delta;
 		(mem[x - mem_min + 4].int_ = (half(mem[x - mem_min + 3].int_ - mem[x - mem_min + 2].int_) - (font_info[(param_base[((eqtb[cur_size+3937].hh).rh)] + 22)].int_)));
 		mem[q - mem_min + 1].hh.rh = 2;
-		mem[q - mem_min + 1].hh.variant.lh = x;
+		mem[q - mem_min + 1].hh.lh = x;
 	}
 	else {
 		delta = 0;
 	}
-	if (mem[q - mem_min].hh.variant.U2.b1 != 1)
+	if (mem[q - mem_min].hh.U2.b1 != 1)
 		return delta;
 	x = clean_box(q + 2, ((cur_style / 4) * 2) + (cur_style & 1) + 4);
 	y = clean_box(q + 1, cur_style);
 	z = clean_box(q + 3, ((cur_style / 4) * 2) + 5);
 	v = new_null_box();
-	mem[v - mem_min].hh.variant.U2.b0 = 1;
+	mem[v - mem_min].hh.U2.b0 = 1;
 	mem[v - mem_min + 1].int_ = mem[y - mem_min + 1].int_;
 	if (mem[x - mem_min + 1].int_ > mem[v - mem_min + 1].int_)
 		mem[v - mem_min + 1].int_ = mem[x - mem_min + 1].int_;
@@ -11261,10 +11201,10 @@ int make_op(unsigned short q)
 	return delta;
 }
 
-void make_ord(unsigned short q)
+void make_ord(halfword q)
 {
-	int a;
-	unsigned short p, r;
+	integer a;
+	halfword p, r;
 
 _L20:
 	if (!mem[q - mem_min + 3].hh.rh) {
@@ -11272,14 +11212,14 @@ _L20:
 			if (mem[q - mem_min + 1].hh.rh == 1) {
 				p = mem[q - mem_min].hh.rh;
 				if (p) {
-					if ((mem[p - mem_min].hh.variant.U2.b0 >= 16) && (mem[p - mem_min].hh.variant.U2.b0 <= 22)) {
+					if ((mem[p - mem_min].hh.U2.b0 >= 16) && (mem[p - mem_min].hh.U2.b0 <= 22)) {
 						if (mem[p - mem_min + 1].hh.rh == 1) {
-							if (mem[p - mem_min + 1].hh.variant.U2.b0 == mem[q - mem_min + 1].hh.variant.U2.b0) {
+							if (mem[p - mem_min + 1].hh.U2.b0 == mem[q - mem_min + 1].hh.U2.b0) {
 								mem[q - mem_min + 1].hh.rh = 4;
 								fetch(q + 1);
 								if ((cur_i.b2 & 3) == 1) {
 									a = lig_kern_base[cur_f] + cur_i.b3;
-									cur_c = mem[p - mem_min + 1].hh.variant.U2.b1;
+									cur_c = mem[p - mem_min + 1].hh.U2.b1;
 									cur_i = font_info[a].qqqq;
 									if (cur_i.b0 > 128) {
 										a = lig_kern_base[cur_f] + (cur_i.b2 * 256) + cur_i.b3;
@@ -11300,17 +11240,17 @@ _L20:
 													switch (cur_i.b2) {
 
 													case 1: case 5:
-														mem[q - mem_min + 1].hh.variant.U2.b1 = cur_i.b3;
+														mem[q - mem_min + 1].hh.U2.b1 = cur_i.b3;
 														break;
 
 													case 2: case 6:
-														mem[p - mem_min + 1].hh.variant.U2.b1 = cur_i.b3;
+														mem[p - mem_min + 1].hh.U2.b1 = cur_i.b3;
 														break;
 
 													case 3: case 7: case 11:
 														r = new_noad();
-														mem[r - mem_min + 1].hh.variant.U2.b1 = cur_i.b3;
-														(mem[r - mem_min + 1].hh.variant.U2.b0 = (mem[q - mem_min + 1].hh.variant.U2.b0));
+														mem[r - mem_min + 1].hh.U2.b1 = cur_i.b3;
+														mem[r - mem_min + 1].hh.U2.b0 = mem[q - mem_min + 1].hh.U2.b0;
 														mem[q - mem_min].hh.rh = r;
 														mem[r - mem_min].hh.rh = p;
 														if (cur_i.b2 < 11)
@@ -11321,7 +11261,7 @@ _L20:
 
 													default:
 														mem[q - mem_min].hh.rh = mem[p - mem_min].hh.rh;
-														mem[q - mem_min + 1].hh.variant.U2.b1 = cur_i.b3;
+														mem[q - mem_min + 1].hh.U2.b1 = cur_i.b3;
 														mem[q - mem_min + 3] = mem[p - mem_min + 3];
 														mem[q - mem_min + 2] = mem[p - mem_min + 2];
 														free_node(p, 4);
@@ -11350,13 +11290,13 @@ _L20:
 _L10: ;
 }
 
-void make_scripts(unsigned short q, int delta)
+void make_scripts(halfword q, scaled delta)
 {
-	unsigned short p, x, y, z;
-	int shift_up, shift_down, clr;
-	char t;
+	halfword x, y, z;
+	scaled shift_up, shift_down, clr;
+	small_number t;
+	halfword p = mem[q - mem_min + 1].int_;
 
-	p = mem[q - mem_min + 1].int_;
 	if (p >= hi_mem_min) {
 		shift_up = 0;
 		shift_down = 0;
@@ -11431,9 +11371,9 @@ void make_scripts(unsigned short q, int delta)
 	mem[p - mem_min].hh.rh = x;
 }
 
-char make_left_right(unsigned short q, char style, int max_d, int max_h)
+small_number make_left_right(halfword q, small_number style, scaled max_d, scaled max_h)
 {
-	int delta, delta1, delta2;
+	scaled delta, delta1, delta2;
 
 	if (style < 4)
 		cur_size = 0;
@@ -11448,25 +11388,23 @@ char make_left_right(unsigned short q, char style, int max_d, int max_h)
 	if (delta < delta2)
 		delta = delta2;
 	mem[q - mem_min + 1].int_ = var_delimiter(q + 1, cur_size, delta);
-	return mem[q - mem_min].hh.variant.U2.b0 - 10;
+	return mem[q - mem_min].hh.U2.b0 - 10;
 }
 
 void mlist_to_hlist()
 {
-	unsigned short mlist;
-	bool penalties;
-	char style, save_style;
-	unsigned short q, r = 0;
-	char r_type = 17, t;
-	unsigned short p, x, y, z;
-	int pen;
-	char s;
-	int max_h = 0, max_d = 0, delta;
+	small_number save_style;
+	halfword r = 0;
+	small_number r_type = 17, t;
+	halfword p, x, y, z;
+	integer pen;
+	small_number s;
+	scaled max_h = 0, max_d = 0, delta;
+	halfword mlist = cur_mlist;
+	bool penalties = mlist_penalties;
+	small_number style = cur_style;
+	halfword q = mlist;
 
-	mlist = cur_mlist;
-	penalties = mlist_penalties;
-	style = cur_style;
-	q = mlist;
 	if (cur_style < 4)
 		cur_size = 0;
 	else
@@ -11475,13 +11413,13 @@ void mlist_to_hlist()
 	while (q) {
 _L21:
 		delta = 0;
-		switch (mem[q - mem_min].hh.variant.U2.b0) {
+		switch (mem[q - mem_min].hh.U2.b0) {
 
 		case 18:
 			switch (r_type) {
 
 			case 18: case 17: case 19: case 20: case 22: case 30:
-				mem[q - mem_min].hh.variant.U2.b0 = 16;
+				mem[q - mem_min].hh.U2.b0 = 16;
 				goto _L21;
 				break;
 
@@ -11492,8 +11430,8 @@ _L21:
 
 		case 19: case 21: case 22: case 31:
 			if (r_type == 18)
-				mem[r - mem_min].hh.variant.U2.b0 = 16;
-			if (mem[q - mem_min].hh.variant.U2.b0 == 31)
+				mem[r - mem_min].hh.U2.b0 = 16;
+			if (mem[q - mem_min].hh.U2.b0 == 31)
 				goto _L80;
 			break;
 
@@ -11508,7 +11446,7 @@ _L21:
 
 		case 17:
 			delta = make_op(q);
-			if (mem[q - mem_min].hh.variant.U2.b1 == 1)
+			if (mem[q - mem_min].hh.U2.b1 == 1)
 				goto _L82;
 			break;
 
@@ -11541,7 +11479,7 @@ _L21:
 			break;
 
 		case 14:
-			cur_style = mem[q - mem_min].hh.variant.U2.b1;
+			cur_style = mem[q - mem_min].hh.U2.b1;
 			if (cur_style < 4)
 				cur_size = 0;
 			else
@@ -11554,8 +11492,8 @@ _L21:
 			switch (cur_style / 2) {
 
 			case 0:
-				p = mem[q - mem_min + 1].hh.variant.lh;
-				mem[q - mem_min + 1].hh.variant.lh = 0;
+				p = mem[q - mem_min + 1].hh.lh;
+				mem[q - mem_min + 1].hh.lh = 0;
 				break;
 
 			case 1:
@@ -11564,8 +11502,8 @@ _L21:
 				break;
 
 			case 2:
-				p = mem[q - mem_min + 2].hh.variant.lh;
-				mem[q - mem_min + 2].hh.variant.lh = 0;
+				p = mem[q - mem_min + 2].hh.lh;
+				mem[q - mem_min + 2].hh.lh = 0;
 				break;
 
 			case 3:
@@ -11573,12 +11511,12 @@ _L21:
 				mem[q - mem_min + 2].hh.rh = 0;
 				break;
 			}
-			flush_node_list(mem[q - mem_min + 1].hh.variant.lh);
+			flush_node_list(mem[q - mem_min + 1].hh.lh);
 			flush_node_list(mem[q - mem_min + 1].hh.rh);
-			flush_node_list(mem[q - mem_min + 2].hh.variant.lh);
+			flush_node_list(mem[q - mem_min + 2].hh.lh);
 			flush_node_list(mem[q - mem_min + 2].hh.rh);
-			mem[q - mem_min].hh.variant.U2.b0 = 14;
-			mem[q - mem_min].hh.variant.U2.b1 = cur_style;
+			mem[q - mem_min].hh.U2.b0 = 14;
+			mem[q - mem_min].hh.U2.b1 = cur_style;
 			mem[q - mem_min + 1].int_ = 0;
 			mem[q - mem_min + 2].int_ = 0;
 			if (p) {
@@ -11604,17 +11542,17 @@ _L21:
 			break;
 
 		case 10:
-			if (mem[q - mem_min].hh.variant.U2.b1 == 99) {
-				x = mem[q - mem_min + 1].hh.variant.lh;
+			if (mem[q - mem_min].hh.U2.b1 == 99) {
+				x = mem[q - mem_min + 1].hh.lh;
 				y = math_glue(x, cur_mu);
 				delete_glue_ref(x);
-				mem[q - mem_min + 1].hh.variant.lh = y;
-				mem[q - mem_min].hh.variant.U2.b1 = 0;
+				mem[q - mem_min + 1].hh.lh = y;
+				mem[q - mem_min].hh.U2.b1 = 0;
 			}
-			else if (cur_size && (mem[q - mem_min].hh.variant.U2.b1 == 98)) {
+			else if (cur_size && (mem[q - mem_min].hh.U2.b1 == 98)) {
 				p = mem[q - mem_min].hh.rh;
 				if (p) {
-					if ((mem[p - mem_min].hh.variant.U2.b0 == 10) || (mem[p - mem_min].hh.variant.U2.b0 == 11)) {
+					if ((mem[p - mem_min].hh.U2.b0 == 10) || (mem[p - mem_min].hh.U2.b0 == 11)) {
 						mem[q - mem_min].hh.rh = mem[p - mem_min].hh.rh;
 						mem[p - mem_min].hh.rh = 0;
 						flush_node_list(p);
@@ -11657,11 +11595,11 @@ _L21:
 			break;
 
 		case 2:
-			p = mem[q - mem_min + 1].hh.variant.lh;
+			p = mem[q - mem_min + 1].hh.lh;
 			break;
 
 		case 3:
-			cur_mlist = mem[q - mem_min + 1].hh.variant.lh;
+			cur_mlist = mem[q - mem_min + 1].hh.lh;
 			save_style = cur_style;
 			mlist_penalties = false;
 			mlist_to_hlist();
@@ -11691,12 +11629,12 @@ _L82:
 		free_node(z, 7);
 _L80:
 		r = q;
-		r_type = mem[r - mem_min].hh.variant.U2.b0;
+		r_type = mem[r - mem_min].hh.U2.b0;
 _L81:
 		q = mem[q - mem_min].hh.rh;
 	}
 	if (r_type == 18)
-		mem[r - mem_min].hh.variant.U2.b0 = 16;
+		mem[r - mem_min].hh.U2.b0 = 16;
 	p = 29997;
 	mem[p - mem_min].hh.rh = 0;
 	q = mlist;
@@ -11711,10 +11649,10 @@ _L81:
 		t = 16;
 		s = 4;
 		pen = 10000;
-		switch (mem[q - mem_min].hh.variant.U2.b0) {
+		switch (mem[q - mem_min].hh.U2.b0) {
 
 		case 17: case 20: case 21: case 22: case 23:
-			t = mem[q - mem_min].hh.variant.U2.b0;
+			t = mem[q - mem_min].hh.U2.b0;
 			break;
 
 		case 18:
@@ -11749,7 +11687,7 @@ _L81:
 			break;
 
 		case 14:
-			cur_style = mem[q - mem_min].hh.variant.U2.b1;
+			cur_style = mem[q - mem_min].hh.U2.b1;
 			s = 3;
 			if (cur_style < 4)
 				cur_size = 0;
@@ -11813,7 +11751,7 @@ _L81:
 				mem[y - mem_min].hh.rh = 0;
 				mem[p - mem_min].hh.rh = z;
 				p = z;
-				mem[z - mem_min].hh.variant.U2.b1 = x + 1;
+				mem[z - mem_min].hh.U2.b1 = x + 1;
 			}
 		}
 		if (mem[q - mem_min + 1].int_) {
@@ -11825,7 +11763,7 @@ _L81:
 		if (penalties) {
 			if (mem[q - mem_min].hh.rh) {
 				if (pen < 10000) {
-					r_type = mem[mem[q - mem_min].hh.rh - mem_min].hh.variant.U2.b0;
+					r_type = mem[mem[q - mem_min].hh.rh - mem_min].hh.U2.b0;
 					if (r_type != 12) {
 						if (r_type != 19) {
 							z = new_penalty(pen);
@@ -11847,16 +11785,15 @@ _L30: ;
 
 void push_alignment()
 {
-	unsigned short p;
+	halfword p = get_node(5);
 
-	p = get_node(5);
 	mem[p - mem_min].hh.rh = align_ptr;
-	mem[p - mem_min].hh.variant.lh = cur_align;
-	mem[p - mem_min + 1].hh.variant.lh = mem[29992 - mem_min].hh.rh;
+	mem[p - mem_min].hh.lh = cur_align;
+	mem[p - mem_min + 1].hh.lh = mem[29992 - mem_min].hh.rh;
 	mem[p - mem_min + 1].hh.rh = cur_span;
 	mem[p - mem_min + 2].int_ = cur_loop;
 	mem[p - mem_min + 3].int_ = align_state;
-	mem[p - mem_min + 4].hh.variant.lh = cur_head;
+	mem[p - mem_min + 4].hh.lh = cur_head;
 	mem[p - mem_min + 4].hh.rh = cur_tail;
 	align_ptr = p;
 	cur_head = get_avail();
@@ -11864,18 +11801,18 @@ void push_alignment()
 
 void pop_alignment()
 {
-	unsigned short p;
+	halfword p;
 
 	mem[cur_head - mem_min].hh.rh = avail;
 	avail = cur_head;
 	p = align_ptr;
 	cur_tail = mem[p - mem_min + 4].hh.rh;
-	cur_head = mem[p - mem_min + 4].hh.variant.lh;
+	cur_head = mem[p - mem_min + 4].hh.lh;
 	align_state = mem[p - mem_min + 3].int_;
 	cur_loop = mem[p - mem_min + 2].int_;
 	cur_span = mem[p - mem_min + 1].hh.rh;
-	mem[29992 - mem_min].hh.rh = mem[p - mem_min + 1].hh.variant.lh;
-	cur_align = mem[p - mem_min].hh.variant.lh;
+	mem[29992 - mem_min].hh.rh = mem[p - mem_min + 1].hh.lh;
+	cur_align = mem[p - mem_min].hh.lh;
 	align_ptr = mem[p - mem_min].hh.rh;
 	free_node(p, 5);
 }
@@ -11906,9 +11843,9 @@ _L20:
 
 void init_align()
 {
-	unsigned short save_cs_ptr, p;
+	halfword p;
+	halfword save_cs_ptr = cur_cs;
 
-	save_cs_ptr = cur_cs;
 	push_alignment();
 	align_state = -1000000;
 	if ((cur_list.mode_field == 203) && ((cur_list.tail_field != cur_list.head_field) || cur_list.aux_field.int_)) {
@@ -11968,7 +11905,7 @@ void init_align()
 				if ((cur_cmd != 10) || (p != 29996)) {
 					mem[p - mem_min].hh.rh = get_avail();
 					p = mem[p - mem_min].hh.rh;
-					mem[p - mem_min].hh.variant.lh = cur_tok;
+					mem[p - mem_min].hh.lh = cur_tok;
 				}
 				continue;
 			}
@@ -11976,7 +11913,7 @@ void init_align()
 _L31:
 		mem[cur_align - mem_min].hh.rh = new_null_box();
 		cur_align = mem[cur_align - mem_min].hh.rh;
-		mem[cur_align - mem_min].hh.variant.lh = 29991;
+		mem[cur_align - mem_min].hh.lh = 29991;
 		mem[cur_align - mem_min + 1].int_ = -1073741824;
 		mem[cur_align - mem_min + 3].int_ = mem[29996 - mem_min].hh.rh;
 		p = 29996;
@@ -11998,12 +11935,12 @@ _L22:
 			}
 			mem[p - mem_min].hh.rh = get_avail();
 			p = mem[p - mem_min].hh.rh;
-			mem[p - mem_min].hh.variant.lh = cur_tok;
+			mem[p - mem_min].hh.lh = cur_tok;
 		}
 _L32:
 		mem[p - mem_min].hh.rh = get_avail();
 		p = mem[p - mem_min].hh.rh;
-		mem[p - mem_min].hh.variant.lh = 6714;
+		mem[p - mem_min].hh.lh = 6714;
 		mem[cur_align - mem_min + 2].int_ = mem[29996 - mem_min].hh.rh;
 	}
 _L30:
@@ -12014,11 +11951,11 @@ _L30:
 	align_peek();
 }
 
-void init_span(unsigned short p)
+void init_span(halfword p)
 {
 	push_nest();
 	if (cur_list.mode_field == (-102)) {
-		cur_list.aux_field.hh.variant.lh = 1000;
+		cur_list.aux_field.hh.lh = 1000;
 	}
 	else {
 		cur_list.aux_field.int_ = -65536000;
@@ -12032,12 +11969,12 @@ void init_row()
 	push_nest();
 	cur_list.mode_field = (-cur_list.mode_field) - 103;
 	if (cur_list.mode_field == (-102))
-		cur_list.aux_field.hh.variant.lh = 0;
+		cur_list.aux_field.hh.lh = 0;
 	else
 		cur_list.aux_field.int_ = 0;
-	mem[cur_list.tail_field - mem_min].hh.rh = new_glue(mem[mem[29992 - mem_min].hh.rh - mem_min + 1].hh.variant.lh);
+	mem[cur_list.tail_field - mem_min].hh.rh = new_glue(mem[mem[29992 - mem_min].hh.rh - mem_min + 1].hh.lh);
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-	mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 12;
+	mem[cur_list.tail_field - mem_min].hh.U2.b1 = 12;
 	cur_align = mem[mem[29992 - mem_min].hh.rh - mem_min].hh.rh;
 	cur_tail = cur_head;
 	init_span(cur_align);
@@ -12045,7 +11982,7 @@ void init_row()
 
 void init_col()
 {
-	mem[cur_align - mem_min + 5].hh.variant.lh = cur_cmd;
+	mem[cur_align - mem_min + 5].hh.lh = cur_cmd;
 	if (cur_cmd == 63) {
 		align_state = 0;
 	}
@@ -12058,10 +11995,10 @@ void init_col()
 bool fin_col()
 {
 	bool result;
-	unsigned short p, q, r, s, u;
-	int w;
-	char o;
-	unsigned short n;
+	halfword p, q, r, s, u;
+	scaled w;
+	glue_ord o;
+	halfword n;
 
 	if (!cur_align)
 		confusion(908);
@@ -12071,11 +12008,11 @@ bool fin_col()
 	if (align_state < 500000)
 		fatal_error(595);
 	p = mem[q - mem_min].hh.rh;
-	if ((!p) && (mem[cur_align - mem_min + 5].hh.variant.lh < 257)) {
+	if ((!p) && (mem[cur_align - mem_min + 5].hh.lh < 257)) {
 		if (cur_loop) {
 			mem[q - mem_min].hh.rh = new_null_box();
 			p = mem[q - mem_min].hh.rh;
-			mem[p - mem_min].hh.variant.lh = 29991;
+			mem[p - mem_min].hh.lh = 29991;
 			mem[p - mem_min + 1].int_ = -1073741824;
 			cur_loop = mem[cur_loop - mem_min].hh.rh;
 			q = 29996;
@@ -12083,7 +12020,7 @@ bool fin_col()
 			while (r) {
 				mem[q - mem_min].hh.rh = get_avail();
 				q = mem[q - mem_min].hh.rh;
-				mem[q - mem_min].hh.variant.lh = mem[r - mem_min].hh.variant.lh;
+				mem[q - mem_min].hh.lh = mem[r - mem_min].hh.lh;
 				r = mem[r - mem_min].hh.rh;
 			}
 			mem[q - mem_min].hh.rh = 0;
@@ -12093,13 +12030,13 @@ bool fin_col()
 			while (r) {
 				mem[q - mem_min].hh.rh = get_avail();
 				q = mem[q - mem_min].hh.rh;
-				mem[q - mem_min].hh.variant.lh = mem[r - mem_min].hh.variant.lh;
+				mem[q - mem_min].hh.lh = mem[r - mem_min].hh.lh;
 				r = mem[r - mem_min].hh.rh;
 			}
 			mem[q - mem_min].hh.rh = 0;
 			mem[p - mem_min + 2].int_ = mem[29996 - mem_min].hh.rh;
 			cur_loop = mem[cur_loop - mem_min].hh.rh;
-			mem[p - mem_min].hh.rh = new_glue(mem[cur_loop - mem_min + 1].hh.variant.lh);
+			mem[p - mem_min].hh.rh = new_glue(mem[cur_loop - mem_min + 1].hh.lh);
 		}
 		else {
 			print_nl(262);
@@ -12109,11 +12046,11 @@ bool fin_col()
 			help_line[2] = 910;
 			help_line[1] = 911;
 			help_line[0] = 912;
-			mem[cur_align - mem_min + 5].hh.variant.lh = 257;
+			mem[cur_align - mem_min + 5].hh.lh = 257;
 			error();
 		}
 	}
-	if (mem[cur_align - mem_min + 5].hh.variant.lh != 256) {
+	if (mem[cur_align - mem_min + 5].hh.lh != 256) {
 		unsave();
 		new_save_level(6);
 		if (cur_list.mode_field == (-102)) {
@@ -12137,22 +12074,22 @@ bool fin_col()
 			if (n > 255)
 				confusion(913);
 			q = cur_span;
-			while (mem[mem[q - mem_min].hh.variant.lh - mem_min].hh.rh < n)
-				q = mem[q - mem_min].hh.variant.lh;
-			if (mem[mem[q - mem_min].hh.variant.lh - mem_min].hh.rh > n) {
+			while (mem[mem[q - mem_min].hh.lh - mem_min].hh.rh < n)
+				q = mem[q - mem_min].hh.lh;
+			if (mem[mem[q - mem_min].hh.lh - mem_min].hh.rh > n) {
 				s = get_node(2);
-				mem[s - mem_min].hh.variant.lh = mem[q - mem_min].hh.variant.lh;
+				mem[s - mem_min].hh.lh = mem[q - mem_min].hh.lh;
 				mem[s - mem_min].hh.rh = n;
-				mem[q - mem_min].hh.variant.lh = s;
+				mem[q - mem_min].hh.lh = s;
 				mem[s - mem_min + 1].int_ = w;
 			}
-			else if (mem[mem[q - mem_min].hh.variant.lh - mem_min + 1].int_ < w)
-				mem[mem[q - mem_min].hh.variant.lh - mem_min + 1].int_ = w;
+			else if (mem[mem[q - mem_min].hh.lh - mem_min + 1].int_ < w)
+				mem[mem[q - mem_min].hh.lh - mem_min + 1].int_ = w;
 		}
 		else if (w > mem[cur_align - mem_min + 1].int_)
 			mem[cur_align - mem_min + 1].int_ = w;
-		mem[u - mem_min].hh.variant.U2.b0 = 13;
-		mem[u - mem_min].hh.variant.U2.b1 = n;
+		mem[u - mem_min].hh.U2.b0 = 13;
+		mem[u - mem_min].hh.U2.b1 = n;
 		if (total_stretch[3]) {
 			o = 3;
 		}
@@ -12163,7 +12100,7 @@ bool fin_col()
 			o = 1;
 		else
 			o = 0;
-		mem[u - mem_min + 5].hh.variant.U2.b1 = o;
+		mem[u - mem_min + 5].hh.U2.b1 = o;
 		mem[u - mem_min + 6].int_ = total_stretch[o];
 		if (total_shrink[3]) {
 			o = 3;
@@ -12175,15 +12112,15 @@ bool fin_col()
 			o = 1;
 		else
 			o = 0;
-		mem[u - mem_min + 5].hh.variant.U2.b0 = o;
+		mem[u - mem_min + 5].hh.U2.b0 = o;
 		mem[u - mem_min + 4].int_ = total_shrink[o];
 		pop_nest();
 		mem[cur_list.tail_field - mem_min].hh.rh = u;
 		cur_list.tail_field = u;
-		mem[cur_list.tail_field - mem_min].hh.rh = new_glue(mem[mem[cur_align - mem_min].hh.rh - mem_min + 1].hh.variant.lh);
+		mem[cur_list.tail_field - mem_min].hh.rh = new_glue(mem[mem[cur_align - mem_min].hh.rh - mem_min + 1].hh.lh);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 12;
-		if (mem[cur_align - mem_min + 5].hh.variant.lh >= 257) {
+		mem[cur_list.tail_field - mem_min].hh.U2.b1 = 12;
+		if (mem[cur_align - mem_min + 5].hh.lh >= 257) {
 			result = true;
 			goto _L10;
 		}
@@ -12202,7 +12139,7 @@ _L10:
 
 void fin_row()
 {
-	unsigned short p;
+	halfword p;
 
 	if (cur_list.mode_field == (-102)) {
 		p = hpack(mem[cur_list.head_field - mem_min].hh.rh, 0, 1);
@@ -12218,9 +12155,9 @@ void fin_row()
 		pop_nest();
 		mem[cur_list.tail_field - mem_min].hh.rh = p;
 		cur_list.tail_field = p;
-		cur_list.aux_field.hh.variant.lh = 1000;
+		cur_list.aux_field.hh.lh = 1000;
 	}
-	mem[p - mem_min].hh.variant.U2.b0 = 13;
+	mem[p - mem_min].hh.U2.b0 = 13;
 	mem[p - mem_min + 6].int_ = 0;
 	if (eqtb[3420].hh.rh)
 		begin_token_list(eqtb[3420].hh.rh, 13);
@@ -12229,10 +12166,8 @@ void fin_row()
 
 void fin_align()
 {
-	unsigned short p, q, r, s, u, v;
-	int t, w, o;
-	unsigned short n;
-	int rule_save;
+	halfword p, q, r, s, u, v, n;
+	scaled t, w, o, rule_save;
 	memory_word aux_save;
 
 	if (cur_group != 6)
@@ -12253,46 +12188,46 @@ void fin_align()
 		if (mem[q - mem_min + 1].int_ == (-1073741824)) {
 			mem[q - mem_min + 1].int_ = 0;
 			r = mem[q - mem_min].hh.rh;
-			s = mem[r - mem_min + 1].hh.variant.lh;
+			s = mem[r - mem_min + 1].hh.lh;
 			if (s) {
 				++mem[-mem_min].hh.rh;
 				delete_glue_ref(s);
-				mem[r - mem_min + 1].hh.variant.lh = 0;
+				mem[r - mem_min + 1].hh.lh = 0;
 			}
 		}
-		if (mem[q - mem_min].hh.variant.lh != 29991) {
-			t = mem[q - mem_min + 1].int_ + mem[mem[mem[q - mem_min].hh.rh - mem_min + 1].hh.variant.lh - mem_min + 1].int_;
-			r = mem[q - mem_min].hh.variant.lh;
+		if (mem[q - mem_min].hh.lh != 29991) {
+			t = mem[q - mem_min + 1].int_ + mem[mem[mem[q - mem_min].hh.rh - mem_min + 1].hh.lh - mem_min + 1].int_;
+			r = mem[q - mem_min].hh.lh;
 			s = 29991;
-			mem[s - mem_min].hh.variant.lh = p;
+			mem[s - mem_min].hh.lh = p;
 			n = 1;
 			do {
 				mem[r - mem_min + 1].int_ -= t;
-				u = mem[r - mem_min].hh.variant.lh;
+				u = mem[r - mem_min].hh.lh;
 				while (mem[r - mem_min].hh.rh > n) {
-					s = mem[s - mem_min].hh.variant.lh;
-					n = mem[mem[s - mem_min].hh.variant.lh - mem_min].hh.rh + 1;
+					s = mem[s - mem_min].hh.lh;
+					n = mem[mem[s - mem_min].hh.lh - mem_min].hh.rh + 1;
 				}
 				if (mem[r - mem_min].hh.rh < n) {
-					mem[r - mem_min].hh.variant.lh = mem[s - mem_min].hh.variant.lh;
-					mem[s - mem_min].hh.variant.lh = r;
+					mem[r - mem_min].hh.lh = mem[s - mem_min].hh.lh;
+					mem[s - mem_min].hh.lh = r;
 					--mem[r - mem_min].hh.rh;
 					s = r;
 				}
 				else {
-					if (mem[r - mem_min + 1].int_ > mem[mem[s - mem_min].hh.variant.lh - mem_min + 1].int_)
-						mem[mem[s - mem_min].hh.variant.lh - mem_min + 1].int_ = mem[r - mem_min + 1].int_;
+					if (mem[r - mem_min + 1].int_ > mem[mem[s - mem_min].hh.lh - mem_min + 1].int_)
+						mem[mem[s - mem_min].hh.lh - mem_min + 1].int_ = mem[r - mem_min + 1].int_;
 					free_node(r, 2);
 				}
 				r = u;
 			} while (r != 29991);
 		}
-		mem[q - mem_min].hh.variant.U2.b0 = 13;
-		mem[q - mem_min].hh.variant.U2.b1 = 0;
+		mem[q - mem_min].hh.U2.b0 = 13;
+		mem[q - mem_min].hh.U2.b1 = 0;
 		mem[q - mem_min + 3].int_ = 0;
 		mem[q - mem_min + 2].int_ = 0;
-		mem[q - mem_min + 5].hh.variant.U2.b1 = 0;
-		mem[q - mem_min + 5].hh.variant.U2.b0 = 0;
+		mem[q - mem_min + 5].hh.U2.b1 = 0;
+		mem[q - mem_min + 5].hh.U2.b0 = 0;
 		mem[q - mem_min + 6].int_ = 0;
 		mem[q - mem_min + 4].int_ = 0;
 		q = p;
@@ -12325,40 +12260,40 @@ void fin_align()
 	s = cur_list.head_field;
 	while (q) {
 		if (q < hi_mem_min) {
-			if (mem[q - mem_min].hh.variant.U2.b0 == 13) {
+			if (mem[q - mem_min].hh.U2.b0 == 13) {
 				if (cur_list.mode_field == (-1)) {
-					mem[q - mem_min].hh.variant.U2.b0 = 0;
+					mem[q - mem_min].hh.U2.b0 = 0;
 					mem[q - mem_min + 1].int_ = mem[p - mem_min + 1].int_;
 				}
 				else {
-					mem[q - mem_min].hh.variant.U2.b0 = 1;
+					mem[q - mem_min].hh.U2.b0 = 1;
 					mem[q - mem_min + 3].int_ = mem[p - mem_min + 3].int_;
 				}
-				mem[q - mem_min + 5].hh.variant.U2.b1 = mem[p - mem_min + 5].hh.variant.U2.b1;
-				mem[q - mem_min + 5].hh.variant.U2.b0 = mem[p - mem_min + 5].hh.variant.U2.b0;
+				mem[q - mem_min + 5].hh.U2.b1 = mem[p - mem_min + 5].hh.U2.b1;
+				mem[q - mem_min + 5].hh.U2.b0 = mem[p - mem_min + 5].hh.U2.b0;
 				mem[q - mem_min + 6].gr = mem[p - mem_min + 6].gr;
 				mem[q - mem_min + 4].int_ = o;
 				r = mem[mem[q - mem_min + 5].hh.rh - mem_min].hh.rh;
 				s = mem[mem[p - mem_min + 5].hh.rh - mem_min].hh.rh;
 				do {
-					n = mem[r - mem_min].hh.variant.U2.b1;
+					n = mem[r - mem_min].hh.U2.b1;
 					t = mem[s - mem_min + 1].int_;
 					w = t;
 					u = 29996;
 					while (n > 0) {
 						--n;
 						s = mem[s - mem_min].hh.rh;
-						v = mem[s - mem_min + 1].hh.variant.lh;
+						v = mem[s - mem_min + 1].hh.lh;
 						mem[u - mem_min].hh.rh = new_glue(v);
 						u = mem[u - mem_min].hh.rh;
-						mem[u - mem_min].hh.variant.U2.b1 = 12;
+						mem[u - mem_min].hh.U2.b1 = 12;
 						t += mem[v - mem_min + 1].int_;
-						if (mem[p - mem_min + 5].hh.variant.U2.b0 == 1) {
-							if (mem[v - mem_min].hh.variant.U2.b0 == mem[p - mem_min + 5].hh.variant.U2.b1)
+						if (mem[p - mem_min + 5].hh.U2.b0 == 1) {
+							if (mem[v - mem_min].hh.U2.b0 == mem[p - mem_min + 5].hh.U2.b1)
 								t += lround(mem[p - mem_min + 6].gr * mem[v - mem_min + 2].int_);
 						}
-						else if (mem[p - mem_min + 5].hh.variant.U2.b0 == 2) {
-							if (mem[v - mem_min].hh.variant.U2.b1 == mem[p - mem_min + 5].hh.variant.U2.b1)
+						else if (mem[p - mem_min + 5].hh.U2.b0 == 2) {
+							if (mem[v - mem_min].hh.U2.b1 == mem[p - mem_min + 5].hh.U2.b1)
 								t -= lround(mem[p - mem_min + 6].gr * mem[v - mem_min + 3].int_);
 						}
 						s = mem[s - mem_min].hh.rh;
@@ -12369,7 +12304,7 @@ void fin_align()
 							mem[u - mem_min + 1].int_ = mem[s - mem_min + 1].int_;
 						}
 						else {
-							mem[u - mem_min].hh.variant.U2.b0 = 1;
+							mem[u - mem_min].hh.U2.b0 = 1;
 							mem[u - mem_min + 3].int_ = mem[s - mem_min + 1].int_;
 						}
 					}
@@ -12377,60 +12312,60 @@ void fin_align()
 						mem[r - mem_min + 3].int_ = mem[q - mem_min + 3].int_;
 						mem[r - mem_min + 2].int_ = mem[q - mem_min + 2].int_;
 						if (t == mem[r - mem_min + 1].int_) {
-							mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
-							mem[r - mem_min + 5].hh.variant.U2.b1 = 0;
+							mem[r - mem_min + 5].hh.U2.b0 = 0;
+							mem[r - mem_min + 5].hh.U2.b1 = 0;
 							mem[r - mem_min + 6].gr = 0.0;
 						}
 						else if (t > mem[r - mem_min + 1].int_) {
-							mem[r - mem_min + 5].hh.variant.U2.b0 = 1;
+							mem[r - mem_min + 5].hh.U2.b0 = 1;
 							if (!mem[r - mem_min + 6].int_)
 								mem[r - mem_min + 6].gr = 0.0;
 							else
 								mem[r - mem_min + 6].gr = ((double)(t - mem[r - mem_min + 1].int_)) / mem[r - mem_min + 6].int_;
 						}
 						else {
-							mem[r - mem_min + 5].hh.variant.U2.b1 = mem[r - mem_min + 5].hh.variant.U2.b0;
-							mem[r - mem_min + 5].hh.variant.U2.b0 = 2;
+							mem[r - mem_min + 5].hh.U2.b1 = mem[r - mem_min + 5].hh.U2.b0;
+							mem[r - mem_min + 5].hh.U2.b0 = 2;
 							if (!mem[r - mem_min + 4].int_) {
 								mem[r - mem_min + 6].gr = 0.0;
 							}
-							else if ((!mem[r - mem_min + 5].hh.variant.U2.b1)
+							else if ((!mem[r - mem_min + 5].hh.U2.b1)
 									 && (mem[r - mem_min + 1].int_ - t > mem[r - mem_min + 4].int_))
 								mem[r - mem_min + 6].gr = 1.0;
 							else
 								mem[r - mem_min + 6].gr = ((double)(mem[r - mem_min + 1].int_ - t)) / mem[r - mem_min + 4].int_;
 						}
 						mem[r - mem_min + 1].int_ = w;
-						mem[r - mem_min].hh.variant.U2.b0 = 0;
+						mem[r - mem_min].hh.U2.b0 = 0;
 					}
 					else {
 						mem[r - mem_min + 1].int_ = mem[q - mem_min + 1].int_;
 						if (t == mem[r - mem_min + 3].int_) {
-							mem[r - mem_min + 5].hh.variant.U2.b0 = 0;
-							mem[r - mem_min + 5].hh.variant.U2.b1 = 0;
+							mem[r - mem_min + 5].hh.U2.b0 = 0;
+							mem[r - mem_min + 5].hh.U2.b1 = 0;
 							mem[r - mem_min + 6].gr = 0.0;
 						}
 						else if (t > mem[r - mem_min + 3].int_) {
-							mem[r - mem_min + 5].hh.variant.U2.b0 = 1;
+							mem[r - mem_min + 5].hh.U2.b0 = 1;
 							if (!mem[r - mem_min + 6].int_)
 								mem[r - mem_min + 6].gr = 0.0;
 							else
 								mem[r - mem_min + 6].gr = ((double)(t - mem[r - mem_min + 3].int_)) / mem[r - mem_min + 6].int_;
 						}
 						else {
-							mem[r - mem_min + 5].hh.variant.U2.b1 = mem[r - mem_min + 5].hh.variant.U2.b0;
-							mem[r - mem_min + 5].hh.variant.U2.b0 = 2;
+							mem[r - mem_min + 5].hh.U2.b1 = mem[r - mem_min + 5].hh.U2.b0;
+							mem[r - mem_min + 5].hh.U2.b0 = 2;
 							if (!mem[r - mem_min + 4].int_) {
 								mem[r - mem_min + 6].gr = 0.0;
 							}
-							else if ((!mem[r - mem_min + 5].hh.variant.U2.b1)
+							else if ((!mem[r - mem_min + 5].hh.U2.b1)
 									 && (mem[r - mem_min + 3].int_ - t > mem[r - mem_min + 4].int_))
 								mem[r - mem_min + 6].gr = 1.0;
 							else
 								mem[r - mem_min + 6].gr = ((double)(mem[r - mem_min + 3].int_ - t)) / mem[r - mem_min + 4].int_;
 						}
 						mem[r - mem_min + 3].int_ = w;
-						mem[r - mem_min].hh.variant.U2.b0 = 1;
+						mem[r - mem_min].hh.U2.b0 = 1;
 					}
 					mem[r - mem_min + 4].int_ = 0;
 					if (u != 29996) {
@@ -12442,7 +12377,7 @@ void fin_align()
 					s = mem[mem[s - mem_min].hh.rh - mem_min].hh.rh;
 				} while (r);
 			}
-			else if (mem[q - mem_min].hh.variant.U2.b0 == 2) {
+			else if (mem[q - mem_min].hh.U2.b0 == 2) {
 				if (mem[q - mem_min + 1].int_ == (-1073741824))
 					mem[q - mem_min + 1].int_ = mem[p - mem_min + 1].int_;
 				if (mem[q - mem_min + 3].int_ == (-1073741824))
@@ -12537,9 +12472,9 @@ _L20:
 	init_col();
 }
 
-unsigned short finite_shrink(unsigned short p)
+halfword finite_shrink(halfword p)
 {
-	unsigned short q;
+	halfword q;
 
 	if (no_shrink_error_yet) {
 		no_shrink_error_yet = false;
@@ -12554,25 +12489,24 @@ unsigned short finite_shrink(unsigned short p)
 		error();
 	}
 	q = new_spec(p);
-	mem[q - mem_min].hh.variant.U2.b1 = 0;
+	mem[q - mem_min].hh.U2.b1 = 0;
 	delete_glue_ref(p);
 	return q;
 }
 
-void try_break(int pi, char break_type)
+void try_break(integer pi, small_number break_type)
 {
-	unsigned short r, prev_r = 29993, old_l = 0;
+	halfword r, prev_r = 29993, old_l = 0;
 	bool no_break_yet = true;
-	unsigned short prev_prev_r, s, q, v;
-	int t, f;
-	unsigned short l;
+	halfword prev_prev_r, s, q, v;
+	integer t, d;
+	internal_font_number f;
+	halfword l;
 	bool node_r_stays_active;
-	int line_width;
+	scaled line_width, shortfall;
 	char fit_class;
-	unsigned short b;
-	int d;
+	halfword b;
 	bool artificial_demerits;
-	int shortfall;
 
 	if (abs(pi) >= 10000) {
 		if (pi > 0)
@@ -12588,7 +12522,7 @@ void try_break(int pi, char break_type)
 	while (true) {
 _L22:
 		r = mem[prev_r - mem_min].hh.rh;
-		if (mem[r - mem_min].hh.variant.U2.b0 == 2) {
+		if (mem[r - mem_min].hh.U2.b0 == 2) {
 			cur_active_width[1] += mem[r - mem_min + 1].int_;
 			cur_active_width[2] += mem[r - mem_min + 2].int_;
 			cur_active_width[3] += mem[r - mem_min + 3].int_;
@@ -12599,7 +12533,7 @@ _L22:
 			prev_r = r;
 			goto _L22;
 		}
-		l = mem[r - mem_min + 1].hh.variant.lh;
+		l = mem[r - mem_min + 1].hh.lh;
 		if (l > old_l) {
 			if ((minimum_demerits < 1073741823) && ((old_l != easy_line) || (r == 29993))) {
 				if (no_break_yet) {
@@ -12613,22 +12547,22 @@ _L22:
 					s = cur_p;
 					if (break_type > 0) {
 						if (cur_p) {
-							t = mem[cur_p - mem_min].hh.variant.U2.b1;
+							t = mem[cur_p - mem_min].hh.U2.b1;
 							v = cur_p;
 							s = mem[cur_p - mem_min + 1].hh.rh;
 							while (t > 0) {
 								--t;
 								v = mem[v - mem_min].hh.rh;
 								if (v >= hi_mem_min) {
-									f = mem[v - mem_min].hh.variant.U2.b0;
-									(break_width[1] -= (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[v - mem_min].hh).variant.U2.b1))].qqqq).b0))].int_));
+									f = mem[v - mem_min].hh.U2.b0;
+									(break_width[1] -= (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[v - mem_min].hh).U2.b1))].qqqq).b0))].int_));
 									continue;
 								}
-								switch (mem[v - mem_min].hh.variant.U2.b0) {
+								switch (mem[v - mem_min].hh.U2.b0) {
 
 								case 6:
-									f = mem[v - mem_min + 1].hh.variant.U2.b0;
-									(break_width[1] -= (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[(v - mem_min + 1)].hh).variant.U2.b1))].qqqq).b0))].int_));
+									f = mem[v - mem_min + 1].hh.U2.b0;
+									(break_width[1] -= (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[(v - mem_min + 1)].hh).U2.b1))].qqqq).b0))].int_));
 									break;
 
 								case 0: case 1: case 2: case 11:
@@ -12642,15 +12576,15 @@ _L22:
 							}
 							while (s) {
 								if (s >= hi_mem_min) {
-									f = mem[s - mem_min].hh.variant.U2.b0;
-									(break_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[s - mem_min].hh).variant.U2.b1))].qqqq).b0))].int_));
+									f = mem[s - mem_min].hh.U2.b0;
+									(break_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[s - mem_min].hh).U2.b1))].qqqq).b0))].int_));
 								}
 								else {
-									switch (mem[s - mem_min].hh.variant.U2.b0) {
+									switch (mem[s - mem_min].hh.U2.b0) {
 
 									case 6:
-										f = mem[s - mem_min + 1].hh.variant.U2.b0;
-										(break_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[(s - mem_min + 1)].hh).variant.U2.b1))].qqqq).b0))].int_));
+										f = mem[s - mem_min + 1].hh.U2.b0;
+										(break_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[(s - mem_min + 1)].hh).U2.b1))].qqqq).b0))].int_));
 										break;
 
 									case 0: case 1: case 2: case 11:
@@ -12672,12 +12606,12 @@ _L22:
 					while (s) {
 						if (s >= hi_mem_min)
 							goto _L30;
-						switch (mem[s - mem_min].hh.variant.U2.b0) {
+						switch (mem[s - mem_min].hh.U2.b0) {
 
 						case 10:
-							v = mem[s - mem_min + 1].hh.variant.lh;
+							v = mem[s - mem_min + 1].hh.lh;
 							break_width[1] -= mem[v - mem_min + 1].int_;
-							break_width[mem[v - mem_min].hh.variant.U2.b0 + 2] -= mem[v - mem_min + 2].int_;
+							break_width[mem[v - mem_min].hh.U2.b0 + 2] -= mem[v - mem_min + 2].int_;
 							break_width[6] -= mem[v - mem_min + 3].int_;
 							break;
 
@@ -12690,7 +12624,7 @@ _L22:
 							break;
 
 						case 11:
-							if (mem[s - mem_min].hh.variant.U2.b1 != 1)
+							if (mem[s - mem_min].hh.U2.b1 != 1)
 								goto _L30;
 							break_width[1] -= mem[s - mem_min + 1].int_;
 							break;
@@ -12703,7 +12637,7 @@ _L22:
 					}
 _L30: ;
 				}
-				if (mem[prev_r - mem_min].hh.variant.U2.b0 == 2) {
+				if (mem[prev_r - mem_min].hh.U2.b0 == 2) {
 					mem[prev_r - mem_min + 1].int_ += break_width[1] - cur_active_width[1];
 					mem[prev_r - mem_min + 2].int_ += break_width[2] - cur_active_width[2];
 					mem[prev_r - mem_min + 3].int_ += break_width[3] - cur_active_width[3];
@@ -12722,8 +12656,8 @@ _L30: ;
 				else {
 					q = get_node(7);
 					mem[q - mem_min].hh.rh = r;
-					mem[q - mem_min].hh.variant.U2.b0 = 2;
-					mem[q - mem_min].hh.variant.U2.b1 = 0;
+					mem[q - mem_min].hh.U2.b0 = 2;
+					mem[q - mem_min].hh.U2.b1 = 0;
 					mem[q - mem_min + 1].int_ = break_width[1] - cur_active_width[1];
 					mem[q - mem_min + 2].int_ = break_width[2] - cur_active_width[2];
 					mem[q - mem_min + 3].int_ = break_width[3] - cur_active_width[3];
@@ -12744,12 +12678,12 @@ _L30: ;
 						mem[q - mem_min].hh.rh = passive;
 						passive = q;
 						mem[q - mem_min + 1].hh.rh = cur_p;
-						mem[q - mem_min + 1].hh.variant.lh = best_place[fit_class];
+						mem[q - mem_min + 1].hh.lh = best_place[fit_class];
 						q = get_node(3);
 						mem[q - mem_min + 1].hh.rh = passive;
-						mem[q - mem_min + 1].hh.variant.lh = best_pl_line[fit_class] + 1;
-						mem[q - mem_min].hh.variant.U2.b1 = fit_class;
-						mem[q - mem_min].hh.variant.U2.b0 = break_type;
+						mem[q - mem_min + 1].hh.lh = best_pl_line[fit_class] + 1;
+						mem[q - mem_min].hh.U2.b1 = fit_class;
+						mem[q - mem_min].hh.U2.b0 = break_type;
 						mem[q - mem_min + 2].int_ = minimal_demerits[fit_class];
 						mem[q - mem_min].hh.rh = r;
 						mem[prev_r - mem_min].hh.rh = q;
@@ -12761,8 +12695,8 @@ _L30: ;
 				if (r != 29993) {
 					q = get_node(7);
 					mem[q - mem_min].hh.rh = r;
-					mem[q - mem_min].hh.variant.U2.b0 = 2;
-					mem[q - mem_min].hh.variant.U2.b1 = 0;
+					mem[q - mem_min].hh.U2.b0 = 2;
+					mem[q - mem_min].hh.U2.b1 = 0;
 					mem[q - mem_min + 1].int_ = cur_active_width[1] - break_width[1];
 					mem[q - mem_min + 2].int_ = cur_active_width[2] - break_width[2];
 					mem[q - mem_min + 3].int_ = cur_active_width[3] - break_width[3];
@@ -12859,13 +12793,13 @@ _L31: ;
 				else if (pi > (-10000))
 					d -= pi * pi;
 			}
-			if ((break_type == 1) && (mem[r - mem_min].hh.variant.U2.b0 == 1)) {
+			if ((break_type == 1) && (mem[r - mem_min].hh.U2.b0 == 1)) {
 				if (cur_p)
 					d += eqtb[5277].int_;
 				else
 					d += eqtb[5278].int_;
 			}
-			if (abs(fit_class - mem[r - mem_min].hh.variant.U2.b1) > 1)
+			if (abs(fit_class - mem[r - mem_min].hh.U2.b1) > 1)
 				d += eqtb[5279].int_;
 		}
 		d += mem[r - mem_min + 2].int_;
@@ -12883,7 +12817,7 @@ _L60:
 		free_node(r, 3);
 		if (prev_r == 29993) {
 			r = mem[29993 - mem_min].hh.rh;
-			if (mem[r - mem_min].hh.variant.U2.b0 != 2)
+			if (mem[r - mem_min].hh.U2.b0 != 2)
 				continue;
 			active_width[1] += mem[r - mem_min + 1].int_;
 			active_width[2] += mem[r - mem_min + 2].int_;
@@ -12901,7 +12835,7 @@ _L60:
 			free_node(r, 7);
 			continue;
 		}
-		if (mem[prev_r - mem_min].hh.variant.U2.b0 != 2)
+		if (mem[prev_r - mem_min].hh.U2.b0 != 2)
 			continue;
 		r = mem[prev_r - mem_min].hh.rh;
 		if (r == 29993) {
@@ -12916,7 +12850,7 @@ _L60:
 			prev_r = prev_prev_r;
 			continue;
 		}
-		if (mem[r - mem_min].hh.variant.U2.b0 != 2)
+		if (mem[r - mem_min].hh.U2.b0 != 2)
 			continue;
 		cur_active_width[1] += mem[r - mem_min + 1].int_;
 		cur_active_width[2] += mem[r - mem_min + 2].int_;
@@ -12936,21 +12870,21 @@ _L60:
 _L10: ;
 }
 
-void post_line_break(int final_widow_penalty)
+void post_line_break(integer final_widow_penalty)
 {
-	unsigned short q, r, s;
+	halfword r, s;
 	bool disc_break, post_disc_break;
-	int cur_width, cur_indent;
-	uint8_t t;
-	int pen;
-	unsigned short cur_line;
+	scaled cur_width, cur_indent;
+	quarterword t;
+	integer pen;
+	halfword cur_line;
+	halfword q = mem[best_bet - mem_min + 1].hh.rh;
 
-	q = mem[best_bet - mem_min + 1].hh.rh;
 	cur_p = 0;
 	do {
 		r = q;
-		q = mem[q - mem_min + 1].hh.variant.lh;
-		mem[r - mem_min + 1].hh.variant.lh = cur_p;
+		q = mem[q - mem_min + 1].hh.lh;
+		mem[r - mem_min + 1].hh.lh = cur_p;
 		cur_p = r;
 	} while (q);
 	cur_line = cur_list.pg_field + 1;
@@ -12959,15 +12893,15 @@ void post_line_break(int final_widow_penalty)
 		disc_break = false;
 		post_disc_break = false;
 		if (q) {
-			if (mem[q - mem_min].hh.variant.U2.b0 == 10) {
-				delete_glue_ref(mem[q - mem_min + 1].hh.variant.lh);
-				mem[q - mem_min + 1].hh.variant.lh = eqtb[2890].hh.rh;
-				mem[q - mem_min].hh.variant.U2.b1 = 9;
+			if (mem[q - mem_min].hh.U2.b0 == 10) {
+				delete_glue_ref(mem[q - mem_min + 1].hh.lh);
+				mem[q - mem_min + 1].hh.lh = eqtb[2890].hh.rh;
+				mem[q - mem_min].hh.U2.b1 = 9;
 				++mem[eqtb[2890].hh.rh - mem_min].hh.rh;
 				goto _L30;
 			}
-			if (mem[q - mem_min].hh.variant.U2.b0 == 7) {
-				t = mem[q - mem_min].hh.variant.U2.b1;
+			if (mem[q - mem_min].hh.U2.b0 == 7) {
+				t = mem[q - mem_min].hh.U2.b1;
 				if (!t) {
 					r = mem[q - mem_min].hh.rh;
 				}
@@ -12981,7 +12915,7 @@ void post_line_break(int final_widow_penalty)
 					r = mem[s - mem_min].hh.rh;
 					mem[s - mem_min].hh.rh = 0;
 					flush_node_list(mem[q - mem_min].hh.rh);
-					mem[q - mem_min].hh.variant.U2.b1 = 0;
+					mem[q - mem_min].hh.U2.b1 = 0;
 				}
 				if (mem[q - mem_min + 1].hh.rh) {
 					s = mem[q - mem_min + 1].hh.rh;
@@ -12992,18 +12926,18 @@ void post_line_break(int final_widow_penalty)
 					mem[q - mem_min + 1].hh.rh = 0;
 					post_disc_break = true;
 				}
-				if (mem[q - mem_min + 1].hh.variant.lh) {
-					s = mem[q - mem_min + 1].hh.variant.lh;
+				if (mem[q - mem_min + 1].hh.lh) {
+					s = mem[q - mem_min + 1].hh.lh;
 					mem[q - mem_min].hh.rh = s;
 					while (mem[s - mem_min].hh.rh)
 						s = mem[s - mem_min].hh.rh;
-					mem[q - mem_min + 1].hh.variant.lh = 0;
+					mem[q - mem_min + 1].hh.lh = 0;
 					q = s;
 				}
 				mem[q - mem_min].hh.rh = r;
 				disc_break = true;
 			}
-			else if ((mem[q - mem_min].hh.variant.U2.b0 == 9) || (mem[q - mem_min].hh.variant.U2.b0 == 11))
+			else if ((mem[q - mem_min].hh.U2.b0 == 9) || (mem[q - mem_min].hh.U2.b0 == 11))
 				mem[q - mem_min + 1].int_ = 0;
 		}
 		else {
@@ -13061,7 +12995,7 @@ _L30:
 			}
 		}
 		++cur_line;
-		cur_p = mem[cur_p - mem_min + 1].hh.variant.lh;
+		cur_p = mem[cur_p - mem_min + 1].hh.lh;
 		if (cur_p) {
 			if (!post_disc_break) {
 				r = 29997;
@@ -13071,10 +13005,10 @@ _L30:
 						goto _L31;
 					if (q >= hi_mem_min)
 						goto _L31;
-					if (mem[q - mem_min].hh.variant.U2.b0 < 9)
+					if (mem[q - mem_min].hh.U2.b0 < 9)
 						goto _L31;
-					if (mem[q - mem_min].hh.variant.U2.b0 == 11) {
-						if (mem[q - mem_min].hh.variant.U2.b1 != 1)
+					if (mem[q - mem_min].hh.U2.b0 == 11) {
+						if (mem[q - mem_min].hh.U2.b1 != 1)
 							goto _L31;
 					}
 					r = q;
@@ -13093,12 +13027,13 @@ _L31:
 	cur_list.pg_field = best_line - 1;
 }
 
-char reconstitute(char j, char n, unsigned short bchar, unsigned short hchar)
+small_number reconstitute(small_number j, small_number n, halfword bchar, halfword hchar)
 {
-	unsigned short p, t = 29996;
+	halfword p, t = 29996;
 	four_quarters q;
-	unsigned short cur_rh, test_char;
-	int w = 0, k;
+	halfword cur_rh, test_char;
+	scaled w = 0;
+	font_index k;
 
 	hyphen_passed = 0;
 	mem[29996 - mem_min].hh.rh = 0;
@@ -13112,16 +13047,16 @@ char reconstitute(char j, char n, unsigned short bchar, unsigned short hchar)
 		while (p > 0) {
 			mem[t - mem_min].hh.rh = get_avail();
 			t = mem[t - mem_min].hh.rh;
-			mem[t - mem_min].hh.variant.U2.b0 = hf;
-			mem[t - mem_min].hh.variant.U2.b1 = mem[p - mem_min].hh.variant.U2.b1;
+			mem[t - mem_min].hh.U2.b0 = hf;
+			mem[t - mem_min].hh.U2.b1 = mem[p - mem_min].hh.U2.b1;
 			p = mem[p - mem_min].hh.rh;
 		}
 	}
 	else if (cur_l < 256) {
 		mem[t - mem_min].hh.rh = get_avail();
 		t = mem[t - mem_min].hh.rh;
-		mem[t - mem_min].hh.variant.U2.b0 = hf;
-		mem[t - mem_min].hh.variant.U2.b1 = cur_l;
+		mem[t - mem_min].hh.U2.b0 = hf;
+		mem[t - mem_min].hh.U2.b1 = cur_l;
 	}
 	lig_stack = 0;
 	if (j < n)
@@ -13189,7 +13124,7 @@ _L22:
 						case 2: case 6:
 							cur_r = q.b3;
 							if (lig_stack > 0) {
-								mem[lig_stack - mem_min].hh.variant.U2.b1 = cur_r;
+								mem[lig_stack - mem_min].hh.U2.b1 = cur_r;
 							}
 							else {
 								lig_stack = new_lig_item(cur_r);
@@ -13199,8 +13134,8 @@ _L22:
 								else {
 									p = get_avail();
 									mem[lig_stack - mem_min + 1].hh.rh = p;
-									mem[p - mem_min].hh.variant.U2.b1 = hu[j+1];
-									mem[p - mem_min].hh.variant.U2.b0 = hf;
+									mem[p - mem_min].hh.U2.b1 = hu[j+1];
+									mem[p - mem_min].hh.U2.b0 = hf;
 								}
 							}
 							break;
@@ -13216,7 +13151,7 @@ _L22:
 							if (ligature_present) {
 								p = new_ligature(hf, cur_l, mem[cur_q - mem_min].hh.rh);
 								if (lft_hit) {
-									mem[p - mem_min].hh.variant.U2.b1 = 2;
+									mem[p - mem_min].hh.U2.b1 = 2;
 									lft_hit = false;
 								}
 								mem[cur_q - mem_min].hh.rh = p;
@@ -13251,7 +13186,7 @@ _L22:
 										cur_rh = 256;
 								}
 								else {
-									cur_r = mem[lig_stack - mem_min].hh.variant.U2.b1;
+									cur_r = mem[lig_stack - mem_min].hh.U2.b1;
 								}
 							}
 							else if (j == n) {
@@ -13260,8 +13195,8 @@ _L22:
 							else {
 								mem[t - mem_min].hh.rh = get_avail();
 								t = mem[t - mem_min].hh.rh;
-								mem[t - mem_min].hh.variant.U2.b0 = hf;
-								mem[t - mem_min].hh.variant.U2.b1 = cur_r;
+								mem[t - mem_min].hh.U2.b0 = hf;
+								mem[t - mem_min].hh.U2.b1 = cur_r;
 								++j;
 								if (j < n)
 									cur_r = hu[j+1];
@@ -13301,12 +13236,12 @@ _L30:
 	if (ligature_present) {
 		p = new_ligature(hf, cur_l, mem[cur_q - mem_min].hh.rh);
 		if (lft_hit) {
-			mem[p - mem_min].hh.variant.U2.b1 = 2;
+			mem[p - mem_min].hh.U2.b1 = 2;
 			lft_hit = false;
 		}
 		if (rt_hit) {
 			if (!lig_stack) {
-				++mem[p - mem_min].hh.variant.U2.b1;
+				++mem[p - mem_min].hh.U2.b1;
 				rt_hit = false;
 			}
 		}
@@ -13322,7 +13257,7 @@ _L30:
 	if (lig_stack <= 0)
 		return j;
 	cur_q = t;
-	cur_l = mem[lig_stack - mem_min].hh.variant.U2.b1;
+	cur_l = mem[lig_stack - mem_min].hh.U2.b1;
 	ligature_present = true;
 	if (mem[lig_stack - mem_min + 1].hh.rh > 0) {
 		mem[t - mem_min].hh.rh = mem[lig_stack - mem_min + 1].hh.rh;
@@ -13343,7 +13278,7 @@ _L30:
 			cur_rh = 256;
 	}
 	else {
-		cur_r = mem[lig_stack - mem_min].hh.variant.U2.b1;
+		cur_r = mem[lig_stack - mem_min].hh.U2.b1;
 	}
 	goto _L22;
 }
@@ -13351,14 +13286,15 @@ _L30:
 void hyphenate()
 {
 	char i, j, l;
-	unsigned short q, r, s, bchar, major_tail, minor_tail;
-	uint8_t c;
+	halfword q, r, s, bchar, major_tail, minor_tail;
+	ASCII_code c;
 	char c_loc;
-	int r_count;
-	unsigned short hyf_node;
-	int z, v;
-	short h;
-	int k, u;
+	integer r_count, v;
+	halfword hyf_node;
+	trie_pointer z;
+	hyph_pointer h;
+	str_number k;
+	pool_pointer u;
 	char N;
 
 	for (N = hn, j = 0; j <= N; ++j)
@@ -13387,7 +13323,7 @@ void hyphenate()
 			} while (j <= hn);
 			s = hyph_list[h];
 			while (s) {
-				hyf[mem[s - mem_min].hh.variant.lh] = 1;
+				hyf[mem[s - mem_min].hh.lh] = 1;
 				s = mem[s - mem_min].hh.rh;
 			}
 			--hn;
@@ -13401,7 +13337,7 @@ _L30:
 	}
 _L45:
 	--hn;
-	if (trie[cur_lang+1].variant.U2.b1 != cur_lang)
+	if (trie[cur_lang+1].U2.b1 != cur_lang)
 		goto _L10;
 	hc[0] = 0;
 	hc[hn+1] = 0;
@@ -13409,9 +13345,9 @@ _L45:
 	for (N = hn - r_hyf + 1, j = 0; j <= N; ++j) {
 		z = trie[cur_lang+1].rh + hc[j];
 		l = j;
-		while (hc[l] == trie[z].variant.U2.b1) {
-			if (trie[z].variant.U2.b0) {
-				v = trie[z].variant.U2.b0;
+		while (hc[l] == trie[z].U2.b1) {
+			if (trie[z].U2.b0) {
+				v = trie[z].U2.b0;
 				do {
 					v += op_start[cur_lang];
 					i = l - hyf_distance[v];
@@ -13441,19 +13377,19 @@ _L41:
 	mem[ha - mem_min].hh.rh = 0;
 	bchar = hyf_bchar;
 	if (ha >= hi_mem_min) {
-		if (mem[ha - mem_min].hh.variant.U2.b0 != hf)
+		if (mem[ha - mem_min].hh.U2.b0 != hf)
 			goto _L42;
 		init_list = ha;
 		init_lig = false;
-		hu[0] = mem[ha - mem_min].hh.variant.U2.b1;
+		hu[0] = mem[ha - mem_min].hh.U2.b1;
 	}
-	else if (mem[ha - mem_min].hh.variant.U2.b0 == 6) {
-		if (mem[ha - mem_min + 1].hh.variant.U2.b0 != hf)
+	else if (mem[ha - mem_min].hh.U2.b0 == 6) {
+		if (mem[ha - mem_min + 1].hh.U2.b0 != hf)
 			goto _L42;
 		init_list = mem[ha - mem_min + 1].hh.rh;
 		init_lig = true;
-		init_lft = (mem[ha - mem_min].hh.variant.U2.b1 > 1);
-		hu[0] = mem[ha - mem_min + 1].hh.variant.U2.b1;
+		init_lft = (mem[ha - mem_min].hh.U2.b1 > 1);
+		hu[0] = mem[ha - mem_min + 1].hh.U2.b1;
 		if (!init_list) {
 			if (init_lft) {
 				hu[0] = 256;
@@ -13464,8 +13400,8 @@ _L41:
 	}
 	else {
 		if (r < hi_mem_min) {
-			if (mem[r - mem_min].hh.variant.U2.b0 == 6) {
-				if (mem[r - mem_min].hh.variant.U2.b1 > 1)
+			if (mem[r - mem_min].hh.U2.b0 == 6) {
+				if (mem[r - mem_min].hh.U2.b1 > 1)
 					goto _L42;
 			}
 		}
@@ -13504,7 +13440,7 @@ _L50:
 			do {
 				r = get_node(2);
 				mem[r - mem_min].hh.rh = mem[29996 - mem_min].hh.rh;
-				mem[r - mem_min].hh.variant.U2.b0 = 7;
+				mem[r - mem_min].hh.U2.b0 = 7;
 				major_tail = r;
 				r_count = 0;
 				while (mem[major_tail - mem_min].hh.rh > 0) {
@@ -13514,7 +13450,7 @@ _L50:
 				i = hyphen_passed;
 				hyf[i] = 0;
 				minor_tail = 0;
-				mem[r - mem_min + 1].hh.variant.lh = 0;
+				mem[r - mem_min + 1].hh.lh = 0;
 				hyf_node = new_character(hf, hyf_char);
 				if (hyf_node) {
 					++i;
@@ -13528,7 +13464,7 @@ _L50:
 					if (mem[29996 - mem_min].hh.rh <= 0)
 						continue;
 					if (!minor_tail)
-						mem[r - mem_min + 1].hh.variant.lh = mem[29996 - mem_min].hh.rh;
+						mem[r - mem_min + 1].hh.lh = mem[29996 - mem_min].hh.rh;
 					else
 						mem[minor_tail - mem_min].hh.rh = mem[29996 - mem_min].hh.rh;
 					minor_tail = mem[29996 - mem_min].hh.rh;
@@ -13582,7 +13518,7 @@ _L50:
 				}
 				else {
 					mem[s - mem_min].hh.rh = r;
-					mem[r - mem_min].hh.variant.U2.b1 = r_count;
+					mem[r - mem_min].hh.U2.b1 = r_count;
 				}
 				s = major_tail;
 				hyphen_passed = j - 1;
@@ -13595,14 +13531,12 @@ _L50:
 _L10: ;
 }
 
-uint8_t new_trie_op(char d, char n, uint8_t v)
+quarterword new_trie_op(small_number d, small_number n, quarterword v)
 {
-	uint8_t result;
-	int h;
-	uint8_t u;
+	quarterword result, u;
 	int l;
+	int h = (abs(n + (d * 313) + (v * 361) + (cur_lang * 1009)) % (trie_op_size + trie_op_size)) - trie_op_size;
 
-	h = (abs(n + (d * 313) + (v * 361) + (cur_lang * 1009)) % (trie_op_size + trie_op_size)) - trie_op_size;
 	while (true) {
 		l = trie_op_hash[h + trie_op_size];
 		if (!l) {
@@ -13636,11 +13570,11 @@ _L10:
 	return result;
 }
 
-int trie_node(int p)
+trie_pointer trie_node(trie_pointer p)
 {
-	int result, h, q;
+	trie_pointer result, q;
+	trie_pointer h = abs(trie_c[p] + (trie_o[p] * 1009) + (trie_l[p] * 2718) + (trie_r[p] * 3142)) % trie_size;
 
-	h = abs(trie_c[p] + (trie_o[p] * 1009) + (trie_l[p] * 2718) + (trie_r[p] * 3142)) % trie_size;
 	while (true) {
 		q = trie_hash[h];
 		if (!q) {
@@ -13661,7 +13595,7 @@ _L10:
 	return result;
 }
 
-int compress_trie(int p)
+trie_pointer compress_trie(trie_pointer p)
 {
 	if (!p) {
 		return 0;
@@ -13673,15 +13607,13 @@ int compress_trie(int p)
 	}
 }
 
-void first_fit(int p)
+void first_fit(trie_pointer p)
 {
-	int h, z, q;
-	uint8_t c;
-	int l, r;
+	trie_pointer h, q, l, r;
 	short ll;
+	ASCII_code c = trie_c[p];
+	trie_pointer z = trie_min[c];
 
-	c = trie_c[p];
-	z = trie_min[c];
 	while (true) {
 		h = z - c;
 		if (trie_max < (h + 256)) {
@@ -13689,12 +13621,12 @@ void first_fit(int p)
 				overflow(950, trie_size);
 			do {
 				++trie_max;
-				clr_bits(trie_taken, trie_max - 1, 0, 3);
+				trie_taken[ trie_max - 1] =  0;
 				trie[trie_max].rh = trie_max + 1;
-				trie[trie_max].variant.lh = trie_max - 1;
+				trie[trie_max].lh = trie_max - 1;
 			} while (trie_max != (h + 256));
 		}
-		if (get_bits(trie_taken, h - 1, 0, 3))
+		if (trie_taken[ h - 1])
 			goto _L45;
 		q = trie_r[p];
 		while (q > 0) {
@@ -13707,14 +13639,14 @@ _L45:
 		z = trie[z].rh;
 	}
 _L40:
-	put_bits(trie_taken, h - 1, 1, 0, 3);
+	trie_taken[ h - 1] =  1;
 	trie_hash[p] = h;
 	q = p;
 	do {
 		z = h + trie_c[q];
-		l = trie[z].variant.lh;
+		l = trie[z].lh;
 		r = trie[z].rh;
-		trie[r].variant.lh = l;
+		trie[r].lh = l;
 		trie[l].rh = r;
 		trie[z].rh = 0;
 		if (l < 256) {
@@ -13731,9 +13663,9 @@ _L40:
 	} while (q);
 }
 
-void trie_pack(int p)
+void trie_pack(trie_pointer p)
 {
-	int q;
+	trie_pointer q;
 
 	do {
 		q = trie_l[p];
@@ -13745,19 +13677,18 @@ void trie_pack(int p)
 	} while (p);
 }
 
-void trie_fix(int p)
+void trie_fix(trie_pointer p)
 {
-	int q;
-	uint8_t c;
-	int z;
+	trie_pointer q;
+	ASCII_code c;
+	trie_pointer z = trie_hash[p];
 
-	z = trie_hash[p];
 	do {
 		q = trie_l[p];
 		c = trie_c[p];
 		trie[z + c].rh = trie_hash[q];
-		trie[z + c].variant.U2.b1 = c;
-		trie[z + c].variant.U2.b0 = trie_o[p];
+		trie[z + c].U2.b1 = c;
+		trie[z + c].U2.b0 = trie_o[p];
 		if (q > 0)
 			trie_fix(q);
 		p = trie_r[p];
@@ -13768,10 +13699,10 @@ void new_patterns()
 {
 	char k, l;
 	bool digit_sensed;
-	uint8_t v;
-	int p, q;
+	quarterword v;
+	trie_pointer p, q;
 	bool first_child;
-	uint8_t c;
+	ASCII_code c;
 
 	if (trie_not_ready) {
 		if (eqtb[5313].int_ <= 0) {
@@ -13902,9 +13833,11 @@ _L30:
 
 void init_trie()
 {
-	int p, j, k, t, r, s;
+	trie_pointer p, r, s;
+	integer j, k, t;
 	two_halves h;
 	int N;
+	trie_pointer N1;
 
 	op_start[0] = 0;
 	for (j = 1; j <= 255; ++j)
@@ -13930,7 +13863,7 @@ void init_trie()
 	for (p = 0; p <= trie_size; ++p)
 		trie_hash[p] = 0;
 	trie_l[0] = compress_trie(trie_l[0]);
-	for (N = trie_ptr, p = 0; p <= N; ++p)
+	for (N1 = trie_ptr, p = 0; p <= N1; ++p)
 		trie_hash[p] = 0;
 	for (p = 0; p <= 255; ++p)
 		trie_min[p] = p + 1;
@@ -13941,8 +13874,8 @@ void init_trie()
 		trie_pack(trie_l[0]);
 	}
 	h.rh = 0;
-	h.variant.U2.b0 = 0;
-	h.variant.U2.b1 = 0;
+	h.U2.b0 = 0;
+	h.U2.b1 = 0;
 	if (!trie_l[0]) {
 		for (r = 0; r <= 256; ++r)
 			trie[r] = h;
@@ -13957,16 +13890,16 @@ void init_trie()
 			r = s;
 		} while (r <= trie_max);
 	}
-	trie[0].variant.U2.b1 = 63;
+	trie[0].U2.b1 = 63;
 	trie_not_ready = false;
 }
 
-void line_break(int final_widow_penalty)
+void line_break(integer final_widow_penalty)
 {
 	bool auto_breaking;
-	unsigned short prev_p, q, r, s, prev_s;
-	int f;
-	char j;
+	halfword prev_p, q, r, s, prev_s;
+	internal_font_number f;
+	small_number j;
 	uint8_t c;
 
 	pack_begin_line = cur_list.ml_field;
@@ -13975,13 +13908,13 @@ void line_break(int final_widow_penalty)
 		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(10000);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 	}
-	else if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 != 10) {
+	else if (mem[cur_list.tail_field - mem_min].hh.U2.b0 != 10) {
 		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(10000);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 	}
 	else {
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = 12;
-		delete_glue_ref(mem[cur_list.tail_field - mem_min + 1].hh.variant.lh);
+		mem[cur_list.tail_field - mem_min].hh.U2.b0 = 12;
+		delete_glue_ref(mem[cur_list.tail_field - mem_min + 1].hh.lh);
 		flush_node_list(mem[cur_list.tail_field - mem_min + 1].hh.rh);
 		mem[cur_list.tail_field - mem_min + 1].int_ = 10000;
 	}
@@ -13991,9 +13924,9 @@ void line_break(int final_widow_penalty)
 	init_r_hyf = (cur_list.pg_field / 65536) & 63;
 	pop_nest();
 	no_shrink_error_yet = true;
-	if (mem[eqtb[2889].hh.rh - mem_min].hh.variant.U2.b1 && mem[eqtb[2889].hh.rh - mem_min + 3].int_)
+	if (mem[eqtb[2889].hh.rh - mem_min].hh.U2.b1 && mem[eqtb[2889].hh.rh - mem_min + 3].int_)
 		eqtb[2889].hh.rh = finite_shrink(eqtb[2889].hh.rh);
-	if (mem[eqtb[2890].hh.rh - mem_min].hh.variant.U2.b1 && mem[eqtb[2890].hh.rh - mem_min + 3].int_)
+	if (mem[eqtb[2890].hh.rh - mem_min].hh.U2.b1 && mem[eqtb[2890].hh.rh - mem_min + 3].int_)
 		eqtb[2890].hh.rh = finite_shrink(eqtb[2890].hh.rh);
 	q = eqtb[2889].hh.rh;
 	r = eqtb[2890].hh.rh;
@@ -14002,8 +13935,8 @@ void line_break(int final_widow_penalty)
 	background[3] = 0;
 	background[4] = 0;
 	background[5] = 0;
-	background[mem[q - mem_min].hh.variant.U2.b0 + 2] = mem[q - mem_min + 2].int_;
-	background[mem[r - mem_min].hh.variant.U2.b0 + 2] += mem[r - mem_min + 2].int_;
+	background[mem[q - mem_min].hh.U2.b0 + 2] = mem[q - mem_min + 2].int_;
+	background[mem[r - mem_min].hh.U2.b0 + 2] += mem[r - mem_min + 2].int_;
 	background[6] = mem[q - mem_min + 3].int_ + mem[r - mem_min + 3].int_;
 	minimum_demerits = 1073741823;
 	minimal_demerits[3] = 1073741823;
@@ -14039,7 +13972,7 @@ void line_break(int final_widow_penalty)
 		}
 	}
 	else {
-		last_special_line = mem[eqtb[3412].hh.rh - mem_min].hh.variant.lh - 1;
+		last_special_line = mem[eqtb[3412].hh.rh - mem_min].hh.lh - 1;
 		second_width = mem[eqtb[3412].hh.rh + ((last_special_line + 1) * 2) - mem_min].int_;
 		second_indent = mem[eqtb[3412].hh.rh + (last_special_line * 2) - mem_min + 1].int_;
 	}
@@ -14068,11 +14001,11 @@ void line_break(int final_widow_penalty)
 			r_hyf = init_r_hyf;
 		}
 		q = get_node(3);
-		mem[q - mem_min].hh.variant.U2.b0 = 0;
-		mem[q - mem_min].hh.variant.U2.b1 = 2;
+		mem[q - mem_min].hh.U2.b0 = 0;
+		mem[q - mem_min].hh.U2.b1 = 2;
 		mem[q - mem_min].hh.rh = 29993;
 		mem[q - mem_min + 1].hh.rh = 0;
-		mem[q - mem_min + 1].hh.variant.lh = cur_list.pg_field + 1;
+		mem[q - mem_min + 1].hh.lh = cur_list.pg_field + 1;
 		mem[q - mem_min + 2].int_ = 0;
 		mem[29993 - mem_min].hh.rh = q;
 		active_width[1] = background[1];
@@ -14092,22 +14025,22 @@ void line_break(int final_widow_penalty)
 			if (cur_p >= hi_mem_min) {
 				prev_p = cur_p;
 				do {
-					f = mem[cur_p - mem_min].hh.variant.U2.b0;
-					(active_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[cur_p - mem_min].hh.variant.U2.b1))].qqqq).b0))].int_));
+					f = mem[cur_p - mem_min].hh.U2.b0;
+					(active_width[1] += (font_info[(width_base[f] + ((font_info[char_base[f] + mem[cur_p - mem_min].hh.U2.b1].qqqq).b0))].int_));
 					cur_p = mem[cur_p - mem_min].hh.rh;
 				} while (cur_p >= hi_mem_min);
 			}
-			switch (mem[cur_p - mem_min].hh.variant.U2.b0) {
+			switch (mem[cur_p - mem_min].hh.U2.b0) {
 
 			case 0: case 1: case 2:
 				active_width[1] += mem[cur_p - mem_min + 1].int_;
 				break;
 
 			case 8:
-				if (mem[cur_p - mem_min].hh.variant.U2.b1 == 4) {
+				if (mem[cur_p - mem_min].hh.U2.b1 == 4) {
 					cur_lang = mem[cur_p - mem_min + 1].hh.rh;
-					l_hyf = mem[cur_p - mem_min + 1].hh.variant.U2.b0;
-					r_hyf = mem[cur_p - mem_min + 1].hh.variant.U2.b1;
+					l_hyf = mem[cur_p - mem_min + 1].hh.U2.b0;
+					r_hyf = mem[cur_p - mem_min + 1].hh.U2.b1;
 				}
 				break;
 
@@ -14116,18 +14049,18 @@ void line_break(int final_widow_penalty)
 					if (prev_p >= hi_mem_min) {
 						try_break(0, 0);
 					}
-					else if (mem[prev_p - mem_min].hh.variant.U2.b0 < 9) {
+					else if (mem[prev_p - mem_min].hh.U2.b0 < 9) {
 						try_break(0, 0);
 					}
-					else if ((mem[prev_p - mem_min].hh.variant.U2.b0 == 11) && (mem[prev_p - mem_min].hh.variant.U2.b1 != 1))
+					else if ((mem[prev_p - mem_min].hh.U2.b0 == 11) && (mem[prev_p - mem_min].hh.U2.b1 != 1))
 						try_break(0, 0);
 				}
-				if (mem[mem[cur_p - mem_min + 1].hh.variant.lh - mem_min].hh.variant.U2.b1
-						&& mem[mem[cur_p - mem_min + 1].hh.variant.lh - mem_min + 3].int_)
-					mem[cur_p - mem_min + 1].hh.variant.lh = finite_shrink(mem[cur_p - mem_min + 1].hh.variant.lh);
-				q = mem[cur_p - mem_min + 1].hh.variant.lh;
+				if (mem[mem[cur_p - mem_min + 1].hh.lh - mem_min].hh.U2.b1
+						&& mem[mem[cur_p - mem_min + 1].hh.lh - mem_min + 3].int_)
+					mem[cur_p - mem_min + 1].hh.lh = finite_shrink(mem[cur_p - mem_min + 1].hh.lh);
+				q = mem[cur_p - mem_min + 1].hh.lh;
 				active_width[1] += mem[q - mem_min + 1].int_;
-				active_width[mem[q - mem_min].hh.variant.U2.b0 + 2] += mem[q - mem_min + 2].int_;
+				active_width[mem[q - mem_min].hh.U2.b0 + 2] += mem[q - mem_min + 2].int_;
 				active_width[6] += mem[q - mem_min + 3].int_;
 				if (second_pass && auto_breaking) {
 					prev_s = cur_p;
@@ -14135,24 +14068,24 @@ void line_break(int final_widow_penalty)
 					if (s) {
 						while (true) {
 							if (s >= hi_mem_min) {
-								c = mem[s - mem_min].hh.variant.U2.b1;
-								hf = mem[s - mem_min].hh.variant.U2.b0;
+								c = mem[s - mem_min].hh.U2.b1;
+								hf = mem[s - mem_min].hh.U2.b0;
 							}
-							else if (mem[s - mem_min].hh.variant.U2.b0 == 6) {
+							else if (mem[s - mem_min].hh.U2.b0 == 6) {
 								if (!mem[s - mem_min + 1].hh.rh)
 									goto _L22;
 								q = mem[s - mem_min + 1].hh.rh;
-								c = mem[q - mem_min].hh.variant.U2.b1;
-								hf = mem[q - mem_min].hh.variant.U2.b0;
+								c = mem[q - mem_min].hh.U2.b1;
+								hf = mem[q - mem_min].hh.U2.b0;
 							}
-							else if ((mem[s - mem_min].hh.variant.U2.b0 == 11) && (!mem[s - mem_min].hh.variant.U2.b1)) {
+							else if ((mem[s - mem_min].hh.U2.b0 == 11) && (!mem[s - mem_min].hh.U2.b1)) {
 								goto _L22;
 							}
-							else if (mem[s - mem_min].hh.variant.U2.b0 == 8) {
-								if (mem[s - mem_min].hh.variant.U2.b1 == 4) {
+							else if (mem[s - mem_min].hh.U2.b0 == 8) {
+								if (mem[s - mem_min].hh.U2.b1 == 4) {
 									cur_lang = mem[s - mem_min + 1].hh.rh;
-									l_hyf = mem[s - mem_min + 1].hh.variant.U2.b0;
-									r_hyf = mem[s - mem_min + 1].hh.variant.U2.b1;
+									l_hyf = mem[s - mem_min + 1].hh.U2.b0;
+									r_hyf = mem[s - mem_min + 1].hh.U2.b1;
 								}
 								goto _L22;
 							}
@@ -14181,9 +14114,9 @@ _L32:
 						hn = 0;
 						while (true) {
 							if (s >= hi_mem_min) {
-								if (mem[s - mem_min].hh.variant.U2.b0 != hf)
+								if (mem[s - mem_min].hh.U2.b0 != hf)
 									goto _L33;
-								hyf_bchar = mem[s - mem_min].hh.variant.U2.b1;
+								hyf_bchar = mem[s - mem_min].hh.U2.b1;
 								c = hyf_bchar;
 								if (!eqtb[c+4239].hh.rh)
 									goto _L33;
@@ -14195,15 +14128,15 @@ _L32:
 								hc[hn] = eqtb[c+4239].hh.rh;
 								hyf_bchar = 256;
 							}
-							else if (mem[s - mem_min].hh.variant.U2.b0 == 6) {
-								if (mem[s - mem_min + 1].hh.variant.U2.b0 != hf)
+							else if (mem[s - mem_min].hh.U2.b0 == 6) {
+								if (mem[s - mem_min + 1].hh.U2.b0 != hf)
 									goto _L33;
 								j = hn;
 								q = mem[s - mem_min + 1].hh.rh;
 								if (q > 0)
-									hyf_bchar = mem[q - mem_min].hh.variant.U2.b1;
+									hyf_bchar = mem[q - mem_min].hh.U2.b1;
 								while (q > 0) {
-									c = mem[q - mem_min].hh.variant.U2.b1;
+									c = mem[q - mem_min].hh.U2.b1;
 									if (!eqtb[c+4239].hh.rh)
 										goto _L33;
 									if (j == 63)
@@ -14215,12 +14148,12 @@ _L32:
 								}
 								hb = s;
 								hn = j;
-								if (mem[s - mem_min].hh.variant.U2.b1 & 1)
+								if (mem[s - mem_min].hh.U2.b1 & 1)
 									hyf_bchar = font_bchar[hf];
 								else
 									hyf_bchar = 256;
 							}
-							else if ((mem[s - mem_min].hh.variant.U2.b0 == 11) && (!mem[s - mem_min].hh.variant.U2.b1)) {
+							else if ((mem[s - mem_min].hh.U2.b0 == 11) && (!mem[s - mem_min].hh.U2.b1)) {
 								hb = s;
 								hyf_bchar = font_bchar[hf];
 							}
@@ -14234,14 +14167,14 @@ _L33:
 							goto _L31;
 						while (true) {
 							if (s < hi_mem_min) {
-								switch (mem[s - mem_min].hh.variant.U2.b0) {
+								switch (mem[s - mem_min].hh.U2.b0) {
 
 								case 6:
 									// blank case
 									break;
 
 								case 11:
-									if (mem[s - mem_min].hh.variant.U2.b1)
+									if (mem[s - mem_min].hh.U2.b1)
 										goto _L34;
 									break;
 
@@ -14264,9 +14197,9 @@ _L31: ;
 				break;
 
 			case 11:
-				if (mem[cur_p - mem_min].hh.variant.U2.b1 == 1) {
+				if (mem[cur_p - mem_min].hh.U2.b1 == 1) {
 					if ((mem[cur_p - mem_min].hh.rh < hi_mem_min) && auto_breaking) {
-						if (mem[mem[cur_p - mem_min].hh.rh - mem_min].hh.variant.U2.b0 == 10)
+						if (mem[mem[cur_p - mem_min].hh.rh - mem_min].hh.U2.b0 == 10)
 							try_break(0, 0);
 					}
 					active_width[1] += mem[cur_p - mem_min + 1].int_;
@@ -14277,12 +14210,12 @@ _L31: ;
 				break;
 
 			case 6:
-				f = mem[cur_p - mem_min + 1].hh.variant.U2.b0;
-				(active_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[cur_p - mem_min + 1].hh.variant.U2.b1))].qqqq).b0))].int_));
+				f = mem[cur_p - mem_min + 1].hh.U2.b0;
+				(active_width[1] += (font_info[(width_base[f] + ((font_info[char_base[f] + mem[cur_p - mem_min + 1].hh.U2.b1].qqqq).b0))].int_));
 				break;
 
 			case 7:
-				s = mem[cur_p - mem_min + 1].hh.variant.lh;
+				s = mem[cur_p - mem_min + 1].hh.lh;
 				disc_width = 0;
 				if (!s) {
 					try_break(eqtb[5267].int_, 1);
@@ -14290,15 +14223,15 @@ _L31: ;
 				else {
 					do {
 						if (s >= hi_mem_min) {
-							f = mem[s - mem_min].hh.variant.U2.b0;
-							(disc_width += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[s - mem_min].hh.variant.U2.b1))].qqqq).b0))].int_));
+							f = mem[s - mem_min].hh.U2.b0;
+							(disc_width += (font_info[(width_base[f] + (font_info[char_base[f] + mem[s - mem_min].hh.U2.b1].qqqq.b0))].int_));
 						}
 						else {
-							switch (mem[s - mem_min].hh.variant.U2.b0) {
+							switch (mem[s - mem_min].hh.U2.b0) {
 
 							case 6:
-								f = mem[s - mem_min + 1].hh.variant.U2.b0;
-								(disc_width += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[s - mem_min + 1].hh.variant.U2.b1))].qqqq).b0))].int_));
+								f = mem[s - mem_min + 1].hh.U2.b0;
+								(disc_width += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[s - mem_min + 1].hh.U2.b1))].qqqq).b0))].int_));
 								break;
 
 							case 0: case 1: case 2: case 11:
@@ -14316,19 +14249,19 @@ _L31: ;
 					try_break(eqtb[5266].int_, 1);
 					active_width[1] -= disc_width;
 				}
-				r = mem[cur_p - mem_min].hh.variant.U2.b1;
+				r = mem[cur_p - mem_min].hh.U2.b1;
 				s = mem[cur_p - mem_min].hh.rh;
 				while (r > 0) {
 					if (s >= hi_mem_min) {
-						f = mem[s - mem_min].hh.variant.U2.b0;
-						(active_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[s - mem_min].hh.variant.U2.b1))].qqqq).b0))].int_));
+						f = mem[s - mem_min].hh.U2.b0;
+						(active_width[1] += (font_info[(width_base[f] + ((font_info[char_base[f] + mem[s - mem_min].hh.U2.b1].qqqq).b0))].int_));
 					}
 					else {
-						switch (mem[s - mem_min].hh.variant.U2.b0) {
+						switch (mem[s - mem_min].hh.U2.b0) {
 
 						case 6:
-							f = mem[s - mem_min + 1].hh.variant.U2.b0;
-							(active_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[s - mem_min + 1].hh.variant.U2.b1))].qqqq).b0))].int_));
+							f = mem[s - mem_min + 1].hh.U2.b0;
+							(active_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + (mem[s - mem_min + 1].hh.U2.b1))].qqqq).b0))].int_));
 							break;
 
 						case 0: case 1: case 2: case 11:
@@ -14349,9 +14282,9 @@ _L31: ;
 				break;
 
 			case 9:
-				auto_breaking = (mem[cur_p - mem_min].hh.variant.U2.b1 == 1);
+				auto_breaking = (mem[cur_p - mem_min].hh.U2.b1 == 1);
 				if ((mem[cur_p - mem_min].hh.rh < hi_mem_min) && auto_breaking) {
-					if (mem[mem[cur_p - mem_min].hh.rh - mem_min].hh.variant.U2.b0 == 10)
+					if (mem[mem[cur_p - mem_min].hh.rh - mem_min].hh.U2.b0 == 10)
 						try_break(0, 0);
 				}
 				active_width[1] += mem[cur_p - mem_min + 1].int_;
@@ -14379,7 +14312,7 @@ _L35: ;
 				r = mem[29993 - mem_min].hh.rh;
 				fewest_demerits = 1073741823;
 				do {
-					if (mem[r - mem_min].hh.variant.U2.b0 != 2) {
+					if (mem[r - mem_min].hh.U2.b0 != 2) {
 						if (mem[r - mem_min + 2].int_ < fewest_demerits) {
 							fewest_demerits = mem[r - mem_min + 2].int_;
 							best_bet = r;
@@ -14387,14 +14320,14 @@ _L35: ;
 					}
 					r = mem[r - mem_min].hh.rh;
 				} while (r != 29993);
-				best_line = mem[best_bet - mem_min + 1].hh.variant.lh;
+				best_line = mem[best_bet - mem_min + 1].hh.lh;
 				if (!eqtb[5282].int_)
 					goto _L30;
 				r = mem[29993 - mem_min].hh.rh;
 				actual_looseness = 0;
 				do {
-					if (mem[r - mem_min].hh.variant.U2.b0 != 2) {
-						line_diff = mem[r - mem_min + 1].hh.variant.lh - best_line;
+					if (mem[r - mem_min].hh.U2.b0 != 2) {
+						line_diff = mem[r - mem_min + 1].hh.lh - best_line;
 						if (((line_diff < actual_looseness) && (eqtb[5282].int_ <= line_diff))
 								|| ((line_diff > actual_looseness) && (eqtb[5282].int_ >= line_diff))) {
 							best_bet = r;
@@ -14408,7 +14341,7 @@ _L35: ;
 					}
 					r = mem[r - mem_min].hh.rh;
 				} while (r != 29993);
-				best_line = mem[best_bet - mem_min + 1].hh.variant.lh;
+				best_line = mem[best_bet - mem_min + 1].hh.lh;
 				if ((actual_looseness == eqtb[5282].int_) || final_pass)
 					goto _L30;
 			}
@@ -14416,7 +14349,7 @@ _L35: ;
 		q = mem[29993 - mem_min].hh.rh;
 		while (q != 29993) {
 			cur_p = mem[q - mem_min].hh.rh;
-			if (mem[q - mem_min].hh.variant.U2.b0 == 2)
+			if (mem[q - mem_min].hh.U2.b0 == 2)
 				free_node(q, 7);
 			else
 				free_node(q, 3);
@@ -14443,7 +14376,7 @@ _L30:
 	q = mem[29993 - mem_min].hh.rh;
 	while (q != 29993) {
 		cur_p = mem[q - mem_min].hh.rh;
-		if (mem[q - mem_min].hh.variant.U2.b0 == 2)
+		if (mem[q - mem_min].hh.U2.b0 == 2)
 			free_node(q, 7);
 		else
 			free_node(q, 3);
@@ -14461,10 +14394,11 @@ _L30:
 void new_hyph_exceptions()
 {
 	char n = 0, j;
-	short h;
-	int k;
-	unsigned short p = 0, q;
-	int s, t, u, v;
+	hyph_pointer h;
+	str_number k;
+	halfword p = 0, q;
+	str_number s, t;
+	pool_pointer u, v;
 
 	scan_left_brace();
 	if (eqtb[5313].int_ <= 0) {
@@ -14484,7 +14418,7 @@ _L21:
 				if (n < 63) {
 					q = get_avail();
 					mem[q - mem_min].hh.rh = p;
-					mem[q - mem_min].hh.variant.lh = n;
+					mem[q - mem_min].hh.lh = n;
 					p = q;
 				}
 			}
@@ -14578,13 +14512,13 @@ _L45:
 _L10: ;
 }
 
-unsigned short prune_page_top(unsigned short p)
+halfword prune_page_top(halfword p)
 {
-	unsigned short prev_p = 29997, q;
+	halfword prev_p = 29997, q;
 
 	mem[29997 - mem_min].hh.rh = p;
 	while (p) {
-		switch (mem[p - mem_min].hh.variant.U2.b0) {
+		switch (mem[p - mem_min].hh.U2.b0) {
 
 		case 0: case 1: case 2:
 			q = new_skip_param(10);
@@ -14618,13 +14552,12 @@ unsigned short prune_page_top(unsigned short p)
 	return mem[29997 - mem_min].hh.rh;
 }
 
-unsigned short vert_break(unsigned short p, int h, int d)
+halfword vert_break(halfword p, scaled h, scaled d)
 {
-	unsigned short prev_p = p, q, r;
-	int pi, b, least_cost = 1073741823;
-	unsigned short best_place;
-	int prev_dp = 0;
-	char t;
+	halfword prev_p = p, q, r, best_place;
+	integer pi, b, least_cost = 1073741823;
+	scaled prev_dp = 0;
+	small_number t;
 
 	active_width[1] = 0;
 	active_width[2] = 0;
@@ -14637,7 +14570,7 @@ unsigned short vert_break(unsigned short p, int h, int d)
 			pi = -10000;
 		}
 		else {
-			switch (mem[p - mem_min].hh.variant.U2.b0) {
+			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1: case 2:
 				active_width[1] += prev_dp + mem[p - mem_min + 3].int_;
@@ -14650,7 +14583,7 @@ unsigned short vert_break(unsigned short p, int h, int d)
 				break;
 
 			case 10:
-				if (mem[prev_p - mem_min].hh.variant.U2.b0 >= 9)
+				if (mem[prev_p - mem_min].hh.U2.b0 >= 9)
 					goto _L90;
 				pi = 0;
 				break;
@@ -14659,7 +14592,7 @@ unsigned short vert_break(unsigned short p, int h, int d)
 				if (!mem[p - mem_min].hh.rh)
 					t = 12;
 				else
-					t = mem[mem[p - mem_min].hh.rh - mem_min].hh.variant.U2.b0;
+					t = mem[mem[p - mem_min].hh.rh - mem_min].hh.U2.b0;
 				if (t != 10)
 					goto _L90;
 				pi = 0;
@@ -14706,17 +14639,17 @@ unsigned short vert_break(unsigned short p, int h, int d)
 			if ((b == 1073741823) || (pi <= (-10000)))
 				goto _L30;
 		}
-		if ((mem[p - mem_min].hh.variant.U2.b0 < 10) || (mem[p - mem_min].hh.variant.U2.b0 > 11))
+		if ((mem[p - mem_min].hh.U2.b0 < 10) || (mem[p - mem_min].hh.U2.b0 > 11))
 			goto _L45;
 _L90:
-		if (mem[p - mem_min].hh.variant.U2.b0 == 11) {
+		if (mem[p - mem_min].hh.U2.b0 == 11) {
 			q = p;
 		}
 		else {
-			q = mem[p - mem_min + 1].hh.variant.lh;
-			active_width[mem[q - mem_min].hh.variant.U2.b0 + 2] += mem[q - mem_min + 2].int_;
+			q = mem[p - mem_min + 1].hh.lh;
+			active_width[mem[q - mem_min].hh.U2.b0 + 2] += mem[q - mem_min + 2].int_;
 			active_width[6] += mem[q - mem_min + 3].int_;
-			if (mem[q - mem_min].hh.variant.U2.b1 && mem[q - mem_min + 3].int_) {
+			if (mem[q - mem_min].hh.U2.b1 && mem[q - mem_min + 3].int_) {
 				print_nl(262);
 				print(960);
 				help_ptr = 4;
@@ -14726,9 +14659,9 @@ _L90:
 				help_line[0] = 921;
 				error();
 				r = new_spec(q);
-				mem[r - mem_min].hh.variant.U2.b1 = 0;
+				mem[r - mem_min].hh.U2.b1 = 0;
 				delete_glue_ref(q);
-				mem[p - mem_min + 1].hh.variant.lh = r;
+				mem[p - mem_min + 1].hh.lh = r;
 				q = r;
 			}
 		}
@@ -14746,11 +14679,11 @@ _L30:
 	return best_place;
 }
 
-unsigned short vsplit(uint8_t n, int h)
+halfword vsplit(eight_bits n, scaled h)
 {
-	unsigned short result, v, p, q;
+	halfword result, p, q;
+	halfword v = eqtb[n+3678].hh.rh;
 
-	v = eqtb[n+3678].hh.rh;
 	if (cur_mark[3]) {
 		delete_token_ref(cur_mark[3]);
 		cur_mark[3] = 0;
@@ -14761,7 +14694,7 @@ unsigned short vsplit(uint8_t n, int h)
 		result = 0;
 		goto _L10;
 	}
-	if (mem[v - mem_min].hh.variant.U2.b0 != 1) {
+	if (mem[v - mem_min].hh.U2.b0 != 1) {
 		print_nl(262);
 		print(338);
 		print_esc(964);
@@ -14781,16 +14714,16 @@ unsigned short vsplit(uint8_t n, int h)
 	}
 	else {
 		while (true) {
-			if (mem[p - mem_min].hh.variant.U2.b0 == 4) {
+			if (mem[p - mem_min].hh.U2.b0 == 4) {
 				if (!cur_mark[3]) {
 					cur_mark[3] = mem[p - mem_min + 1].int_;
 					cur_mark[4] = cur_mark[3];
-					mem[cur_mark[3] - mem_min].hh.variant.lh += 2;
+					mem[cur_mark[3] - mem_min].hh.lh += 2;
 				}
 				else {
 					delete_token_ref(cur_mark[4]);
 					cur_mark[4] = mem[p - mem_min + 1].int_;
-					++mem[cur_mark[4] - mem_min].hh.variant.lh;
+					++mem[cur_mark[4] - mem_min].hh.lh;
 				}
 			}
 			if (mem[p - mem_min].hh.rh == q) {
@@ -14842,7 +14775,7 @@ void print_totals()
 	}
 }
 
-void freeze_page_specs(char s)
+void freeze_page_specs(small_number s)
 {
 	page_contents = s;
 	page_so_far[0] = eqtb[5834].int_;
@@ -14857,7 +14790,7 @@ void freeze_page_specs(char s)
 	least_page_cost = 1073741823;
 }
 
-void box_error(uint8_t n)
+void box_error(eight_bits n)
 {
 	error();
 	begin_diagnostic();
@@ -14868,14 +14801,13 @@ void box_error(uint8_t n)
 	eqtb[n+3678].hh.rh = 0;
 }
 
-void ensure_vbox(uint8_t n)
+void ensure_vbox(eight_bits n)
 {
-	unsigned short p;
+	halfword p = eqtb[n+3678].hh.rh;
 
-	p = eqtb[n+3678].hh.rh;
 	if (!p)
 		return;
-	if (mem[p - mem_min].hh.variant.U2.b0)
+	if (mem[p - mem_min].hh.U2.b0)
 		return;
 	print_nl(262);
 	print(988);
@@ -14886,15 +14818,16 @@ void ensure_vbox(uint8_t n)
 	box_error(n);
 }
 
-void fire_up(unsigned short c)
+void fire_up(halfword c)
 {
-	unsigned short p, q = 29996, r, s, prev_p = 29998;
+	halfword p, q = 29996, r, s, prev_p = 29998;
 	uint8_t n;
 	bool wait;
-	int save_vbadness, save_vfuzz;
-	unsigned short save_split_top_skip;
+	integer save_vbadness;
+	scaled save_vfuzz;
+	halfword save_split_top_skip;
 
-	if (mem[best_page_break - mem_min].hh.variant.U2.b0 == 12) {
+	if (mem[best_page_break - mem_min].hh.U2.b0 == 12) {
 		geq_word_define(5302, mem[best_page_break - mem_min + 1].int_);
 		mem[best_page_break - mem_min + 1].int_ = 10000;
 	}
@@ -14905,7 +14838,7 @@ void fire_up(unsigned short c)
 		if (cur_mark[0])
 			delete_token_ref(cur_mark[0]);
 		cur_mark[0] = cur_mark[2];
-		++mem[cur_mark[0] - mem_min].hh.variant.lh;
+		++mem[cur_mark[0] - mem_min].hh.lh;
 		delete_token_ref(cur_mark[1]);
 		cur_mark[1] = 0;
 	}
@@ -14926,8 +14859,8 @@ void fire_up(unsigned short c)
 	if (eqtb[5316].int_ <= 0) {
 		r = mem[30000 - mem_min].hh.rh;
 		while (r != 30000) {
-			if (mem[r - mem_min + 2].hh.variant.lh) {
-				n = mem[r - mem_min].hh.variant.U2.b1;
+			if (mem[r - mem_min + 2].hh.lh) {
+				n = mem[r - mem_min].hh.U2.b1;
 				ensure_vbox(n);
 				if (!eqtb[n+3678].hh.rh)
 					eqtb[n+3678].hh.rh = new_null_box();
@@ -14942,36 +14875,36 @@ void fire_up(unsigned short c)
 	mem[q - mem_min].hh.rh = 0;
 	p = mem[prev_p - mem_min].hh.rh;
 	while (p != best_page_break) {
-		if (mem[p - mem_min].hh.variant.U2.b0 == 3) {
+		if (mem[p - mem_min].hh.U2.b0 == 3) {
 			if (eqtb[5316].int_ <= 0) {
 				r = mem[30000 - mem_min].hh.rh;
-				while (mem[r - mem_min].hh.variant.U2.b1 != mem[p - mem_min].hh.variant.U2.b1)
+				while (mem[r - mem_min].hh.U2.b1 != mem[p - mem_min].hh.U2.b1)
 					r = mem[r - mem_min].hh.rh;
-				if (!mem[r - mem_min + 2].hh.variant.lh) {
+				if (!mem[r - mem_min + 2].hh.lh) {
 					wait = true;
 				}
 				else {
 					wait = false;
 					s = mem[r - mem_min + 2].hh.rh;
-					mem[s - mem_min].hh.rh = mem[p - mem_min + 4].hh.variant.lh;
-					if (mem[r - mem_min + 2].hh.variant.lh == p) {
-						if (mem[r - mem_min].hh.variant.U2.b0 == 1) {
-							if ((mem[r - mem_min + 1].hh.variant.lh == p) && mem[r - mem_min + 1].hh.rh) {
+					mem[s - mem_min].hh.rh = mem[p - mem_min + 4].hh.lh;
+					if (mem[r - mem_min + 2].hh.lh == p) {
+						if (mem[r - mem_min].hh.U2.b0 == 1) {
+							if ((mem[r - mem_min + 1].hh.lh == p) && mem[r - mem_min + 1].hh.rh) {
 								while (mem[s - mem_min].hh.rh != mem[r - mem_min + 1].hh.rh)
 									s = mem[s - mem_min].hh.rh;
 								mem[s - mem_min].hh.rh = 0;
 								eqtb[2892].hh.rh = mem[p - mem_min + 4].hh.rh;
-								mem[p - mem_min + 4].hh.variant.lh = prune_page_top(mem[r - mem_min + 1].hh.rh);
-								if (mem[p - mem_min + 4].hh.variant.lh) {
-									temp_ptr = vpackage(mem[p - mem_min + 4].hh.variant.lh, 0, 1, 1073741823);
+								mem[p - mem_min + 4].hh.lh = prune_page_top(mem[r - mem_min + 1].hh.rh);
+								if (mem[p - mem_min + 4].hh.lh) {
+									temp_ptr = vpackage(mem[p - mem_min + 4].hh.lh, 0, 1, 1073741823);
 									(mem[p - mem_min + 3].int_ = (mem[temp_ptr - mem_min + 3].int_ + (mem[temp_ptr - mem_min + 2].int_)));
 									free_node(temp_ptr, 7);
 									wait = true;
 								}
 							}
 						}
-						mem[r - mem_min + 2].hh.variant.lh = 0;
-						n = mem[r - mem_min].hh.variant.U2.b1;
+						mem[r - mem_min + 2].hh.lh = 0;
+						n = mem[r - mem_min].hh.U2.b1;
 						temp_ptr = mem[eqtb[n+3678].hh.rh - mem_min + 5].hh.rh;
 						free_node(eqtb[n+3678].hh.rh, 7);
 						eqtb[n+3678].hh.rh = vpackage(temp_ptr, 0, 1, 1073741823);
@@ -14996,15 +14929,15 @@ void fire_up(unsigned short c)
 				p = prev_p;
 			}
 		}
-		else if (mem[p - mem_min].hh.variant.U2.b0 == 4) {
+		else if (mem[p - mem_min].hh.U2.b0 == 4) {
 			if (!cur_mark[1]) {
 				cur_mark[1] = mem[p - mem_min + 1].int_;
-				++mem[cur_mark[1] - mem_min].hh.variant.lh;
+				++mem[cur_mark[1] - mem_min].hh.lh;
 			}
 			if (cur_mark[2])
 				delete_token_ref(cur_mark[2]);
 			cur_mark[2] = mem[p - mem_min + 1].int_;
-			++mem[cur_mark[2] - mem_min].hh.variant.lh;
+			++mem[cur_mark[2] - mem_min].hh.lh;
 		}
 		prev_p = p;
 		p = mem[prev_p - mem_min].hh.rh;
@@ -15051,7 +14984,7 @@ void fire_up(unsigned short c)
 	mem[30000 - mem_min].hh.rh = 30000;
 	if (cur_mark[0] && (!cur_mark[1])) {
 		cur_mark[1] = cur_mark[0];
-		++mem[cur_mark[0] - mem_min].hh.variant.lh;
+		++mem[cur_mark[0] - mem_min].hh.lh;
 	}
 	if (eqtb[3413].hh.rh) {
 		if (dead_cycles < eqtb[5303].int_) {
@@ -15098,10 +15031,10 @@ _L10: ;
 
 void build_page()
 {
-	unsigned short p, q, r;
-	int b, c, pi;
+	halfword p, q, r;
+	integer b, c, pi;
 	uint8_t n;
-	int delta, h, w;
+	scaled delta, h, w;
 
 	if ((!mem[29999 - mem_min].hh.rh) || output_active)
 		goto _L10;
@@ -15112,19 +15045,19 @@ _L22:
 			delete_glue_ref(last_glue);
 		last_penalty = 0;
 		last_kern = 0;
-		if (mem[p - mem_min].hh.variant.U2.b0 == 10) {
-			last_glue = mem[p - mem_min + 1].hh.variant.lh;
+		if (mem[p - mem_min].hh.U2.b0 == 10) {
+			last_glue = mem[p - mem_min + 1].hh.lh;
 			++mem[last_glue - mem_min].hh.rh;
 		}
 		else {
 			last_glue = 65535;
-			if (mem[p - mem_min].hh.variant.U2.b0 == 12) {
+			if (mem[p - mem_min].hh.U2.b0 == 12) {
 				last_penalty = mem[p - mem_min + 1].int_;
 			}
-			else if (mem[p - mem_min].hh.variant.U2.b0 == 11)
+			else if (mem[p - mem_min].hh.U2.b0 == 11)
 				last_kern = mem[p - mem_min + 1].int_;
 		}
-		switch (mem[p - mem_min].hh.variant.U2.b0) {
+		switch (mem[p - mem_min].hh.U2.b0) {
 
 		case 0: case 1: case 2:
 			if (page_contents < 2) {
@@ -15155,7 +15088,7 @@ _L22:
 		case 10:
 			if (page_contents < 2)
 				goto _L31;
-			if (mem[page_tail - mem_min].hh.variant.U2.b0 >= 9)
+			if (mem[page_tail - mem_min].hh.U2.b0 >= 9)
 				goto _L90;
 			pi = 0;
 			break;
@@ -15165,7 +15098,7 @@ _L22:
 				goto _L31;
 			if (!mem[p - mem_min].hh.rh)
 				goto _L10;
-			if (mem[mem[p - mem_min].hh.rh - mem_min].hh.variant.U2.b0 != 10)
+			if (mem[mem[p - mem_min].hh.rh - mem_min].hh.U2.b0 != 10)
 				goto _L90;
 			pi = 0;
 			break;
@@ -15183,32 +15116,32 @@ _L22:
 		case 3:
 			if (!page_contents)
 				freeze_page_specs(1);
-			n = mem[p - mem_min].hh.variant.U2.b1;
+			n = mem[p - mem_min].hh.U2.b1;
 			r = 30000;
-			while (n >= mem[mem[r - mem_min].hh.rh - mem_min].hh.variant.U2.b1)
+			while (n >= mem[mem[r - mem_min].hh.rh - mem_min].hh.U2.b1)
 				r = mem[r - mem_min].hh.rh;
-			if (mem[r - mem_min].hh.variant.U2.b1 != n) {
+			if (mem[r - mem_min].hh.U2.b1 != n) {
 				q = get_node(4);
 				mem[q - mem_min].hh.rh = mem[r - mem_min].hh.rh;
 				mem[r - mem_min].hh.rh = q;
 				r = q;
-				mem[r - mem_min].hh.variant.U2.b1 = n;
-				mem[r - mem_min].hh.variant.U2.b0 = 0;
+				mem[r - mem_min].hh.U2.b1 = n;
+				mem[r - mem_min].hh.U2.b0 = 0;
 				ensure_vbox(n);
 				if (!eqtb[n+3678].hh.rh)
 					mem[r - mem_min + 3].int_ = 0;
 				else
 					(mem[r - mem_min + 3].int_ = (mem[eqtb[n+3678].hh.rh - mem_min + 3].int_ + (mem[(eqtb[n+3678].hh.rh - mem_min + 2)].int_)));
-				mem[r - mem_min + 2].hh.variant.lh = 0;
+				mem[r - mem_min + 2].hh.lh = 0;
 				q = eqtb[n+2900].hh.rh;
 				if (eqtb[n+5318].int_ == 1000)
 					h = mem[r - mem_min + 3].int_;
 				else
 					h = x_over_n(mem[r - mem_min + 3].int_, 1000) * eqtb[n+5318].int_;
 				page_so_far[0] += (-h) - mem[q - mem_min + 1].int_;
-				page_so_far[mem[q - mem_min].hh.variant.U2.b0 + 2] += mem[q - mem_min + 2].int_;
+				page_so_far[mem[q - mem_min].hh.U2.b0 + 2] += mem[q - mem_min + 2].int_;
 				page_so_far[6] += mem[q - mem_min + 3].int_;
-				if (mem[q - mem_min].hh.variant.U2.b1 && mem[q - mem_min + 3].int_) {
+				if (mem[q - mem_min].hh.U2.b1 && mem[q - mem_min + 3].int_) {
 					print_nl(262);
 					print(997);
 					print_esc(395);
@@ -15220,7 +15153,7 @@ _L22:
 					error();
 				}
 			}
-			if (mem[r - mem_min].hh.variant.U2.b0 == 1) {
+			if (mem[r - mem_min].hh.U2.b0 == 1) {
 				insert_penalties += mem[p - mem_min + 1].int_;
 			}
 			else {
@@ -15245,18 +15178,18 @@ _L22:
 					}
 					if (w > (eqtb[n+5851].int_ - mem[r - mem_min + 3].int_))
 						w = eqtb[n+5851].int_ - mem[r - mem_min + 3].int_;
-					q = vert_break(mem[p - mem_min + 4].hh.variant.lh, w, mem[p - mem_min + 2].int_);
+					q = vert_break(mem[p - mem_min + 4].hh.lh, w, mem[p - mem_min + 2].int_);
 					mem[r - mem_min + 3].int_ += best_height_plus_depth;
 					if (eqtb[n+5318].int_ != 1000)
 						best_height_plus_depth = x_over_n(best_height_plus_depth, 1000) * eqtb[n+5318].int_;
 					page_so_far[0] -= best_height_plus_depth;
-					mem[r - mem_min].hh.variant.U2.b0 = 1;
+					mem[r - mem_min].hh.U2.b0 = 1;
 					mem[r - mem_min + 1].hh.rh = q;
-					mem[r - mem_min + 1].hh.variant.lh = p;
+					mem[r - mem_min + 1].hh.lh = p;
 					if (!q) {
 						insert_penalties -= 10000;
 					}
-					else if (mem[q - mem_min].hh.variant.U2.b0 == 12)
+					else if (mem[q - mem_min].hh.U2.b0 == 12)
 						insert_penalties += mem[q - mem_min + 1].int_;
 				}
 			}
@@ -15298,7 +15231,7 @@ _L22:
 				least_page_cost = c;
 				r = mem[30000 - mem_min].hh.rh;
 				while (r != 30000) {
-					mem[r - mem_min + 2].hh.variant.lh = mem[r - mem_min + 2].hh.rh;
+					mem[r - mem_min + 2].hh.lh = mem[r - mem_min + 2].hh.rh;
 					r = mem[r - mem_min].hh.rh;
 				}
 			}
@@ -15309,17 +15242,17 @@ _L22:
 				goto _L30;
 			}
 		}
-		if ((mem[p - mem_min].hh.variant.U2.b0 < 10) || (mem[p - mem_min].hh.variant.U2.b0 > 11))
+		if ((mem[p - mem_min].hh.U2.b0 < 10) || (mem[p - mem_min].hh.U2.b0 > 11))
 			goto _L80;
 _L90:
-		if (mem[p - mem_min].hh.variant.U2.b0 == 11) {
+		if (mem[p - mem_min].hh.U2.b0 == 11) {
 			q = p;
 		}
 		else {
-			q = mem[p - mem_min + 1].hh.variant.lh;
-			page_so_far[mem[q - mem_min].hh.variant.U2.b0 + 2] += mem[q - mem_min + 2].int_;
+			q = mem[p - mem_min + 1].hh.lh;
+			page_so_far[mem[q - mem_min].hh.U2.b0 + 2] += mem[q - mem_min + 2].int_;
 			page_so_far[6] += mem[q - mem_min + 3].int_;
-			if (mem[q - mem_min].hh.variant.U2.b1 && mem[q - mem_min + 3].int_) {
+			if (mem[q - mem_min].hh.U2.b1 && mem[q - mem_min + 3].int_) {
 				print_nl(262);
 				print(993);
 				help_ptr = 4;
@@ -15329,9 +15262,9 @@ _L90:
 				help_line[0] = 921;
 				error();
 				r = new_spec(q);
-				mem[r - mem_min].hh.variant.U2.b1 = 0;
+				mem[r - mem_min].hh.U2.b1 = 0;
 				delete_glue_ref(q);
-				mem[p - mem_min + 1].hh.variant.lh = r;
+				mem[p - mem_min + 1].hh.lh = r;
 				q = r;
 			}
 		}
@@ -15362,9 +15295,9 @@ _L10: ;
 
 void app_space()
 {
-	unsigned short q;
+	halfword q;
 
-	if ((cur_list.aux_field.hh.variant.lh >= 2000) && eqtb[2895].hh.rh) {
+	if ((cur_list.aux_field.hh.lh >= 2000) && eqtb[2895].hh.rh) {
 		q = new_param_glue(13);
 	}
 	else {
@@ -15383,10 +15316,10 @@ void app_space()
 			}
 		}
 		main_p = new_spec(main_p);
-		if (cur_list.aux_field.hh.variant.lh >= 2000)
+		if (cur_list.aux_field.hh.lh >= 2000)
 			mem[main_p - mem_min + 1].int_ += font_info[param_base[eqtb[3934].hh.rh] + 7].int_;
-		mem[main_p - mem_min + 2].int_ = xn_over_d(mem[main_p - mem_min + 2].int_, cur_list.aux_field.hh.variant.lh, 1000);
-		mem[main_p - mem_min + 3].int_ = xn_over_d(mem[main_p - mem_min + 3].int_, 1000, cur_list.aux_field.hh.variant.lh);
+		mem[main_p - mem_min + 2].int_ = xn_over_d(mem[main_p - mem_min + 2].int_, cur_list.aux_field.hh.lh, 1000);
+		mem[main_p - mem_min + 3].int_ = xn_over_d(mem[main_p - mem_min + 3].int_, 1000, cur_list.aux_field.hh.lh);
 		q = new_glue(main_p);
 		mem[main_p - mem_min].hh.rh = 0;
 	}
@@ -15463,9 +15396,8 @@ _L10:
 
 void append_glue()
 {
-	char s;
+	small_number s = cur_chr;
 
-	s = cur_chr;
 	switch (s) {
 
 	case 0:
@@ -15498,23 +15430,22 @@ void append_glue()
 		return;
 	--mem[cur_val - mem_min].hh.rh;
 	if (s > 4)
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 99;
+		mem[cur_list.tail_field - mem_min].hh.U2.b1 = 99;
 }
 
 void append_kern()
 {
-	uint8_t s;
+	quarterword s = cur_chr;
 
-	s = cur_chr;
 	scan_dimen(s == 99, false, false);
 	mem[cur_list.tail_field - mem_min].hh.rh = new_kern(cur_val);
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-	mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = s;
+	mem[cur_list.tail_field - mem_min].hh.U2.b1 = s;
 }
 
 void off_save()
 {
-	unsigned short p;
+	halfword p;
 
 	if (!cur_group) {
 		print_nl(262);
@@ -15533,25 +15464,25 @@ void off_save()
 	switch (cur_group) {
 
 	case 14:
-		mem[p - mem_min].hh.variant.lh = 6711;
+		mem[p - mem_min].hh.lh = 6711;
 		print_esc(516);
 		break;
 
 	case 15:
-		mem[p - mem_min].hh.variant.lh = 804;
+		mem[p - mem_min].hh.lh = 804;
 		print_char(36);
 		break;
 
 	case 16:
-		mem[p - mem_min].hh.variant.lh = 6712;
+		mem[p - mem_min].hh.lh = 6712;
 		mem[p - mem_min].hh.rh = get_avail();
 		p = mem[p - mem_min].hh.rh;
-		mem[p - mem_min].hh.variant.lh = 3118;
+		mem[p - mem_min].hh.lh = 3118;
 		print_esc(1041);
 		break;
 
 	default:
-		mem[p - mem_min].hh.variant.lh = 637;
+		mem[p - mem_min].hh.lh = 637;
 		print_char(125);
 		break;
 	}
@@ -15606,9 +15537,9 @@ void normal_paragraph()
 		eq_define(3412, 118, 0);
 }
 
-void box_end(int box_context)
+void box_end(integer box_context)
 {
-	unsigned short p;
+	halfword p;
 
 	if (box_context < 1073741824) {
 		if (!cur_box)
@@ -15628,12 +15559,12 @@ void box_end(int box_context)
 			return;
 		}
 		if (abs(cur_list.mode_field) == 102) {
-			cur_list.aux_field.hh.variant.lh = 1000;
+			cur_list.aux_field.hh.lh = 1000;
 		}
 		else {
 			p = new_noad();
 			mem[p - mem_min + 1].hh.rh = 2;
-			mem[p - mem_min + 1].hh.variant.lh = cur_box;
+			mem[p - mem_min + 1].hh.lh = cur_box;
 			cur_box = p;
 		}
 		mem[cur_list.tail_field - mem_min].hh.rh = cur_box;
@@ -15658,7 +15589,7 @@ void box_end(int box_context)
 	} while ((cur_cmd == 10) || (!cur_cmd));
 	if (((cur_cmd == 26) && (abs(cur_list.mode_field) != 1)) || ((cur_cmd == 27) && (abs(cur_list.mode_field) == 1))) {
 		append_glue();
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = box_context - 1073742237;
+		mem[cur_list.tail_field - mem_min].hh.U2.b1 = box_context - 1073742237;
 		mem[cur_list.tail_field - mem_min + 1].hh.rh = cur_box;
 		return;
 	}
@@ -15672,12 +15603,13 @@ void box_end(int box_context)
 	flush_node_list(cur_box);
 }
 
-void begin_box(int box_context)
+void begin_box(integer box_context)
 {
-	unsigned short p, q;
-	uint8_t m;
-	unsigned short k;
-	uint8_t n, N1;
+	halfword p, q;
+	quarterword m;
+	halfword k;
+	eight_bits n;
+	quarterword N1;
 
 	switch (cur_chr) {
 
@@ -15708,14 +15640,13 @@ void begin_box(int box_context)
 			error();
 		}
 		else if (cur_list.tail_field < hi_mem_min) {
-			if ((!mem[cur_list.tail_field - mem_min].hh.variant.U2.b0)
-					|| (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == 1)) {
+			if ((!mem[cur_list.tail_field - mem_min].hh.U2.b0) || (mem[cur_list.tail_field - mem_min].hh.U2.b0 == 1)) {
 				q = cur_list.head_field;
 				do {
 					p = q;
 					if (q < hi_mem_min) {
-						if (mem[q - mem_min].hh.variant.U2.b0 == 7) {
-							for (N1 = mem[q - mem_min].hh.variant.U2.b1, m = 1; m <= N1; ++m)
+						if (mem[q - mem_min].hh.U2.b0 == 7) {
+							for (N1 = mem[q - mem_min].hh.U2.b1, m = 1; m <= N1; ++m)
 								p = mem[p - mem_min].hh.rh;
 							if (p == cur_list.tail_field)
 								goto _L30;
@@ -15774,7 +15705,7 @@ _L30: ;
 				begin_token_list(eqtb[3418].hh.rh, 11);
 		}
 		else {
-			cur_list.aux_field.hh.variant.lh = 1000;
+			cur_list.aux_field.hh.lh = 1000;
 			if (eqtb[3417].hh.rh)
 				begin_token_list(eqtb[3417].hh.rh, 10);
 		}
@@ -15785,7 +15716,7 @@ _L30: ;
 _L10: ;
 }
 
-void scan_box(int box_context)
+void scan_box(integer box_context)
 {
 	do {
 		get_x_token();
@@ -15808,13 +15739,12 @@ void scan_box(int box_context)
 	back_error();
 }
 
-void package(char c)
+void package(small_number c)
 {
-	int h;
-	unsigned short p;
-	int d;
+	scaled h;
+	halfword p;
+	scaled d = eqtb[5837].int_;
 
-	d = eqtb[5837].int_;
 	unsave();
 	save_ptr -= 3;
 	if (cur_list.mode_field == (-102)) {
@@ -15827,7 +15757,7 @@ void package(char c)
 			h = 0;
 			p = mem[cur_box - mem_min + 5].hh.rh;
 			if (p) {
-				if (mem[p - mem_min].hh.variant.U2.b0 <= 2)
+				if (mem[p - mem_min].hh.U2.b0 <= 2)
 					h = mem[p - mem_min + 3].int_;
 			}
 			mem[cur_box - mem_min + 2].int_ += mem[cur_box - mem_min + 3].int_ - h;
@@ -15838,7 +15768,7 @@ void package(char c)
 	box_end(save_stack[save_ptr].int_);
 }
 
-char norm_min(int h)
+small_number norm_min(integer h)
 {
 	if (h <= 0) {
 		return 1;
@@ -15858,7 +15788,7 @@ void new_graf(bool indented)
 	}
 	push_nest();
 	cur_list.mode_field = 102;
-	cur_list.aux_field.hh.variant.lh = 1000;
+	cur_list.aux_field.hh.lh = 1000;
 	if (eqtb[5313].int_ <= 0) {
 		cur_lang = 0;
 	}
@@ -15881,19 +15811,19 @@ void new_graf(bool indented)
 
 void indent_in_hmode()
 {
-	unsigned short p, q;
+	halfword p, q;
 
 	if (cur_chr <= 0)
 		return;
 	p = new_null_box();
 	mem[p - mem_min + 1].int_ = eqtb[5830].int_;
 	if (abs(cur_list.mode_field) == 102) {
-		cur_list.aux_field.hh.variant.lh = 1000;
+		cur_list.aux_field.hh.lh = 1000;
 	}
 	else {
 		q = new_noad();
 		mem[q - mem_min + 1].hh.rh = 2;
-		mem[q - mem_min + 1].hh.variant.lh = p;
+		mem[q - mem_min + 1].hh.lh = p;
 		p = q;
 	}
 	mem[cur_list.tail_field - mem_min].hh.rh = p;
@@ -15965,12 +15895,11 @@ void begin_insert_or_adjust()
 
 void make_mark()
 {
-	unsigned short p;
+	halfword p = scan_toks(false, true);
 
-	p = scan_toks(false, true);
 	p = get_node(2);
-	mem[p - mem_min].hh.variant.U2.b0 = 4;
-	mem[p - mem_min].hh.variant.U2.b1 = 0;
+	mem[p - mem_min].hh.U2.b0 = 4;
+	mem[p - mem_min].hh.U2.b1 = 0;
 	mem[p - mem_min + 1].int_ = def_ref;
 	mem[cur_list.tail_field - mem_min].hh.rh = p;
 	cur_list.tail_field = p;
@@ -15987,8 +15916,8 @@ void append_penalty()
 
 void delete_last()
 {
-	unsigned short p, q;
-	uint8_t m, N;
+	halfword p, q;
+	quarterword m, N;
 
 	if ((cur_list.mode_field == 1) && (cur_list.tail_field == cur_list.head_field)) {
 		if ((cur_chr != 10) || (last_glue != 65535)) {
@@ -16005,13 +15934,13 @@ void delete_last()
 		}
 	}
 	else if (cur_list.tail_field < hi_mem_min) {
-		if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == cur_chr) {
+		if (mem[cur_list.tail_field - mem_min].hh.U2.b0 == cur_chr) {
 			q = cur_list.head_field;
 			do {
 				p = q;
 				if (q < hi_mem_min) {
-					if (mem[q - mem_min].hh.variant.U2.b0 == 7) {
-						for (N = mem[q - mem_min].hh.variant.U2.b1, m = 1; m <= N; ++m)
+					if (mem[q - mem_min].hh.U2.b0 == 7) {
+						for (N = mem[q - mem_min].hh.U2.b1, m = 1; m <= N; ++m)
 							p = mem[p - mem_min].hh.rh;
 						if (p == cur_list.tail_field)
 							goto _L10;
@@ -16029,16 +15958,15 @@ _L10: ;
 
 void unpackage()
 {
-	unsigned short p;
-	char c;
+	halfword p;
+	char c = cur_chr;
 
-	c = cur_chr;
 	scan_eight_bit_int();
 	p = eqtb[cur_val+3678].hh.rh;
 	if (!p)
 		goto _L10;
-	if ((abs(cur_list.mode_field) == 203) || ((abs(cur_list.mode_field) == 1) && (mem[p - mem_min].hh.variant.U2.b0 != 1))
-			|| ((abs(cur_list.mode_field) == 102) && mem[p - mem_min].hh.variant.U2.b0)) {
+	if ((abs(cur_list.mode_field) == 203) || ((abs(cur_list.mode_field) == 1) && (mem[p - mem_min].hh.U2.b0 != 1))
+			|| ((abs(cur_list.mode_field) == 102) && mem[p - mem_min].hh.U2.b0)) {
 		print_nl(262);
 		print(1096);
 		help_ptr = 3;
@@ -16063,29 +15991,29 @@ _L10: ;
 
 void append_italic_correction()
 {
-	unsigned short p;
-	int f;
+	halfword p;
+	internal_font_number f;
 
 	if (cur_list.tail_field != cur_list.head_field) {
 		if (cur_list.tail_field >= hi_mem_min) {
 			p = cur_list.tail_field;
 		}
-		else if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == 6)
+		else if (mem[cur_list.tail_field - mem_min].hh.U2.b0 == 6)
 			p = cur_list.tail_field + 1;
 		else
 			goto _L10;
-		f = mem[p - mem_min].hh.variant.U2.b0;
+		f = mem[p - mem_min].hh.U2.b0;
 		(mem[cur_list.tail_field - mem_min].hh.rh = new_kern(
-				 font_info[italic_base[f] + (font_info[char_base[f] + mem[p - mem_min].hh.variant.U2.b1].qqqq.b2 / 4)].int_));
+				 font_info[italic_base[f] + (font_info[char_base[f] + mem[p - mem_min].hh.U2.b1].qqqq.b2 / 4)].int_));
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 1;
+		mem[cur_list.tail_field - mem_min].hh.U2.b1 = 1;
 	}
 _L10: ;
 }
 
 void append_discretionary()
 {
-	int c;
+	integer c;
 
 	mem[cur_list.tail_field - mem_min].hh.rh = new_disc();
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
@@ -16093,7 +16021,7 @@ void append_discretionary()
 		c = hyphen_char[eqtb[3934].hh.rh];
 		if (c >= 0) {
 			if (c < 256)
-				mem[cur_list.tail_field - mem_min + 1].hh.variant.lh = new_character(eqtb[3934].hh.rh, c);
+				mem[cur_list.tail_field - mem_min + 1].hh.lh = new_character(eqtb[3934].hh.rh, c);
 		}
 		return;
 	}
@@ -16103,22 +16031,22 @@ void append_discretionary()
 	scan_left_brace();
 	push_nest();
 	cur_list.mode_field = -102;
-	cur_list.aux_field.hh.variant.lh = 1000;
+	cur_list.aux_field.hh.lh = 1000;
 }
 
 void build_discretionary()
 {
-	unsigned short p, q;
-	int n = 0;
+	halfword p, q;
+	integer n = 0;
 
 	unsave();
 	q = cur_list.head_field;
 	p = mem[q - mem_min].hh.rh;
 	while (p) {
 		if (p < hi_mem_min) {
-			if (mem[p - mem_min].hh.variant.U2.b0 > 2) {
-				if (mem[p - mem_min].hh.variant.U2.b0 != 11) {
-					if (mem[p - mem_min].hh.variant.U2.b0 != 6) {
+			if (mem[p - mem_min].hh.U2.b0 > 2) {
+				if (mem[p - mem_min].hh.U2.b0 != 11) {
+					if (mem[p - mem_min].hh.U2.b0 != 6) {
 						print_nl(262);
 						print(1106);
 						help_ptr = 1;
@@ -16145,7 +16073,7 @@ _L30:
 	switch (save_stack[save_ptr-1].int_) {
 
 	case 0:
-		mem[cur_list.tail_field - mem_min + 1].hh.variant.lh = p;
+		mem[cur_list.tail_field - mem_min + 1].hh.lh = p;
 		break;
 
 	case 1:
@@ -16168,7 +16096,7 @@ _L30:
 			mem[cur_list.tail_field - mem_min].hh.rh = p;
 		}
 		if (n <= 255) {
-			mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = n;
+			mem[cur_list.tail_field - mem_min].hh.U2.b1 = n;
 		}
 		else {
 			print_nl(262);
@@ -16189,15 +16117,16 @@ _L30:
 	scan_left_brace();
 	push_nest();
 	cur_list.mode_field = -102;
-	cur_list.aux_field.hh.variant.lh = 1000;
+	cur_list.aux_field.hh.lh = 1000;
 _L10: ;
 }
 
 void make_accent()
 {
 	double s, t;
-	unsigned short p, q = 0, r;
-	int f, a, h, x, w, delta;
+	halfword p, q = 0, r;
+	internal_font_number f;
+	scaled a, h, x, w, delta;
 	four_quarters i;
 
 	scan_char_num();
@@ -16207,7 +16136,7 @@ void make_accent()
 		return;
 	x = font_info[param_base[f] + 5].int_;
 	s = font_info[param_base[f] + 1].int_ / 65536.0;
-	a = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.variant.U2.b1].qqqq.b0].int_;
+	a = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.U2.b1].qqqq.b0].int_;
 	do_assignments();
 	f = eqtb[3934].hh.rh;
 	if ((cur_cmd == 11) || (cur_cmd == 12) || (cur_cmd == 68)) {
@@ -16222,7 +16151,7 @@ void make_accent()
 	}
 	if (q) {
 		t = font_info[param_base[f] + 1].int_ / 65536.0;
-		i = font_info[char_base[f] + mem[q - mem_min].hh.variant.U2.b1].qqqq;
+		i = font_info[char_base[f] + mem[q - mem_min].hh.U2.b1].qqqq;
 		w = font_info[width_base[f] + i.b0].int_;
 		h = font_info[height_base[f] + (i.b1 / 16)].int_;
 		if (h != x) {
@@ -16231,17 +16160,17 @@ void make_accent()
 		}
 		delta = lround(((w - a) / 2.0) + (h * t) - (x * s));
 		r = new_kern(delta);
-		mem[r - mem_min].hh.variant.U2.b1 = 2;
+		mem[r - mem_min].hh.U2.b1 = 2;
 		mem[cur_list.tail_field - mem_min].hh.rh = r;
 		mem[r - mem_min].hh.rh = p;
 		cur_list.tail_field = new_kern((-a) - delta);
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 2;
+		mem[cur_list.tail_field - mem_min].hh.U2.b1 = 2;
 		mem[p - mem_min].hh.rh = cur_list.tail_field;
 		p = q;
 	}
 	mem[cur_list.tail_field - mem_min].hh.rh = p;
 	cur_list.tail_field = p;
-	cur_list.aux_field.hh.variant.lh = 1000;
+	cur_list.aux_field.hh.lh = 1000;
 }
 
 void align_error()
@@ -16340,7 +16269,7 @@ void cs_error()
 	error();
 }
 
-void push_math(char c)
+void push_math(group_code c)
 {
 	push_nest();
 	cur_list.mode_field = -203;
@@ -16350,9 +16279,10 @@ void push_math(char c)
 
 void init_math()
 {
-	int w, l, s;
-	unsigned short p, q;
-	int f, n, v, d;
+	scaled w, l, s, v, d;
+	halfword p, q;
+	internal_font_number f;
+	integer n;
 
 	get_token();
 	if ((cur_cmd == 3) && (cur_list.mode_field > 0)) {
@@ -16368,11 +16298,11 @@ void init_math()
 			while (p) {
 _L21:
 				if (p >= hi_mem_min) {
-					f = mem[p - mem_min].hh.variant.U2.b0;
-					d = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.variant.U2.b1].qqqq.b0].int_;
+					f = mem[p - mem_min].hh.U2.b0;
+					d = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.U2.b1].qqqq.b0].int_;
 					goto _L40;
 				}
-				switch (mem[p - mem_min].hh.variant.U2.b0) {
+				switch (mem[p - mem_min].hh.U2.b0) {
 
 				case 0: case 1: case 2:
 					d = mem[p - mem_min + 1].int_;
@@ -16391,19 +16321,17 @@ _L21:
 					break;
 
 				case 10:
-					q = mem[p - mem_min + 1].hh.variant.lh;
+					q = mem[p - mem_min + 1].hh.lh;
 					d = mem[q - mem_min + 1].int_;
-					if (mem[just_box - mem_min + 5].hh.variant.U2.b0 == 1) {
-						if ((mem[just_box - mem_min + 5].hh.variant.U2.b1 == mem[q - mem_min].hh.variant.U2.b0)
-								&& mem[q - mem_min + 2].int_)
+					if (mem[just_box - mem_min + 5].hh.U2.b0 == 1) {
+						if ((mem[just_box - mem_min + 5].hh.U2.b1 == mem[q - mem_min].hh.U2.b0) && mem[q - mem_min + 2].int_)
 							v = 1073741823;
 					}
-					else if (mem[just_box - mem_min + 5].hh.variant.U2.b0 == 2) {
-						if ((mem[just_box - mem_min + 5].hh.variant.U2.b1 == mem[q - mem_min].hh.variant.U2.b1)
-								&& mem[q - mem_min + 3].int_)
+					else if (mem[just_box - mem_min + 5].hh.U2.b0 == 2) {
+						if ((mem[just_box - mem_min + 5].hh.U2.b1 == mem[q - mem_min].hh.U2.b1) && mem[q - mem_min + 3].int_)
 							v = 1073741823;
 					}
-					if (mem[p - mem_min].hh.variant.U2.b1 >= 100)
+					if (mem[p - mem_min].hh.U2.b1 >= 100)
 						goto _L40;
 					break;
 
@@ -16445,7 +16373,7 @@ _L30: ;
 			}
 		}
 		else {
-			n = mem[eqtb[3412].hh.rh - mem_min].hh.variant.lh;
+			n = mem[eqtb[3412].hh.rh - mem_min].hh.lh;
 			if (cur_list.pg_field + 2 >= n)
 				p = eqtb[3412].hh.rh + (n * 2);
 			else
@@ -16482,9 +16410,9 @@ void start_eq_no()
 		begin_token_list(eqtb[3415].hh.rh, 8);
 }
 
-void scan_math(unsigned short p)
+void scan_math(halfword p)
 {
-	int c;
+	integer c;
 
 _L20:
 	do {
@@ -16497,7 +16425,7 @@ _L21:
 		c = eqtb[cur_chr+5007].hh.rh;
 		if (c == 32768) {
 			cur_cs = cur_chr + 1;
-			cur_cmd = eqtb[cur_cs].hh.variant.U2.b0;
+			cur_cmd = eqtb[cur_cs].hh.U2.b0;
 			cur_chr = eqtb[cur_cs].hh.rh;
 			x_token();
 			back_input();
@@ -16536,21 +16464,21 @@ _L21:
 		break;
 	}
 	mem[p - mem_min].hh.rh = 1;
-	mem[p - mem_min].hh.variant.U2.b1 = c & 255;
+	mem[p - mem_min].hh.U2.b1 = c & 255;
 	if ((c >= 28672) && (((unsigned)eqtb[5307].int_) < 16))
-		mem[p - mem_min].hh.variant.U2.b0 = eqtb[5307].int_;
+		mem[p - mem_min].hh.U2.b0 = eqtb[5307].int_;
 	else
-		mem[p - mem_min].hh.variant.U2.b0 = (c / 256) & 15;
+		mem[p - mem_min].hh.U2.b0 = (c / 256) & 15;
 _L10: ;
 }
 
-void set_math_char(int c)
+void set_math_char(integer c)
 {
-	unsigned short p;
+	halfword p;
 
 	if (c >= 32768) {
 		cur_cs = cur_chr + 1;
-		cur_cmd = eqtb[cur_cs].hh.variant.U2.b0;
+		cur_cmd = eqtb[cur_cs].hh.U2.b0;
 		cur_chr = eqtb[cur_cs].hh.rh;
 		x_token();
 		back_input();
@@ -16558,15 +16486,15 @@ void set_math_char(int c)
 	}
 	p = new_noad();
 	mem[p - mem_min + 1].hh.rh = 1;
-	mem[p - mem_min + 1].hh.variant.U2.b1 = c & 255;
-	mem[p - mem_min + 1].hh.variant.U2.b0 = (c / 256) & 15;
+	mem[p - mem_min + 1].hh.U2.b1 = c & 255;
+	mem[p - mem_min + 1].hh.U2.b0 = (c / 256) & 15;
 	if (c >= 28672) {
 		if (((unsigned)eqtb[5307].int_) < 16)
-			mem[p - mem_min + 1].hh.variant.U2.b0 = eqtb[5307].int_;
-		mem[p - mem_min].hh.variant.U2.b0 = 16;
+			mem[p - mem_min + 1].hh.U2.b0 = eqtb[5307].int_;
+		mem[p - mem_min].hh.U2.b0 = 16;
 	}
 	else {
-		mem[p - mem_min].hh.variant.U2.b0 = (c / 4096) + 16;
+		mem[p - mem_min].hh.U2.b0 = (c / 4096) + 16;
 	}
 	mem[cur_list.tail_field - mem_min].hh.rh = p;
 	cur_list.tail_field = p;
@@ -16575,8 +16503,8 @@ void set_math_char(int c)
 void math_limit_switch()
 {
 	if (cur_list.head_field != cur_list.tail_field) {
-		if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == 17) {
-			mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = cur_chr;
+		if (mem[cur_list.tail_field - mem_min].hh.U2.b0 == 17) {
+			mem[cur_list.tail_field - mem_min].hh.U2.b1 = cur_chr;
 			goto _L10;
 		}
 	}
@@ -16588,7 +16516,7 @@ void math_limit_switch()
 _L10: ;
 }
 
-void scan_delimiter(unsigned short p, bool r)
+void scan_delimiter(halfword p, bool r)
 {
 	if (r) {
 		scan_twenty_seven_bit_int();
@@ -16635,8 +16563,8 @@ void math_radical()
 {
 	mem[cur_list.tail_field - mem_min].hh.rh = get_node(5);
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-	mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = 24;
-	mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 0;
+	mem[cur_list.tail_field - mem_min].hh.U2.b0 = 24;
+	mem[cur_list.tail_field - mem_min].hh.U2.b1 = 0;
 	mem[cur_list.tail_field - mem_min + 1].hh = empty_field;
 	mem[cur_list.tail_field - mem_min + 3].hh = empty_field;
 	mem[cur_list.tail_field - mem_min + 2].hh = empty_field;
@@ -16658,18 +16586,18 @@ void math_ac()
 	}
 	mem[cur_list.tail_field - mem_min].hh.rh = get_node(5);
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-	mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = 28;
-	mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 0;
+	mem[cur_list.tail_field - mem_min].hh.U2.b0 = 28;
+	mem[cur_list.tail_field - mem_min].hh.U2.b1 = 0;
 	mem[cur_list.tail_field - mem_min + 1].hh = empty_field;
 	mem[cur_list.tail_field - mem_min + 3].hh = empty_field;
 	mem[cur_list.tail_field - mem_min + 2].hh = empty_field;
 	mem[cur_list.tail_field - mem_min + 4].hh.rh = 1;
 	scan_fifteen_bit_int();
-	mem[cur_list.tail_field - mem_min + 4].hh.variant.U2.b1 = cur_val & 255;
+	mem[cur_list.tail_field - mem_min + 4].hh.U2.b1 = cur_val & 255;
 	if ((cur_val >= 28672) && (((unsigned)eqtb[5307].int_) < 16))
-		mem[cur_list.tail_field - mem_min + 4].hh.variant.U2.b0 = eqtb[5307].int_;
+		mem[cur_list.tail_field - mem_min + 4].hh.U2.b0 = eqtb[5307].int_;
 	else
-		mem[cur_list.tail_field - mem_min + 4].hh.variant.U2.b0 = (cur_val / 256) & 15;
+		mem[cur_list.tail_field - mem_min + 4].hh.U2.b0 = (cur_val / 256) & 15;
 	scan_math(cur_list.tail_field + 1);
 }
 
@@ -16683,21 +16611,21 @@ void append_choices()
 	scan_left_brace();
 }
 
-unsigned short fin_mlist(unsigned short p)
+halfword fin_mlist(halfword p)
 {
-	unsigned short q;
+	halfword q;
 
 	if (cur_list.aux_field.int_) {
 		mem[cur_list.aux_field.int_ - mem_min + 3].hh.rh = 3;
-		mem[cur_list.aux_field.int_ - mem_min + 3].hh.variant.lh = mem[cur_list.head_field - mem_min].hh.rh;
+		mem[cur_list.aux_field.int_ - mem_min + 3].hh.lh = mem[cur_list.head_field - mem_min].hh.rh;
 		if (!p) {
 			q = cur_list.aux_field.int_;
 		}
 		else {
-			q = mem[cur_list.aux_field.int_ - mem_min + 2].hh.variant.lh;
-			if (mem[q - mem_min].hh.variant.U2.b0 != 30)
+			q = mem[cur_list.aux_field.int_ - mem_min + 2].hh.lh;
+			if (mem[q - mem_min].hh.U2.b0 != 30)
 				confusion(876);
-			mem[cur_list.aux_field.int_ - mem_min + 2].hh.variant.lh = mem[q - mem_min].hh.rh;
+			mem[cur_list.aux_field.int_ - mem_min + 2].hh.lh = mem[q - mem_min].hh.rh;
 			mem[q - mem_min].hh.rh = cur_list.aux_field.int_;
 			mem[cur_list.aux_field.int_ - mem_min].hh.rh = p;
 		}
@@ -16712,14 +16640,14 @@ unsigned short fin_mlist(unsigned short p)
 
 void build_choices()
 {
-	unsigned short p;
+	halfword p;
 
 	unsave();
 	p = fin_mlist(0);
 	switch (save_stack[save_ptr-1].int_) {
 
 	case 0:
-		mem[cur_list.tail_field - mem_min + 1].hh.variant.lh = p;
+		mem[cur_list.tail_field - mem_min + 1].hh.lh = p;
 		break;
 
 	case 1:
@@ -16727,7 +16655,7 @@ void build_choices()
 		break;
 
 	case 2:
-		mem[cur_list.tail_field - mem_min + 2].hh.variant.lh = p;
+		mem[cur_list.tail_field - mem_min + 2].hh.lh = p;
 		break;
 
 	case 3:
@@ -16744,12 +16672,11 @@ _L10: ;
 
 void sub_sup()
 {
-	char t = 0;
-	unsigned short p = 0;
+	small_number t = 0;
+	halfword p = 0;
 
 	if (cur_list.tail_field != cur_list.head_field) {
-		if ((mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 >= 16)
-				&& (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 < 30)) {
+		if ((mem[cur_list.tail_field - mem_min].hh.U2.b0 >= 16) && (mem[cur_list.tail_field - mem_min].hh.U2.b0 < 30)) {
 			p = cur_list.tail_field + cur_cmd - 5;
 			t = mem[p - mem_min].hh.rh;
 		}
@@ -16779,9 +16706,8 @@ void sub_sup()
 
 void math_fraction()
 {
-	char c;
+	small_number c = cur_chr;
 
-	c = cur_chr;
 	if (cur_list.aux_field.int_) {
 		if (c >= 3) {
 			scan_delimiter(29988, false);
@@ -16799,10 +16725,10 @@ void math_fraction()
 		return;
 	}
 	cur_list.aux_field.int_ = get_node(6);
-	mem[cur_list.aux_field.int_ - mem_min].hh.variant.U2.b0 = 25;
-	mem[cur_list.aux_field.int_ - mem_min].hh.variant.U2.b1 = 0;
+	mem[cur_list.aux_field.int_ - mem_min].hh.U2.b0 = 25;
+	mem[cur_list.aux_field.int_ - mem_min].hh.U2.b1 = 0;
 	mem[cur_list.aux_field.int_ - mem_min + 2].hh.rh = 3;
-	mem[cur_list.aux_field.int_ - mem_min + 2].hh.variant.lh = mem[cur_list.head_field - mem_min].hh.rh;
+	mem[cur_list.aux_field.int_ - mem_min + 2].hh.lh = mem[cur_list.head_field - mem_min].hh.rh;
 	mem[cur_list.aux_field.int_ - mem_min + 3].hh = empty_field;
 	mem[cur_list.aux_field.int_ - mem_min + 4].qqqq = null_delimiter;
 	mem[cur_list.aux_field.int_ - mem_min + 5].qqqq = null_delimiter;
@@ -16831,10 +16757,9 @@ void math_fraction()
 
 void math_left_right()
 {
-	char t;
-	unsigned short p;
+	halfword p;
+	small_number t = cur_chr;
 
-	t = cur_chr;
 	if ((t == 31) && (cur_group != 16)) {
 		if (cur_group != 15) {
 			off_save();
@@ -16850,7 +16775,7 @@ void math_left_right()
 		return;
 	}
 	p = new_noad();
-	mem[p - mem_min].hh.variant.U2.b0 = t;
+	mem[p - mem_min].hh.U2.b0 = t;
 	scan_delimiter(p + 1, false);
 	if (t == 30) {
 		push_math(16);
@@ -16862,19 +16787,19 @@ void math_left_right()
 	unsave();
 	mem[cur_list.tail_field - mem_min].hh.rh = new_noad();
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-	mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = 23;
+	mem[cur_list.tail_field - mem_min].hh.U2.b0 = 23;
 	mem[cur_list.tail_field - mem_min + 1].hh.rh = 3;
-	mem[cur_list.tail_field - mem_min + 1].hh.variant.lh = p;
+	mem[cur_list.tail_field - mem_min + 1].hh.lh = p;
 }
 
 void after_math()
 {
 	bool l = false, danger = false;
-	int m;
-	unsigned short p, a, b;
-	int w, z, e, q, d, s;
-	char g1, g2;
-	unsigned short r, t;
+	integer m;
+	halfword p, a, b;
+	scaled w, z, e, q, d, s;
+	small_number g1, g2;
+	halfword r, t;
 
 	if ((font_params[eqtb[3937].hh.rh] < 22) || (font_params[eqtb[3953].hh.rh] < 22) || (font_params[eqtb[3969].hh.rh] < 22)) {
 		print_nl(262);
@@ -16962,7 +16887,7 @@ void after_math()
 			cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		mem[cur_list.tail_field - mem_min].hh.rh = new_math(eqtb[5831].int_, 1);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		cur_list.aux_field.hh.variant.lh = 1000;
+		cur_list.aux_field.hh.lh = 1000;
 		unsave();
 		return;
 	}
@@ -17017,7 +16942,7 @@ void after_math()
 		d = half(z - w - e);
 		if (p) {
 			if (p < hi_mem_min) {
-				if (mem[p - mem_min].hh.variant.U2.b0 == 10)
+				if (mem[p - mem_min].hh.U2.b0 == 10)
 					d = 0;
 			}
 		}
@@ -17086,7 +17011,7 @@ void resume_after_display()
 	cur_list.pg_field += 3;
 	push_nest();
 	cur_list.mode_field = 102;
-	cur_list.aux_field.hh.variant.lh = 1000;
+	cur_list.aux_field.hh.lh = 1000;
 	if (eqtb[5313].int_ <= 0) {
 		cur_lang = 0;
 	}
@@ -17135,12 +17060,12 @@ void trap_zero_glue()
 	cur_val = 0;
 }
 
-void do_register_command(char a)
+void do_register_command(small_number a)
 {
-	unsigned short l, q, r, s;
+	halfword l, r, s;
 	char p;
+	halfword q = cur_cmd;
 
-	q = cur_cmd;
 	if (q != 89) {
 		get_x_token();
 		if ((cur_cmd >= 73) && (cur_cmd <= 76)) {
@@ -17203,22 +17128,22 @@ _L40:
 				delete_glue_ref(cur_val);
 				mem[q - mem_min + 1].int_ += mem[r - mem_min + 1].int_;
 				if (!mem[q - mem_min + 2].int_)
-					mem[q - mem_min].hh.variant.U2.b0 = 0;
-				if (mem[q - mem_min].hh.variant.U2.b0 == mem[r - mem_min].hh.variant.U2.b0) {
+					mem[q - mem_min].hh.U2.b0 = 0;
+				if (mem[q - mem_min].hh.U2.b0 == mem[r - mem_min].hh.U2.b0) {
 					mem[q - mem_min + 2].int_ += mem[r - mem_min + 2].int_;
 				}
-				else if ((mem[q - mem_min].hh.variant.U2.b0 < mem[r - mem_min].hh.variant.U2.b0) && mem[r - mem_min + 2].int_) {
+				else if ((mem[q - mem_min].hh.U2.b0 < mem[r - mem_min].hh.U2.b0) && mem[r - mem_min + 2].int_) {
 					mem[q - mem_min + 2].int_ = mem[r - mem_min + 2].int_;
-					mem[q - mem_min].hh.variant.U2.b0 = mem[r - mem_min].hh.variant.U2.b0;
+					mem[q - mem_min].hh.U2.b0 = mem[r - mem_min].hh.U2.b0;
 				}
 				if (!mem[q - mem_min + 3].int_)
-					mem[q - mem_min].hh.variant.U2.b1 = 0;
-				if (mem[q - mem_min].hh.variant.U2.b1 == mem[r - mem_min].hh.variant.U2.b1) {
+					mem[q - mem_min].hh.U2.b1 = 0;
+				if (mem[q - mem_min].hh.U2.b1 == mem[r - mem_min].hh.U2.b1) {
 					mem[q - mem_min + 3].int_ += mem[r - mem_min + 3].int_;
 				}
-				else if ((mem[q - mem_min].hh.variant.U2.b1 < mem[r - mem_min].hh.variant.U2.b1) && mem[r - mem_min + 3].int_) {
+				else if ((mem[q - mem_min].hh.U2.b1 < mem[r - mem_min].hh.U2.b1) && mem[r - mem_min + 3].int_) {
 					mem[q - mem_min + 3].int_ = mem[r - mem_min + 3].int_;
-					mem[q - mem_min].hh.variant.U2.b1 = mem[r - mem_min].hh.variant.U2.b1;
+					mem[q - mem_min].hh.U2.b1 = mem[r - mem_min].hh.U2.b1;
 				}
 				cur_val = q;
 			}
@@ -17282,7 +17207,7 @@ _L10: ;
 
 void alter_aux()
 {
-	unsigned short c;
+	halfword c;
 
 	if (cur_chr != abs(cur_list.mode_field)) {
 		report_illegal_case();
@@ -17297,7 +17222,7 @@ void alter_aux()
 	}
 	scan_int();
 	if ((cur_val > 0) && (cur_val <= 32767)) {
-		cur_list.aux_field.hh.variant.lh = cur_val;
+		cur_list.aux_field.hh.lh = cur_val;
 		return;
 	}
 	print_nl(262);
@@ -17332,9 +17257,8 @@ void alter_prev_graf()
 
 void alter_page_so_far()
 {
-	char c;
+	char c = cur_chr;
 
-	c = cur_chr;
 	scan_optional_equals();
 	scan_dimen(false, false, false);
 	page_so_far[c] = cur_val;
@@ -17342,9 +17266,8 @@ void alter_page_so_far()
 
 void alter_integer()
 {
-	char c;
+	char c = cur_chr;
 
-	c = cur_chr;
 	scan_optional_equals();
 	scan_int();
 	if (!c)
@@ -17355,10 +17278,9 @@ void alter_integer()
 
 void alter_box_dimen()
 {
-	char c;
-	uint8_t b;
+	eight_bits b;
+	small_number c = cur_chr;
 
-	c = cur_chr;
 	scan_eight_bit_int();
 	b = cur_val;
 	scan_optional_equals();
@@ -17367,12 +17289,15 @@ void alter_box_dimen()
 		mem[eqtb[b+3678].hh.rh + c - mem_min].int_ = cur_val;
 }
 
-void new_font(char a)
+void new_font(small_number a)
 {
-	unsigned short u;
-	int s, f, t;
+	halfword u;
+	scaled s;
+	internal_font_number f;
+	str_number t;
 	char old_setting;
-	int flushable_string, N;
+	str_number flushable_string;
+	internal_font_number N;
 
 	if (!job_name)
 		open_log_file();
@@ -17472,12 +17397,12 @@ void new_interaction()
 
 void prefixed_command()
 {
-	char a = 0;
-	int f;
-	unsigned short j;
-	int k;
-	unsigned short p, q;
-	int n;
+	small_number a = 0;
+	internal_font_number f;
+	halfword j;
+	font_index k;
+	halfword p, q;
+	integer n;
 	bool e;
 
 	while (cur_cmd == 93) {
@@ -17563,7 +17488,7 @@ void prefixed_command()
 			back_input();
 		}
 		if (cur_cmd >= 111)
-			++mem[cur_chr - mem_min].hh.variant.lh;
+			++mem[cur_chr - mem_min].hh.lh;
 		if (a >= 4)
 			geq_define(p, cur_cmd, cur_chr);
 		else
@@ -17688,7 +17613,7 @@ void prefixed_command()
 						eq_define(p, 101, 0);
 				}
 				else {
-					++mem[q - mem_min].hh.variant.lh;
+					++mem[q - mem_min].hh.lh;
 					if (a >= 4)
 						geq_define(p, 111, q);
 					else
@@ -17712,9 +17637,9 @@ void prefixed_command()
 			if (p == 3413) {
 				mem[q - mem_min].hh.rh = get_avail();
 				q = mem[q - mem_min].hh.rh;
-				mem[q - mem_min].hh.variant.lh = 637;
+				mem[q - mem_min].hh.lh = 637;
 				q = get_avail();
-				mem[q - mem_min].hh.variant.lh = 379;
+				mem[q - mem_min].hh.lh = 379;
 				mem[q - mem_min].hh.rh = mem[def_ref - mem_min].hh.rh;
 				mem[def_ref - mem_min].hh.rh = q;
 			}
@@ -17877,7 +17802,7 @@ void prefixed_command()
 		}
 		else {
 			p = get_node((n * 2) + 1);
-			mem[p - mem_min].hh.variant.lh = n;
+			mem[p - mem_min].hh.lh = n;
 			for (j = 1; j <= n; ++j) {
 				scan_dimen(false, false, false);
 				mem[p + (j * 2) - mem_min - 1].int_ = cur_val;
@@ -17960,13 +17885,13 @@ _L10: ;
 
 void open_or_close_in()
 {
-	char c, n;
+	char n;
+	char c = cur_chr;
 
-	c = cur_chr;
 	scan_four_bit_int();
 	n = cur_val;
 	if (read_open[n] != 2) {
-		a_close(&read_file[n]);
+		a_close(read_file[n]);
 		read_open[n] = 2;
 	}
 	if (!c)
@@ -17976,16 +17901,16 @@ void open_or_close_in()
 	if (cur_ext == 338)
 		cur_ext = 790;
 	pack_file_name(cur_name, cur_area, cur_ext);
-	if (a_open_in(&read_file[n]))
+	if (a_open_in(read_file[n]))
 		read_open[n] = 1;
 }
 
 void issue_message()
 {
-	char old_setting, c;
-	int s;
+	char old_setting;
+	str_number s;
+	char c = cur_chr;
 
-	c = cur_chr;
 	mem[29988 - mem_min].hh.rh = scan_toks(false, true);
 	old_setting = selector;
 	selector = 21;
@@ -18002,7 +17927,7 @@ void issue_message()
 		else if ((term_offset > 0) || (file_offset > 0))
 			print_char(32);
 		slow_print(s);
-		fflush(term_out.f);
+		term_out->flush();
 		errno = 0;
 	}
 	else {
@@ -18034,18 +17959,18 @@ void issue_message()
 
 void shift_case()
 {
-	unsigned short b, p, t;
-	uint8_t c;
+	halfword p, t;
+	eight_bits c;
+	halfword b = cur_chr;
 
-	b = cur_chr;
 	scan_toks(false, false);
 	p = mem[def_ref - mem_min].hh.rh;
 	while (p) {
-		t = mem[p - mem_min].hh.variant.lh;
+		t = mem[p - mem_min].hh.lh;
 		if (t < 4352) {
 			c = t & 255;
 			if (eqtb[b + c].hh.rh)
-				mem[p - mem_min].hh.variant.lh = t - c + eqtb[b + c].hh.rh;
+				mem[p - mem_min].hh.lh = t - c + eqtb[b + c].hh.rh;
 		}
 		p = mem[p - mem_min].hh.rh;
 	}
@@ -18056,7 +17981,7 @@ void shift_case()
 
 void show_whatever()
 {
-	unsigned short p;
+	halfword p;
 
 	switch (cur_chr) {
 
@@ -18130,12 +18055,11 @@ _L50:
 
 void store_fmt_file()
 {
-	int j, k, l;
-	unsigned short p = 0, q;
-	int x = 0;
+	integer j, k, l, x = 0;
+	halfword p = 0, q;
 	four_quarters w;
 	int N;
-	unsigned short N1;
+	halfword N1;
 
 	if (save_ptr) {
 		print_nl(262);
@@ -18167,33 +18091,33 @@ void store_fmt_file()
 		overflow(257, pool_size - init_pool_ptr);
 	format_ident = make_string();
 	pack_job_name(785);
-	while (!w_open_out(&fmt_file))
+	while (!w_open_out(fmt_file))
 		prompt_file_name(1272, 785);
 	print_nl(1273);
-	slow_print(w_make_name_string(&fmt_file));
+	slow_print(w_make_name_string(fmt_file));
 	--str_ptr;
 	pool_ptr = str_start[str_ptr];
 	print_nl(338);
 	slow_print(format_ident);
-	GETFBUF(fmt_file.f, memory_word).int_ = 117275187;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = 0;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = 30000;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = 6106;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = 1777;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = 307;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = pool_ptr;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = str_ptr;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 117275187;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 0;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 30000;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 6106;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 1777;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 307;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = pool_ptr;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = str_ptr;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	for (N = str_ptr, k = 0; k <= N; ++k) {
-		GETFBUF(fmt_file.f, memory_word).int_ = str_start[k];
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = str_start[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
 	k = 0;
 	while (k + 4 < pool_ptr) {
@@ -18201,8 +18125,8 @@ void store_fmt_file()
 		w.b1 = str_pool[k+1];
 		w.b2 = str_pool[k+2];
 		w.b3 = str_pool[k+3];
-		GETFBUF(fmt_file.f, memory_word).qqqq = w;
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).qqqq = w;
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		k += 4;
 	}
 	k = pool_ptr - 4;
@@ -18210,48 +18134,48 @@ void store_fmt_file()
 	w.b1 = str_pool[k+1];
 	w.b2 = str_pool[k+2];
 	w.b3 = str_pool[k+3];
-	GETFBUF(fmt_file.f, memory_word).qqqq = w;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).qqqq = w;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	print_ln();
 	print_int(str_ptr);
 	print(1259);
 	print_int(pool_ptr);
 	sort_avail();
 	var_used = 0;
-	GETFBUF(fmt_file.f, memory_word).int_ = lo_mem_max;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = rover;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = lo_mem_max;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = rover;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	q = rover;
 	do {
 		for (k = p; k <= (q + 1); ++k)
-			fwrite(&mem[k - mem_min], sizeof(memory_word), 1, fmt_file.f);
+			fmt_file->write(reinterpret_cast<const char *>(&mem[k - mem_min]), sizeof(memory_word));
 		x += q - p + 2;
 		var_used += q - p;
-		p = q + mem[q - mem_min].hh.variant.lh;
+		p = q + mem[q - mem_min].hh.lh;
 		q = mem[q - mem_min + 1].hh.rh;
 	} while (q != rover);
 	var_used += lo_mem_max - p;
 	dyn_used = mem_end - hi_mem_min + 1;
 	for (N = lo_mem_max, k = p; k <= N; ++k)
-		fwrite(&mem[k - mem_min], sizeof(memory_word), 1, fmt_file.f);
+		fmt_file->write(reinterpret_cast<const char *>(&mem[k - mem_min]), sizeof(memory_word));
 	x += lo_mem_max - p + 1;
-	GETFBUF(fmt_file.f, memory_word).int_ = hi_mem_min;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = avail;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hi_mem_min;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = avail;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	for (N = mem_end, k = hi_mem_min; k <= N; ++k)
-		fwrite(&mem[k - mem_min], sizeof(memory_word), 1, fmt_file.f);
+		fmt_file->write(reinterpret_cast<const char *>(&mem[k - mem_min]), sizeof(memory_word));
 	x += mem_end - hi_mem_min + 1;
 	p = avail;
 	while (p) {
 		--dyn_used;
 		p = mem[p - mem_min].hh.rh;
 	}
-	GETFBUF(fmt_file.f, memory_word).int_ = var_used;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = dyn_used;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = var_used;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = dyn_used;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	print_ln();
 	print_int(x);
 	print(1260);
@@ -18262,8 +18186,8 @@ void store_fmt_file()
 	do {
 		j = k;
 		while (j < 5262) {
-			if ((eqtb[j].hh.rh == eqtb[j+1].hh.rh) && (eqtb[j].hh.variant.U2.b0 == eqtb[j+1].hh.variant.U2.b0)
-					&& (eqtb[j].hh.variant.U2.b1 == eqtb[j+1].hh.variant.U2.b1))
+			if ((eqtb[j].hh.rh == eqtb[j+1].hh.rh) && (eqtb[j].hh.U2.b0 == eqtb[j+1].hh.U2.b0)
+					&& (eqtb[j].hh.U2.b1 == eqtb[j+1].hh.U2.b1))
 				goto _L41;
 			++j;
 		}
@@ -18273,21 +18197,21 @@ _L41:
 		++j;
 		l = j;
 		while (j < 5262) {
-			if ((eqtb[j].hh.rh != eqtb[j+1].hh.rh) || (eqtb[j].hh.variant.U2.b0 != eqtb[j+1].hh.variant.U2.b0)
-					|| (eqtb[j].hh.variant.U2.b1 != eqtb[j+1].hh.variant.U2.b1))
+			if ((eqtb[j].hh.rh != eqtb[j+1].hh.rh) || (eqtb[j].hh.U2.b0 != eqtb[j+1].hh.U2.b0)
+					|| (eqtb[j].hh.U2.b1 != eqtb[j+1].hh.U2.b1))
 				goto _L31;
 			++j;
 		}
 _L31:
-		GETFBUF(fmt_file.f, memory_word).int_ = l - k;
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = l - k;
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		while (k < l) {
-			fwrite(&eqtb[k], sizeof(memory_word), 1, fmt_file.f);
+			fmt_file->write(reinterpret_cast<const char *>(&eqtb[k]), sizeof(memory_word));
 			++k;
 		}
 		k = j + 1;
-		GETFBUF(fmt_file.f, memory_word).int_ = k - l;
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = k - l;
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	} while (k != 5263);
 	do {
 		j = k;
@@ -18307,94 +18231,94 @@ _L42:
 			++j;
 		}
 _L32:
-		GETFBUF(fmt_file.f, memory_word).int_ = l - k;
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = l - k;
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		while (k < l) {
-			fwrite(&eqtb[k], sizeof(memory_word), 1, fmt_file.f);
+			fmt_file->write(reinterpret_cast<const char *>(&eqtb[k]), sizeof(memory_word));
 			++k;
 		}
 		k = j + 1;
-		GETFBUF(fmt_file.f, memory_word).int_ = k - l;
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = k - l;
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	} while (k <= 6106);
-	GETFBUF(fmt_file.f, memory_word).int_ = par_loc;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = write_loc;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = hash_used;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = par_loc;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = write_loc;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hash_used;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	cs_count = 2613 - hash_used;
 	for (N1 = hash_used, p = 514; p <= N1; ++p) {
 		if (hash[p-514].rh) {
-			GETFBUF(fmt_file.f, memory_word).int_ = p;
-			PUT(fmt_file.f, memory_word);
-			GETFBUF(fmt_file.f, memory_word).hh = hash[p-514];
-			PUT(fmt_file.f, memory_word);
+			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = p;
+			put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh = hash[p-514];
+			put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 			++cs_count;
 		}
 	}
 	for (p = hash_used + 1; p <= 2880; ++p) {
-		GETFBUF(fmt_file.f, memory_word).hh = hash[p-514];
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh = hash[p-514];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
-	GETFBUF(fmt_file.f, memory_word).int_ = cs_count;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = cs_count;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	print_ln();
 	print_int(cs_count);
 	print(1261);
-	GETFBUF(fmt_file.f, memory_word).int_ = fmem_ptr;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = fmem_ptr;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	for (N = fmem_ptr, k = 0; k < N; ++k)
-		fwrite(&font_info[k], sizeof(memory_word), 1, fmt_file.f);
-	GETFBUF(fmt_file.f, memory_word).int_ = font_ptr;
-	PUT(fmt_file.f, memory_word);
+		fmt_file->write(reinterpret_cast<const char *>(&font_info[k]), sizeof(memory_word));
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_ptr;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	for (N = font_ptr, k = 0; k <= N; ++k) {
-		GETFBUF(fmt_file.f, memory_word).qqqq = font_check[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_size[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_dsize[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_params[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = hyphen_char[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = skew_char[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_name[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_area[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_bc[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_ec[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = char_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = width_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = height_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = depth_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = italic_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = lig_kern_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = kern_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = exten_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = param_base[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_glue[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = bchar_label[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_bchar[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = font_false_bchar[k];
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).qqqq = font_check[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_size[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_dsize[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_params[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hyphen_char[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = skew_char[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_name[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_area[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_bc[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_ec[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = char_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = width_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = height_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = depth_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = italic_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = lig_kern_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = kern_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = exten_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = param_base[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_glue[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = bchar_label[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_bchar[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_false_bchar[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		print_nl(1264);
 		print_esc(hash[k+2110].rh);
 		print_char(61);
@@ -18412,16 +18336,16 @@ _L32:
 	print(1263);
 	if (font_ptr != 1)
 		print_char(115);
-	GETFBUF(fmt_file.f, memory_word).int_ = hyph_count;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hyph_count;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	for (k = 0; k <= 307; ++k) {
 		if (hyph_word[k]) {
-			GETFBUF(fmt_file.f, memory_word).int_ = k;
-			PUT(fmt_file.f, memory_word);
-			GETFBUF(fmt_file.f, memory_word).int_ = hyph_word[k];
-			PUT(fmt_file.f, memory_word);
-			GETFBUF(fmt_file.f, memory_word).int_ = hyph_list[k];
-			PUT(fmt_file.f, memory_word);
+			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = k;
+			put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hyph_word[k];
+			put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hyph_list[k];
+			put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		}
 	}
 	print_ln();
@@ -18431,21 +18355,21 @@ _L32:
 		print_char(115);
 	if (trie_not_ready)
 		init_trie();
-	GETFBUF(fmt_file.f, memory_word).int_ = trie_max;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = trie_max;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	for (N = trie_max, k = 0; k <= N; ++k) {
-		GETFBUF(fmt_file.f, memory_word).hh = trie[k];
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh = trie[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
-	GETFBUF(fmt_file.f, memory_word).int_ = trie_op_ptr;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = trie_op_ptr;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	for (N = trie_op_ptr, k = 1; k <= N; ++k) {
-		GETFBUF(fmt_file.f, memory_word).int_ = hyf_distance[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = hyf_num[k];
-		PUT(fmt_file.f, memory_word);
-		GETFBUF(fmt_file.f, memory_word).int_ = hyf_next[k];
-		PUT(fmt_file.f, memory_word);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hyf_distance[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hyf_num[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hyf_next[k];
+		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
 	print_nl(1266);
 	print_int(trie_max);
@@ -18462,34 +18386,33 @@ _L32:
 			print_int(trie_used[k]);
 			print(1270);
 			print_int(k);
-			GETFBUF(fmt_file.f, memory_word).int_ = k;
-			PUT(fmt_file.f, memory_word);
-			GETFBUF(fmt_file.f, memory_word).int_ = trie_used[k];
-			PUT(fmt_file.f, memory_word);
+			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = k;
+			put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = trie_used[k];
+			put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		}
 	}
-	GETFBUF(fmt_file.f, memory_word).int_ = interaction;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = format_ident;
-	PUT(fmt_file.f, memory_word);
-	GETFBUF(fmt_file.f, memory_word).int_ = 69069;
-	PUT(fmt_file.f, memory_word);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = interaction;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = format_ident;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 69069;
+	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	eqtb[5294].int_ = 0;
-	w_close(&fmt_file);
+	w_close(fmt_file);
 }
 
-void new_whatsit(char s, char w)
+void new_whatsit(small_number s, small_number w)
 {
-	unsigned short p;
+	halfword p = get_node(w);
 
-	p = get_node(w);
-	mem[p - mem_min].hh.variant.U2.b0 = 8;
-	mem[p - mem_min].hh.variant.U2.b1 = s;
+	mem[p - mem_min].hh.U2.b0 = 8;
+	mem[p - mem_min].hh.U2.b1 = s;
 	mem[cur_list.tail_field - mem_min].hh.rh = p;
 	cur_list.tail_field = p;
 }
 
-void new_write_whatsit(char w)
+void new_write_whatsit(small_number w)
 {
 	new_whatsit(cur_chr, w);
 	if (w != 2) {
@@ -18503,13 +18426,13 @@ void new_write_whatsit(char w)
 		else if (cur_val > 15)
 			cur_val = 16;
 	}
-	mem[cur_list.tail_field - mem_min + 1].hh.variant.lh = cur_val;
+	mem[cur_list.tail_field - mem_min + 1].hh.lh = cur_val;
 }
 
 void do_extension()
 {
-	int k;
-	unsigned short p;
+	integer k;
+	halfword p;
 
 	switch (cur_chr) {
 
@@ -18518,7 +18441,7 @@ void do_extension()
 		scan_optional_equals();
 		scan_file_name();
 		mem[cur_list.tail_field - mem_min + 1].hh.rh = cur_name;
-		mem[cur_list.tail_field - mem_min + 2].hh.variant.lh = cur_area;
+		mem[cur_list.tail_field - mem_min + 2].hh.lh = cur_area;
 		mem[cur_list.tail_field - mem_min + 2].hh.rh = cur_ext;
 		break;
 
@@ -18537,7 +18460,7 @@ void do_extension()
 
 	case 3:
 		new_whatsit(3, 2);
-		mem[cur_list.tail_field - mem_min + 1].hh.variant.lh = 0;
+		mem[cur_list.tail_field - mem_min + 1].hh.lh = 0;
 		p = scan_toks(false, true);
 		mem[cur_list.tail_field - mem_min + 1].hh.rh = def_ref;
 		break;
@@ -18572,8 +18495,8 @@ void do_extension()
 			else
 				cur_list.aux_field.hh.rh = cur_val;
 			mem[cur_list.tail_field - mem_min + 1].hh.rh = cur_list.aux_field.hh.rh;
-			mem[cur_list.tail_field - mem_min + 1].hh.variant.U2.b0 = norm_min(eqtb[5314].int_);
-			mem[cur_list.tail_field - mem_min + 1].hh.variant.U2.b1 = norm_min(eqtb[5315].int_);
+			mem[cur_list.tail_field - mem_min + 1].hh.U2.b0 = norm_min(eqtb[5314].int_);
+			mem[cur_list.tail_field - mem_min + 1].hh.U2.b1 = norm_min(eqtb[5315].int_);
 		}
 		break;
 
@@ -18585,7 +18508,7 @@ void do_extension()
 
 void fix_language()
 {
-	uint8_t l;
+	ASCII_code l;
 
 	if (eqtb[5313].int_ <= 0) {
 		l = 0;
@@ -18599,14 +18522,15 @@ void fix_language()
 	new_whatsit(4, 2);
 	mem[cur_list.tail_field - mem_min + 1].hh.rh = l;
 	cur_list.aux_field.hh.rh = l;
-	mem[cur_list.tail_field - mem_min + 1].hh.variant.U2.b0 = norm_min(eqtb[5314].int_);
-	mem[cur_list.tail_field - mem_min + 1].hh.variant.U2.b1 = norm_min(eqtb[5315].int_);
+	mem[cur_list.tail_field - mem_min + 1].hh.U2.b0 = norm_min(eqtb[5314].int_);
+	mem[cur_list.tail_field - mem_min + 1].hh.U2.b1 = norm_min(eqtb[5315].int_);
 }
 
 void handle_right_brace()
 {
-	unsigned short p, q;
-	int d, f;
+	halfword p, q;
+	scaled d;
+	integer f;
 
 	switch (cur_group) {
 
@@ -18659,10 +18583,10 @@ void handle_right_brace()
 		if (save_stack[save_ptr].int_ < 255) {
 			mem[cur_list.tail_field - mem_min].hh.rh = get_node(5);
 			cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-			mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = 3;
-			mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = save_stack[save_ptr].int_;
+			mem[cur_list.tail_field - mem_min].hh.U2.b0 = 3;
+			mem[cur_list.tail_field - mem_min].hh.U2.b1 = save_stack[save_ptr].int_;
 			mem[cur_list.tail_field - mem_min + 3].int_ = mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_;
-			mem[cur_list.tail_field - mem_min + 4].hh.variant.lh = mem[p - mem_min + 5].hh.rh;
+			mem[cur_list.tail_field - mem_min + 4].hh.lh = mem[p - mem_min + 5].hh.rh;
 			mem[cur_list.tail_field - mem_min + 4].hh.rh = q;
 			mem[cur_list.tail_field - mem_min + 2].int_ = d;
 			mem[cur_list.tail_field - mem_min + 1].int_ = f;
@@ -18670,8 +18594,8 @@ void handle_right_brace()
 		else {
 			mem[cur_list.tail_field - mem_min].hh.rh = get_node(2);
 			cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-			mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = 5;
-			mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 0;
+			mem[cur_list.tail_field - mem_min].hh.U2.b0 = 5;
+			mem[cur_list.tail_field - mem_min].hh.U2.b1 = 0;
 			mem[cur_list.tail_field - mem_min + 1].int_ = mem[p - mem_min + 5].hh.rh;
 			delete_glue_ref(q);
 		}
@@ -18755,9 +18679,9 @@ void handle_right_brace()
 		pop_nest();
 		mem[cur_list.tail_field - mem_min].hh.rh = new_noad();
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = 29;
+		mem[cur_list.tail_field - mem_min].hh.U2.b0 = 29;
 		mem[cur_list.tail_field - mem_min + 1].hh.rh = 2;
-		mem[cur_list.tail_field - mem_min + 1].hh.variant.lh = p;
+		mem[cur_list.tail_field - mem_min + 1].hh.lh = p;
 		break;
 
 	case 13:
@@ -18769,10 +18693,10 @@ void handle_right_brace()
 		--save_ptr;
 		mem[save_stack[save_ptr].int_ - mem_min].hh.rh = 3;
 		p = fin_mlist(0);
-		mem[save_stack[save_ptr].int_ - mem_min].hh.variant.lh = p;
+		mem[save_stack[save_ptr].int_ - mem_min].hh.lh = p;
 		if (p) {
 			if (!mem[p - mem_min].hh.rh) {
-				if (mem[p - mem_min].hh.variant.U2.b0 == 16) {
+				if (mem[p - mem_min].hh.U2.b0 == 16) {
 					if (!mem[p - mem_min + 3].hh.rh) {
 						if (!mem[p - mem_min + 2].hh.rh) {
 							mem[save_stack[save_ptr].int_ - mem_min].hh = mem[p - mem_min + 1].hh;
@@ -18780,9 +18704,9 @@ void handle_right_brace()
 						}
 					}
 				}
-				else if (mem[p - mem_min].hh.variant.U2.b0 == 28) {
+				else if (mem[p - mem_min].hh.U2.b0 == 28) {
 					if (save_stack[save_ptr].int_ == (cur_list.tail_field + 1)) {
-						if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 == 16) {
+						if (mem[cur_list.tail_field - mem_min].hh.U2.b0 == 16) {
 							q = cur_list.head_field;
 							while (mem[q - mem_min].hh.rh != cur_list.tail_field)
 								q = mem[q - mem_min].hh.rh;
@@ -18804,7 +18728,7 @@ void handle_right_brace()
 
 void main_control()
 {
-	int t;
+	integer t;
 
 	if (eqtb[3419].hh.rh)
 		begin_token_list(eqtb[3419].hh.rh, 12);
@@ -18841,7 +18765,7 @@ _L21:
 		break;
 
 	case 112:
-		if (cur_list.aux_field.hh.variant.lh == 1000)
+		if (cur_list.aux_field.hh.lh == 1000)
 			goto _L120;
 		app_space();
 		break;
@@ -18884,7 +18808,7 @@ _L21:
 			cur_list.aux_field.int_ = -65536000;
 		}
 		else if (abs(cur_list.mode_field) == 102)
-			cur_list.aux_field.hh.variant.lh = 1000;
+			cur_list.aux_field.hh.lh = 1000;
 		break;
 
 	case 28: case 128: case 229: case 231:
@@ -19079,7 +19003,7 @@ _L21:
 	case 253:
 		mem[cur_list.tail_field - mem_min].hh.rh = new_noad();
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b0 = cur_chr;
+		mem[cur_list.tail_field - mem_min].hh.U2.b0 = cur_chr;
 		scan_math(cur_list.tail_field + 1);
 		break;
 
@@ -19113,7 +19037,7 @@ _L21:
 	case 258:
 		mem[cur_list.tail_field - mem_min].hh.rh = new_glue(0);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 = 98;
+		mem[cur_list.tail_field - mem_min].hh.U2.b1 = 98;
 		break;
 
 	case 257:
@@ -19184,16 +19108,16 @@ _L21:
 _L70:
 	main_s = eqtb[cur_chr+4751].hh.rh;
 	if (main_s == 1000) {
-		cur_list.aux_field.hh.variant.lh = 1000;
+		cur_list.aux_field.hh.lh = 1000;
 	}
 	else if (main_s < 1000) {
 		if (main_s > 0)
-			cur_list.aux_field.hh.variant.lh = main_s;
+			cur_list.aux_field.hh.lh = main_s;
 	}
-	else if (cur_list.aux_field.hh.variant.lh < 1000)
-		cur_list.aux_field.hh.variant.lh = 1000;
+	else if (cur_list.aux_field.hh.lh < 1000)
+		cur_list.aux_field.hh.lh = 1000;
 	else
-		cur_list.aux_field.hh.variant.lh = main_s;
+		cur_list.aux_field.hh.lh = main_s;
 	main_f = eqtb[3934].hh.rh;
 	bchar = font_bchar[main_f];
 	false_bchar = font_false_bchar[main_f];
@@ -19209,9 +19133,9 @@ _L70:
 		avail = mem[lig_stack - mem_min].hh.rh;
 		mem[lig_stack - mem_min].hh.rh = 0;
 	}
-	mem[lig_stack - mem_min].hh.variant.U2.b0 = main_f;
+	mem[lig_stack - mem_min].hh.U2.b0 = main_f;
 	cur_l = cur_chr;
-	mem[lig_stack - mem_min].hh.variant.U2.b1 = cur_l;
+	mem[lig_stack - mem_min].hh.U2.b1 = cur_l;
 	cur_q = cur_list.tail_field;
 	if (cancel_boundary) {
 		cancel_boundary = false;
@@ -19228,18 +19152,18 @@ _L70:
 _L80:
 	if (cur_l < 256) {
 		if (mem[cur_q - mem_min].hh.rh > 0) {
-			if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 == hyphen_char[main_f])
+			if (mem[cur_list.tail_field - mem_min].hh.U2.b1 == hyphen_char[main_f])
 				ins_disc = true;
 		}
 		if (ligature_present) {
 			main_p = new_ligature(main_f, cur_l, mem[cur_q - mem_min].hh.rh);
 			if (lft_hit) {
-				mem[main_p - mem_min].hh.variant.U2.b1 = 2;
+				mem[main_p - mem_min].hh.U2.b1 = 2;
 				lft_hit = false;
 			}
 			if (rt_hit) {
 				if (!lig_stack) {
-					++mem[main_p - mem_min].hh.variant.U2.b1;
+					++mem[main_p - mem_min].hh.U2.b1;
 					rt_hit = false;
 				}
 			}
@@ -19259,7 +19183,7 @@ _L90:
 	if (!lig_stack)
 		goto _L21;
 	cur_q = cur_list.tail_field;
-	cur_l = mem[lig_stack - mem_min].hh.variant.U2.b1;
+	cur_l = mem[lig_stack - mem_min].hh.U2.b1;
 _L91:
 	if (lig_stack < hi_mem_min)
 		goto _L95;
@@ -19307,16 +19231,16 @@ _L100:
 _L101:
 	main_s = eqtb[cur_chr+4751].hh.rh;
 	if (main_s == 1000) {
-		cur_list.aux_field.hh.variant.lh = 1000;
+		cur_list.aux_field.hh.lh = 1000;
 	}
 	else if (main_s < 1000) {
 		if (main_s > 0)
-			cur_list.aux_field.hh.variant.lh = main_s;
+			cur_list.aux_field.hh.lh = main_s;
 	}
-	else if (cur_list.aux_field.hh.variant.lh < 1000)
-		cur_list.aux_field.hh.variant.lh = 1000;
+	else if (cur_list.aux_field.hh.lh < 1000)
+		cur_list.aux_field.hh.lh = 1000;
 	else
-		cur_list.aux_field.hh.variant.lh = main_s;
+		cur_list.aux_field.hh.lh = main_s;
 	lig_stack = avail;
 	if (!lig_stack) {
 		lig_stack = get_avail();
@@ -19325,9 +19249,9 @@ _L101:
 		avail = mem[lig_stack - mem_min].hh.rh;
 		mem[lig_stack - mem_min].hh.rh = 0;
 	}
-	mem[lig_stack - mem_min].hh.variant.U2.b0 = main_f;
+	mem[lig_stack - mem_min].hh.U2.b0 = main_f;
 	cur_r = cur_chr;
-	mem[lig_stack - mem_min].hh.variant.U2.b1 = cur_r;
+	mem[lig_stack - mem_min].hh.U2.b1 = cur_r;
 	if (cur_r == false_bchar)
 		cur_r = 256;
 _L110:
@@ -19348,18 +19272,18 @@ _L112:
 			if (main_j.b2 >= 128) {
 				if (cur_l < 256) {
 					if (mem[cur_q - mem_min].hh.rh > 0) {
-						if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 == hyphen_char[main_f])
+						if (mem[cur_list.tail_field - mem_min].hh.U2.b1 == hyphen_char[main_f])
 							ins_disc = true;
 					}
 					if (ligature_present) {
 						main_p = new_ligature(main_f, cur_l, mem[cur_q - mem_min].hh.rh);
 						if (lft_hit) {
-							mem[main_p - mem_min].hh.variant.U2.b1 = 2;
+							mem[main_p - mem_min].hh.U2.b1 = 2;
 							lft_hit = false;
 						}
 						if (rt_hit) {
 							if (!lig_stack) {
-								++mem[main_p - mem_min].hh.variant.U2.b1;
+								++mem[main_p - mem_min].hh.U2.b1;
 								rt_hit = false;
 							}
 						}
@@ -19407,7 +19331,7 @@ _L112:
 					mem[lig_stack - mem_min + 1].hh.rh = main_p;
 				}
 				else {
-					mem[lig_stack - mem_min].hh.variant.U2.b1 = cur_r;
+					mem[lig_stack - mem_min].hh.U2.b1 = cur_r;
 				}
 				break;
 
@@ -19421,13 +19345,13 @@ _L112:
 			case 7: case 11:
 				if (cur_l < 256) {
 					if (mem[cur_q - mem_min].hh.rh > 0) {
-						if (mem[cur_list.tail_field - mem_min].hh.variant.U2.b1 == hyphen_char[main_f])
+						if (mem[cur_list.tail_field - mem_min].hh.U2.b1 == hyphen_char[main_f])
 							ins_disc = true;
 					}
 					if (ligature_present) {
 						main_p = new_ligature(main_f, cur_l, mem[cur_q - mem_min].hh.rh);
 						if (lft_hit) {
-							mem[main_p - mem_min].hh.variant.U2.b1 = 2;
+							mem[main_p - mem_min].hh.U2.b1 = 2;
 							lft_hit = false;
 						}
 						mem[cur_q - mem_min].hh.rh = main_p;
@@ -19493,7 +19417,7 @@ _L95:
 		cur_r = bchar;
 	}
 	else {
-		cur_r = mem[lig_stack - mem_min].hh.variant.U2.b1;
+		cur_r = mem[lig_stack - mem_min].hh.U2.b1;
 	}
 	goto _L110;
 _L120:
@@ -19526,9 +19450,8 @@ void give_err_help()
 bool open_fmt_file()
 {
 	bool result;
-	int j;
+	int j = cur_input.loc_field;
 
-	j = cur_input.loc_field;
 	if (buffer[cur_input.loc_field] == 38) {
 		++cur_input.loc_field;
 		j = cur_input.loc_field;
@@ -19536,18 +19459,18 @@ bool open_fmt_file()
 		while (buffer[j] != 32)
 			++j;
 		pack_buffered_name(0, cur_input.loc_field, j - 1);
-		if (w_open_in(&fmt_file))
+		if (w_open_in(fmt_file))
 			goto _L40;
 		pack_buffered_name(11, cur_input.loc_field, j - 1);
-		if (w_open_in(&fmt_file))
+		if (w_open_in(fmt_file))
 			goto _L40;
-		write_ln(term_out, "Sorry, I can't find that format;", " will try PLAIN.");
-		fflush(term_out.f);
+		*term_out << "Sorry, I can't find that format;" << " will try PLAIN." << std::endl;
+		term_out->flush();
 		errno = 0;
 	}
 	pack_buffered_name(16, 1, 0);
-	if (!w_open_in(&fmt_file)) {
-		write_ln(term_out, "I can't find the PLAIN format file!");
+	if (!w_open_in(fmt_file)) {
+		*term_out << "I can't find the PLAIN format file!" << std::endl;
 		result = false;
 		goto _L10;
 	}
@@ -19561,64 +19484,63 @@ _L10:
 bool load_fmt_file()
 {
 	bool result = true;
-	int j, k;
-	unsigned short p = 0, q;
-	int x;
+	integer j, k;
+	halfword p = 0, q;
 	four_quarters w;
 	int N;
+	integer x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 
-	x = GETFBUF(fmt_file.f, memory_word).int_;
 	if (x != 117275187)
 		goto _L6666;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x)
 		goto _L6666;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x != 30000)
 		goto _L6666;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x != 6106)
 		goto _L6666;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x != 1777)
 		goto _L6666;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x != 307)
 		goto _L6666;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x < 0)
 		goto _L6666;
 	if (x > pool_size) {
-		write_ln(term_out, "---! Must increase the ", "string pool size");
+		*term_out << "---! Must increase the " << "string pool size" << std::endl;
 		goto _L6666;
 	}
 	pool_ptr = x;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x < 0)
 		goto _L6666;
 	if (x > max_strings) {
-		write_ln(term_out, "---! Must increase the ", "max strings");
+		*term_out << "---! Must increase the " << "max strings" << std::endl;
 		goto _L6666;
 	}
 	str_ptr = x;
 	for (N = str_ptr, k = 0; k <= N; ++k) {
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > pool_ptr)
 			goto _L6666;
 		str_start[k] = x;
 	}
 	k = 0;
 	while (k + 4 < pool_ptr) {
-		GET(fmt_file.f, memory_word);
-		w = GETFBUF(fmt_file.f, memory_word).qqqq;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		w = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).qqqq;
 		str_pool[k] = w.b0;
 		str_pool[k+1] = w.b1;
 		str_pool[k+2] = w.b2;
@@ -19626,277 +19548,277 @@ bool load_fmt_file()
 		k += 4;
 	}
 	k = pool_ptr - 4;
-	GET(fmt_file.f, memory_word);
-	w = GETFBUF(fmt_file.f, memory_word).qqqq;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	w = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).qqqq;
 	str_pool[k] = w.b0;
 	str_pool[k+1] = w.b1;
 	str_pool[k+2] = w.b2;
 	str_pool[k+3] = w.b3;
 	init_str_ptr = str_ptr;
 	init_pool_ptr = pool_ptr;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if ((x < 1019) || (x > 29986))
 		goto _L6666;
 	lo_mem_max = x;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if ((x < 20) || (x > lo_mem_max))
 		goto _L6666;
 	rover = x;
 	q = rover;
 	do {
 		for (k = p; k <= (q + 1); ++k) {
-			GET(fmt_file.f, memory_word);
-			mem[k - mem_min] = GETFBUF(fmt_file.f, memory_word);
+			get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+			mem[k - mem_min] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		}
-		p = q + mem[q - mem_min].hh.variant.lh;
+		p = q + mem[q - mem_min].hh.lh;
 		if ((p > lo_mem_max) || ((q >= mem[q - mem_min + 1].hh.rh) && (mem[q - mem_min + 1].hh.rh != rover)))
 			goto _L6666;
 		q = mem[q - mem_min + 1].hh.rh;
 	} while (q != rover);
 	for (N = lo_mem_max, k = p; k <= N; ++k) {
-		GET(fmt_file.f, memory_word);
-		mem[k - mem_min] = GETFBUF(fmt_file.f, memory_word);
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		mem[k - mem_min] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
 	if (mem_min < (-2)) {
-		p = mem[rover - mem_min + 1].hh.variant.lh;
+		p = mem[rover - mem_min + 1].hh.lh;
 		q = mem_min + 1;
 		mem[0].hh.rh = 0;
-		mem[0].hh.variant.lh = 0;
+		mem[0].hh.lh = 0;
 		mem[p - mem_min + 1].hh.rh = q;
-		mem[rover - mem_min + 1].hh.variant.lh = q;
+		mem[rover - mem_min + 1].hh.lh = q;
 		mem[q - mem_min + 1].hh.rh = rover;
-		mem[q - mem_min + 1].hh.variant.lh = p;
+		mem[q - mem_min + 1].hh.lh = p;
 		mem[q - mem_min].hh.rh = 65535;
-		mem[q - mem_min].hh.variant.lh = -q;
+		mem[q - mem_min].hh.lh = -q;
 	}
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if ((x <= lo_mem_max) || (x > 29987))
 		goto _L6666;
 	hi_mem_min = x;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (((unsigned)x) > 30000)
 		goto _L6666;
 	avail = x;
 	mem_end = 30000;
 	for (N = mem_end, k = hi_mem_min; k <= N; ++k) {
-		GET(fmt_file.f, memory_word);
-		mem[k - mem_min] = GETFBUF(fmt_file.f, memory_word);
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		mem[k - mem_min] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
-	GET(fmt_file.f, memory_word);
-	var_used = GETFBUF(fmt_file.f, memory_word).int_;
-	GET(fmt_file.f, memory_word);
-	dyn_used = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	var_used = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	dyn_used = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	k = 1;
 	do {
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if ((x < 1) || (k + x > 6107))
 			goto _L6666;
 		for (j = k; j < (k + x); ++j) {
-			GET(fmt_file.f, memory_word);
-			eqtb[j] = GETFBUF(fmt_file.f, memory_word);
+			get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+			eqtb[j] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		}
 		k += x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if ((x < 0) || (k + x > 6107))
 			goto _L6666;
 		for (j = k; j < (k + x); ++j)
 			eqtb[j] = eqtb[k-1];
 		k += x;
 	} while (k <= 6106);
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if ((x < 514) || (x > 2614))
 		goto _L6666;
 	par_loc = x;
 	par_token = par_loc + 4095;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if ((x < 514) || (x > 2614))
 		goto _L6666;
 	write_loc = x;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if ((x < 514) || (x > 2614))
 		goto _L6666;
 	hash_used = x;
 	p = 513;
 	do {
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if ((x <= p) || (x > hash_used))
 			goto _L6666;
 		p = x;
-		GET(fmt_file.f, memory_word);
-		hash[p-514] = GETFBUF(fmt_file.f, memory_word).hh;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		hash[p-514] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh;
 	} while (p != hash_used);
 	for (p = hash_used + 1; p <= 2880; ++p) {
-		GET(fmt_file.f, memory_word);
-		hash[p-514] = GETFBUF(fmt_file.f, memory_word).hh;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		hash[p-514] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh;
 	}
-	GET(fmt_file.f, memory_word);
-	cs_count = GETFBUF(fmt_file.f, memory_word).int_;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	cs_count = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x < 7)
 		goto _L6666;
 	if (x > font_mem_size) {
-		write_ln(term_out, "---! Must increase the ", "font mem size");
+		*term_out << "---! Must increase the " << "font mem size" << std::endl;
 		goto _L6666;
 	}
 	fmem_ptr = x;
 	for (N = fmem_ptr, k = 0; k < N; ++k) {
-		GET(fmt_file.f, memory_word);
-		font_info[k] = GETFBUF(fmt_file.f, memory_word);
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		font_info[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x < 0)
 		goto _L6666;
 	if (x > font_max) {
-		write_ln(term_out, "---! Must increase the ", "font max");
+		*term_out << "---! Must increase the " << "font max" << std::endl;
 		goto _L6666;
 	}
 	font_ptr = x;
 	for (N = font_ptr, k = 0; k <= N; ++k) {
-		GET(fmt_file.f, memory_word);
-		font_check[k] = GETFBUF(fmt_file.f, memory_word).qqqq;
-		GET(fmt_file.f, memory_word);
-		font_size[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		font_dsize[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		font_check[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).qqqq;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		font_size[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		font_dsize[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 65535)
 			goto _L6666;
 		font_params[k] = x;
-		GET(fmt_file.f, memory_word);
-		hyphen_char[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		skew_char[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		hyphen_char[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		skew_char[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > str_ptr)
 			goto _L6666;
 		font_name[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > str_ptr)
 			goto _L6666;
 		font_area[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 255)
 			goto _L6666;
 		font_bc[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 255)
 			goto _L6666;
 		font_ec[k] = x;
-		GET(fmt_file.f, memory_word);
-		char_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		width_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		height_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		depth_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		italic_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		lig_kern_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		kern_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		exten_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		param_base[k] = GETFBUF(fmt_file.f, memory_word).int_;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		char_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		width_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		height_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		depth_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		italic_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		lig_kern_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		kern_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		exten_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		param_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > lo_mem_max)
 			goto _L6666;
 		font_glue[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) >= fmem_ptr)
 			goto _L6666;
 		bchar_label[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 256)
 			goto _L6666;
 		font_bchar[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 256)
 			goto _L6666;
 		font_false_bchar[k] = x;
 	}
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (((unsigned)x) > 307)
 		goto _L6666;
 	hyph_count = x;
 	for (N = hyph_count, k = 1; k <= N; ++k) {
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 307)
 			goto _L6666;
 		j = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > str_ptr)
 			goto _L6666;
 		hyph_word[j] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 65535)
 			goto _L6666;
 		hyph_list[j] = x;
 	}
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x < 0)
 		goto _L6666;
 	if (x > trie_size) {
-		write_ln(term_out, "---! Must increase the ", "trie size");
+		*term_out << "---! Must increase the " << "trie size" << std::endl;
 		goto _L6666;
 	}
 	j = x;
 	trie_max = j;
 	for (k = 0; k <= j; ++k) {
-		GET(fmt_file.f, memory_word);
-		trie[k] = GETFBUF(fmt_file.f, memory_word).hh;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		trie[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh;
 	}
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (x < 0)
 		goto _L6666;
 	if (x > trie_op_size) {
-		write_ln(term_out, "---! Must increase the ", "trie op size");
+		*term_out << "---! Must increase the " << "trie op size" << std::endl;
 		goto _L6666;
 	}
 	j = x;
 	trie_op_ptr = j;
 	for (k = 1; k <= j; ++k) {
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 63)
 			goto _L6666;
 		hyf_distance[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 63)
 			goto _L6666;
 		hyf_num[k] = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) > 255)
 			goto _L6666;
 		hyf_next[k] = x;
@@ -19905,13 +19827,13 @@ bool load_fmt_file()
 		trie_used[k] = 0;
 	k = 256;
 	while (j > 0) {
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if (((unsigned)x) >= k)
 			goto _L6666;
 		k = x;
-		GET(fmt_file.f, memory_word);
-		x = GETFBUF(fmt_file.f, memory_word).int_;
+		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		if ((x < 1) || (x > j))
 			goto _L6666;
 		trie_used[k] = x;
@@ -19919,23 +19841,23 @@ bool load_fmt_file()
 		op_start[k] = j;
 	}
 	trie_not_ready = false;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (((unsigned)x) > 3)
 		goto _L6666;
 	interaction = x;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 	if (((unsigned)x) > str_ptr)
 		goto _L6666;
 	format_ident = x;
-	GET(fmt_file.f, memory_word);
-	x = GETFBUF(fmt_file.f, memory_word).int_;
-	if ((x != 69069) || feof(fmt_file.f))
+	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
+	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
+	if ((x != 69069) || fmt_file->eof())
 		goto _L6666;
 	goto _L10;
 _L6666:
-	write_ln(term_out, "(Fatal format file error; I'm stymied)");
+	*term_out << "(Fatal format file error; I'm stymied)" << std::endl;
 	result = false;
 _L10:
 	return result;
@@ -19943,11 +19865,11 @@ _L10:
 
 void close_files_and_terminate()
 {
-	int k;
+	integer k;
 
 	for (k = 0; k <= 15; ++k) {
 		if (write_open[k])
-			a_close(&write_file[k]);
+			a_close(write_file[k]);
 	}
 	while (cur_s > (-1)) {
 		if (cur_s > 0) {
@@ -20033,12 +19955,12 @@ void close_files_and_terminate()
 		print(839);
 		print_int(dvi_offset + dvi_ptr);
 		print(840);
-		b_close(&dvi_file);
+		b_close(dvi_file);
 	}
 	if (!log_opened)
 		return;
-	write_ln(log_file);
-	a_close(&log_file);
+	*log_file << std::endl;
+	a_close(log_file);
 	selector -= 2;
 	if (selector != 17)
 		return;
@@ -20049,9 +19971,8 @@ void close_files_and_terminate()
 
 void final_cleanup()
 {
-	char c;
+	small_number c = cur_chr;
 
-	c = cur_chr;
 	if (!job_name)
 		open_log_file();
 	while (input_ptr > 0) {
@@ -20082,7 +20003,7 @@ void final_cleanup()
 		}
 		print(1280);
 		if_line = mem[cond_ptr - mem_min + 1].int_;
-		cur_if = mem[cond_ptr - mem_min].hh.variant.U2.b1;
+		cur_if = mem[cond_ptr - mem_min].hh.U2.b1;
 		temp_ptr = cond_ptr;
 		cond_ptr = mem[cond_ptr - mem_min].hh.rh;
 		free_node(temp_ptr, 2);
@@ -20326,11 +20247,11 @@ void init_prim()
 	primitive(899, 5, 258);
 	hash[2105].rh = 900;
 	hash[2106].rh = 900;
-	eqtb[2620].hh.variant.U2.b0 = 9;
+	eqtb[2620].hh.U2.b0 = 9;
 	eqtb[2620].hh.rh = 29989;
-	eqtb[2620].hh.variant.U2.b1 = 1;
+	eqtb[2620].hh.U2.b1 = 1;
 	eqtb[2619] = eqtb[2620];
-	eqtb[2619].hh.variant.U2.b0 = 115;
+	eqtb[2619].hh.U2.b0 = 115;
 	primitive(969, 81, 0);
 	primitive(970, 81, 1);
 	primitive(971, 81, 2);
@@ -20462,35 +20383,23 @@ void init_prim()
 	no_new_control_sequence = true;
 }
 
-virtual void typeset(int argc, const char * const * argv)
+virtual void typeset(const std::initializer_list<const char *>& args)
 {
-	char character = 'T';
-
-	getopt(argc, argv);
+	getopt(args);
 	if (setjmp(_JL9998))
 		goto _L9998;
 	if (setjmp(_JL9999))
 		goto _L9999;
-	fmt_file.f = nullptr;
-	strcpy(fmt_file.name, "fmt_file");
-	tfm_file.f = nullptr;
-	strcpy(tfm_file.name, "tfm_file");
-	dvi_file.f = nullptr;
-	strcpy(dvi_file.name, "dvi_file");
-	log_file.f = nullptr;
-	strcpy(log_file.name, "log_file");
-	pool_file.f = nullptr;
-	strcpy(pool_file.name, "pool_file");
-	term_out.f = nullptr;
-	strcpy(term_out.name, "term_out");
-	term_in.f = nullptr;
-	strcpy(term_in.name, "term_in");
+	fmt_file = nullptr;
+	tfm_file = nullptr;
+	log_file = nullptr;
+	pool_file = nullptr;
+	term_out = nullptr;
+	term_in = nullptr;
 	history = 3;
-	strcpy(term_out.name, "TTY:");
-	term_out.f = stdout;
-	if (!term_out.f)
-		io_error(errno, term_out.name);
-	SETUPBUF(term_out.f, char);
+	term_out = output_stream;
+	if (!term_out)
+		io_error(errno, "TTY:");
 	if (ready_already == 314159)
 		goto _L1;
 	bad = 0;
@@ -20521,7 +20430,7 @@ virtual void typeset(int argc, const char * const * argv)
 	if (101070 < (-mem_min))
 		bad = 41;
 	if (bad > 0) {
-		write_ln(term_out, "Ouch---my internal constants have been clobbered!", "---case ", bad);
+		*term_out << "Ouch---my internal constants have been clobbered!" << "---case " << bad << std::endl;
 		goto _L9999;
 	}
 	initialize();
@@ -20537,15 +20446,15 @@ _L1:
 	tally = 0;
 	term_offset = 0;
 	file_offset = 0;
-	fwrite(&character, 1, 1, term_out.f);
+	*term_out << "This is TeX, Version 3.1415926";
 	if (!format_ident) {
-		write_ln(term_out, " (no format preloaded)");
+		*term_out << " (no format preloaded)" << std::endl;
 	}
 	else {
 		slow_print(format_ident);
 		print_ln();
 	}
-	fflush(term_out.f);
+	term_out->flush();
 	errno = 0;
 	job_name = 0;
 	name_in_progress = false;
@@ -20583,10 +20492,10 @@ _L1:
 		if (!open_fmt_file())
 			goto _L9999;
 		if (!load_fmt_file()) {
-			w_close(&fmt_file);
+			w_close(fmt_file);
 			goto _L9999;
 		}
-		w_close(&fmt_file);
+		w_close(fmt_file);
 		while ((cur_input.loc_field < cur_input.limit_field) && (buffer[cur_input.loc_field] == 32))
 			++cur_input.loc_field;
 	}
@@ -20609,47 +20518,62 @@ _L9998:
 	close_files_and_terminate();
 _L9999:
 	ready_already = 0;
-	if (term_in.f)
-		fclose(term_in.f);
-	if (term_out.f)
-		fflush(term_out.f);
-	if (pool_file.f)
-		fclose(pool_file.f);
-	if (log_file.f)
-		fclose(log_file.f);
-	if (dvi_file.f)
-		fclose(dvi_file.f);
-	if (tfm_file.f)
-		fclose(tfm_file.f);
-	if (fmt_file.f)
-		fclose(fmt_file.f);
+	if (term_in)
+		fclose(term_in);
+	if (term_out)
+		fclose(term_out);
+	if (pool_file)
+		fclose(pool_file);
+	if (log_file)
+		fclose(log_file);
+	if (dvi_file)
+		fclose(dvi_file);
+	if (tfm_file)
+		fclose(tfm_file);
+	if (fmt_file)
+		fclose(fmt_file);
 	
 	return;
 }
 
-
-
 // End.
 
-FILE * input_stream; // stores the command line args
 
-virtual void getopt(int argc, const char * const * argv)
+static std::iostream * fopen(const char * name, const char * mode)
 {
-	input_stream = tmpfile(); // will be closed as term_in.f
+	std::fstream file(name, (mode[0] == 'r' ? std::ios::in+std::ios::binary : std::ios::out+std::ios::binary+std::ios::trunc));
+	if (file.fail())
+		return nullptr;
 
-	for (int i = 0; i < argc; ++i)
-		fputs(" ", input_stream), // must come first, the first character is always skipped…
-		fputs(argv[i], input_stream);
-
-	fflush(input_stream);
-	fseek(input_stream, 0, SEEK_SET);
+	return new std::fstream(std::move(file));
 }
 
-public:
-
-virtual void typeset(const std::initializer_list<const char *>& args)
+static void fclose(std::iostream *& ios)
 {
-	typeset(args.size(), args.begin());
+	delete ios;
+	ios = nullptr;
+}
+
+
+std::iostream * output_stream; // displays the logging messages
+std::iostream * input_stream; // stores the command line args
+
+virtual void getopt(const std::initializer_list<const char *>& args)
+{
+	for (auto arg : args)
+		*input_stream << ' ' << arg; // ' ' must come first, the first character is always skipped…
+}
+
+// inexplicably, p2c forgets these
+int tfm_file_mode;
+uint8_t tfm_file_value;
+int fmt_file_mode;
+memory_word fmt_file_value;
+
+tex()
+{
+	tfm_file_mode = tfm_file_value = fmt_file_mode = 0; // clear added members
+	fmt_file_value = { 0 };
 }
 
 virtual ~tex() = default;
@@ -20658,70 +20582,132 @@ virtual ~tex() = default;
 
 
 class plain : public tex {
-	
-std::string output_path; // directory to store output files in
 
-virtual bool a_open_in(alpha_file *f) override
+std::streambuf * inputfile_streambuf; // optional stream-based replacement for filename
+std::string output_path; // directory to store output files in
+std::string input_path; // directory to search input files for
+
+bool a_open_in(std::iostream *& ios) override
 {
-	bool found = tex::a_open_in(f);
+	bool found = tex::a_open_in(ios);
+
+	if (found == false && strncmp("null.tex", name_of_file, 8) == 0) {
+		ios = new std::iostream(inputfile_streambuf); // handle the input file passed in as a stream (rather than a filename)
+
+		found = true;
+	}
 
 	if (found == false) {
-		std::string absolute_path = output_path + name_of_file; // look in the output directory; intermediate files will be found there
+		const std::string& absolute_path = input_path + name_of_file; // look relative to the the input directory; user macro definitions will be found their
 		strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
 
-		found = tex::a_open_in(f);
+		found = tex::a_open_in(ios);
 	}
-	
+
+	if (found == false) {
+		const std::string& absolute_path = output_path + name_of_file; // look in the output directory; intermediate files will be found there
+		strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
+
+		found = tex::a_open_in(ios);
+	}
+
 	return found;
 }
 
-virtual bool a_open_out(alpha_file *f) override
+bool b_open_in(std::iostream *& ios) override
 {
-	std::string absolute_path = output_path + name_of_file;
-	strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
+	bool found = tex::a_open_in(ios);
 
-	return tex::a_open_out(f);
+	if (found == false) {
+		const std::string& absolute_path = input_path + name_of_file;
+		strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
+
+		found = tex::a_open_in(ios);
+	}
+
+	return found;
 }
 
-virtual bool b_open_out(byte_file *f) override
+bool a_open_out(std::iostream *& ios) override
 {
 	std::string absolute_path = output_path + name_of_file;
 	strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
 
-	return tex::b_open_out(f);
+	return tex::a_open_out(ios);
 }
 
-virtual bool w_open_out(word_file *f) override
+bool b_open_out(std::iostream *& ios) override
 {
 	std::string absolute_path = output_path + name_of_file;
 	strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
 
-	return tex::w_open_out(f);
+	return tex::b_open_out(ios);
+}
+
+bool w_open_out(std::iostream *& ios) override
+{
+	std::string absolute_path = output_path + name_of_file;
+	strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
+
+	return tex::w_open_out(ios);
+}
+
+void open_log_file() override
+{
+	log_file = new std::iostream(nullptr); // we already capture the term_out as a stream; a file based copy is unnecessary
+}
+
+virtual void typeset(const std::string& filename, std::streambuf * resultbuf, const std::string& search_dir, const std::string& working_dir, std::ostream& output)
+{
+	input_path = search_dir;
+	if (input_path.empty() == false and input_path.back() != '/')
+		input_path.push_back('/');
+
+	output_path = working_dir;
+	if (output_path.empty() == false and output_path.back() != '/')
+		output_path.push_back('/');
+
+	input_stream = new std::stringstream; // will be closed as term_in
+	output_stream = new std::iostream(output.rdbuf()); // will be closed as term_out
+
+	if (resultbuf) {
+		dvi_file = new std::stringstream;
+		dvi_file->rdbuf(resultbuf);
+	}
+
+	tex::typeset({
+		R"(\nonstopmode)", // omits all stops (\batchmode also omits terminal output)
+		R"(\input plain)",
+		R"(\input)", filename.c_str(),
+		R"(\end)",
+	});
 }
 
 
 public:
 
-virtual void typeset(const std::string& filename, std::string output_path = "")
+virtual void typeset(const std::string& filename, std::ostream& result, const std::string& search_dir = "", const std::string& working_dir = "", std::ostream& output = std::clog)
 {
-	auto args = {
-#ifdef DEBUG
-		R"(\nonstopmode)", // omits all stops
-#else
-		R"(\batchmode)", // omits all stops and omits terminal output
-#endif
-		R"(\input plain)",
-		R"(\input)", filename.c_str(),
-		R"(\end)",
-	};
-
-	if (output_path.empty() == false and output_path.back() != '/')
-		output_path.push_back('/');
-	this->output_path = output_path;
-	
-	tex::typeset(args);
+	typeset(filename, result.rdbuf(), search_dir, working_dir, output);
 }
-	
+
+virtual void typeset(const std::string& filename, const std::string& search_dir = "", const std::string& working_dir = "", std::ostream& output = std::clog)
+{
+	typeset(filename, nullptr, search_dir, working_dir, output);
+}
+
+virtual void typeset(std::istream& input, std::ostream& result, const std::string& search_dir = "", const std::string& working_dir = "", std::ostream& output = std::clog)
+{
+	inputfile_streambuf = input.rdbuf();
+	typeset("null", result.rdbuf(), search_dir, working_dir, output);
+}
+
+virtual void typeset(std::istream& input, const std::string& search_dir = "", const std::string& working_dir = "", std::ostream& output = std::clog)
+{
+	inputfile_streambuf = input.rdbuf();
+	typeset("null", nullptr, search_dir, working_dir, output);
+}
+
 };
 
 } // end namespace ‘tex’
