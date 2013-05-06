@@ -42,8 +42,11 @@ sed -i.bak -E 's/fopen\("TTY:", "wb"\)/output_stream/' tex.c
 sed -i.bak -E 's/uint8_t trie_taken\[\(trie_size \+ 7\) \/ 8\]/std::bitset<trie_size> trie_taken/' tex.c
 
 # replace #defines with constexpr statics
-sed -i.bak -E 's/^#define ([a-z_]+) "([^"]+)"$/constexpr static const char * \1 = "\2";/' tex.c
-sed -i.bak -E 's/^#define ([a-z_]+) ([0-9]+)$/constexpr static int \1 = \2;/' tex.c
+sed -i.bak -E 's/^#define ([a-z_]+) (.+)$/constexpr static auto \1 = \2;/' tex.c
+
+# change the character-set arrays to allow all eight-bits
+sed -i.bak -E "/xchr\[32\] = ' ';/,/for \(i = 0; i <= 126; \+\+i\)/D;s/	xord\[xchr\[i\]\] = i;/std::iota\(xchr, xchr+255, 0\); std::iota\(xord, xord+255, 0\);/" tex.c
+sed -i.bak -E 's/i, k;/k;/' tex.c # since ‘i’ is now unused…
 
 # clean up the typedefs by removing the extra line between them
 sed -i.bak -E '/^typedef [^{]+$/N; s/\n//' tex.c
@@ -119,6 +122,7 @@ cat > tex.hpp <<EOH
 #include <setjmp.h>
 
 #include <string>
+#include <numeric>
 #include <stdexcept>
 
 #include <iostream>
@@ -222,10 +226,9 @@ uint8_t tfm_file_value;
 int fmt_file_mode;
 memory_word fmt_file_value;
 
-tex()
+tex() : fmt_file_value({ 0 }), tfm_file_mode(0), tfm_file_value(0), fmt_file_mode(0) // clear members added above
 {
-	tfm_file_mode = tfm_file_value = fmt_file_mode = 0; // clear added members
-	fmt_file_value = { 0 };
+
 }
 
 virtual ~tex() = default;
