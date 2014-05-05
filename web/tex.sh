@@ -180,6 +180,8 @@ cat > tex.hpp <<EOH
 
 #include <string>
 #include <vector>
+#include <bitset>
+#include <memory>
 #include <numeric>
 #include <stdexcept>
 
@@ -255,11 +257,11 @@ ${tex_source_code}
 
 static std::iostream * fopen(const char * name, const char * mode)
 {
-	std::fstream file(name, (mode[0] == 'r' ? std::ios::in+std::ios::binary : std::ios::out+std::ios::binary+std::ios::trunc));
-	if (file.fail())
+	std::unique_ptr<std::fstream> file(new std::fstream(name, (mode[0] == 'r' ? std::ios::in|std::ios::binary : std::ios::out|std::ios::binary|std::ios::trunc)));
+	if (file->fail())
 		return nullptr;
 
-	return new std::fstream(std::move(file));
+	return file.release();
 }
 
 static void fclose(std::iostream *& ios)
