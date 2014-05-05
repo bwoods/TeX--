@@ -2533,7 +2533,7 @@ void show_node_list(integer p)
 							print_glue(1310720000, mem[p - mem_min + 5].hh.U2.b1, 0);
 						}
 						else {
-							print_glue(lround(65536 * g), mem[p - mem_min + 5].hh.U2.b1, 0);
+							print_glue(int(round(65536 * g)), mem[p - mem_min + 5].hh.U2.b1, 0);
 						}
 					}
 					if (mem[p - mem_min + 4].int_) {
@@ -9454,7 +9454,7 @@ _L21:
 						}
 						else if (glue_temp < (-1000000000.0))
 							glue_temp = -1000000000.0;
-						cur_g = lround(glue_temp);
+						cur_g = int(round(glue_temp));
 					}
 				}
 				else if (mem[g - mem_min].hh.U2.b1 == g_order) {
@@ -9465,7 +9465,7 @@ _L21:
 					}
 					else if (glue_temp < (-1000000000.0))
 						glue_temp = -1000000000.0;
-					cur_g = lround(glue_temp);
+					cur_g = int(round(glue_temp));
 				}
 			}
 			rule_wd += cur_g;
@@ -9662,7 +9662,7 @@ void vlist_out()
 							}
 							else if (glue_temp < (-1000000000.0))
 								glue_temp = -1000000000.0;
-							cur_g = lround(glue_temp);
+							cur_g = int(round(glue_temp));
 						}
 					}
 					else if (mem[g - mem_min].hh.U2.b1 == g_order) {
@@ -9673,7 +9673,7 @@ void vlist_out()
 						}
 						else if (glue_temp < (-1000000000.0))
 							glue_temp = -1000000000.0;
-						cur_g = lround(glue_temp);
+						cur_g = int(round(glue_temp));
 					}
 				}
 				rule_ht += cur_g;
@@ -12200,11 +12200,11 @@ void fin_align()
 						t += mem[v - mem_min + 1].int_;
 						if (mem[p - mem_min + 5].hh.U2.b0 == 1) {
 							if (mem[v - mem_min].hh.U2.b0 == mem[p - mem_min + 5].hh.U2.b1)
-								t += lround(mem[p - mem_min + 6].gr * mem[v - mem_min + 2].int_);
+								t += int(round(mem[p - mem_min + 6].gr * mem[v - mem_min + 2].int_));
 						}
 						else if (mem[p - mem_min + 5].hh.U2.b0 == 2) {
 							if (mem[v - mem_min].hh.U2.b1 == mem[p - mem_min + 5].hh.U2.b1)
-								t -= lround(mem[p - mem_min + 6].gr * mem[v - mem_min + 3].int_);
+								t -= int(round(mem[p - mem_min + 6].gr * mem[v - mem_min + 3].int_));
 						}
 						s = mem[s - mem_min].hh.rh;
 						mem[u - mem_min].hh.rh = new_null_box();
@@ -16069,7 +16069,7 @@ void make_accent()
 			p = hpack(p, 0, 1);
 			mem[p - mem_min + 4].int_ = x - h;
 		}
-		delta = lround(((w - a) / 2.0) + (h * t) - (x * s));
+		delta = int(round(((w - a) / 2.0) + (h * t) - (x * s)));
 		r = new_kern(delta);
 		mem[r - mem_min].hh.U2.b1 = 2;
 		mem[cur_list.tail_field - mem_min].hh.rh = r;
@@ -20416,7 +20416,7 @@ _L9999:
 static std::iostream * fopen(const char * name, const char * mode)
 {
 	std::unique_ptr<std::fstream> file(new std::fstream(name, (mode[0] == 'r' ? std::ios::in|std::ios::binary : std::ios::out|std::ios::binary|std::ios::trunc)));
-	if (file->fail())
+	if (erstat(file.get()))
 		return nullptr;
 
 	return file.release();

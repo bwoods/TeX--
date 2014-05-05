@@ -258,7 +258,7 @@ ${tex_source_code}
 static std::iostream * fopen(const char * name, const char * mode)
 {
 	std::unique_ptr<std::fstream> file(new std::fstream(name, (mode[0] == 'r' ? std::ios::in|std::ios::binary : std::ios::out|std::ios::binary|std::ios::trunc)));
-	if (file->fail())
+	if (erstat(file.get()))
 		return nullptr;
 
 	return file.release();

@@ -7,3 +7,4 @@
 #define SETUPBUF(f,type)	__CAT__(f,_mode) = 0
 #define get_bit(a,i,n,L) a[i]
 #define put_bit(a,i,x,n,L) a[i] = x
+#define nearest_int(x) int(round(x))
