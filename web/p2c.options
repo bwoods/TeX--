@@ -823,7 +823,7 @@ EscIO2Name        io_error      # Name of named-I/O-error-generation function
 
 FileNotFoundName  errno         # Name or number of "File Not Found" ioresult
 
-RoundName         lround        # Name of function or macro for rounding
+RoundName         nearest_int   # Name of function or macro for rounding
                                 # a real to an integer.  Precede name with
                                 # a '*' if it is a macro that evaluates its
                                 # arguments more than once.  Default=do it
