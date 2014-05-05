@@ -4,85 +4,142 @@
 ../p2c/p2c -c p2c.options tex.p
 
 # make these methods virtual
-sed -i.bak -E 's/(void open_log_file)/virtual \1/' tex.c
-sed -i.bak -E 's/(bool a_open_in\(FILE \*)/virtual \1\& /' tex.c # …and have these take the pointer by reference
-sed -i.bak -E 's/(bool b_open_in\(FILE \*)/virtual \1\& /' tex.c
-sed -i.bak -E 's/(bool w_open_in\(FILE \*)/virtual \1\& /' tex.c
-sed -i.bak -E 's/(bool a_open_out\(FILE \*)/virtual \1\& /' tex.c
-sed -i.bak -E 's/(bool b_open_out\(FILE \*)/virtual \1\& /' tex.c
-sed -i.bak -E 's/(bool w_open_out\(FILE \*)/virtual \1\& /' tex.c
-sed -i.bak -E 's/(void a_close\(FILE \*)/virtual \1\& /' tex.c
-sed -i.bak -E 's/(void b_close\(FILE \*)/virtual \1\& /' tex.c
-sed -i.bak -E 's/(void w_close\(FILE \*)/virtual \1\& /' tex.c
+sed -i.bak -E '{
+	s/(void open_log_file)/virtual \1/
+
+	# …and have these take the pointer by reference
+	s/(bool a_open_in\(FILE \*)/virtual \1\& /
+	s/(bool b_open_in\(FILE \*)/virtual \1\& /
+	s/(bool w_open_in\(FILE \*)/virtual \1\& /
+	s/(bool a_open_out\(FILE \*)/virtual \1\& /
+	s/(bool b_open_out\(FILE \*)/virtual \1\& /
+	s/(bool w_open_out\(FILE \*)/virtual \1\& /
+	s/(void a_close\(FILE \*)/virtual \1\& /
+	s/(void b_close\(FILE \*)/virtual \1\& /
+	s/(void w_close\(FILE \*)/virtual \1\& /
+}' tex.c
 
 # use C++ iostreams, rather than FILE *’s
-sed -i.bak -E 's/FILE /std::iostream /' tex.c
-sed -i.bak -E 's/WRITE\(([][a-zA-Z0-9_]+), ([][a-zA-Z0-9_[:punct:]\ ]+)\)/\*\1 << \2/' tex.c
-sed -i.bak -E 's/write_ln\(([][a-zA-Z0-9_]+)\)/\*\1 << std::endl/' tex.c
-sed -i.bak -E 's/write_ln\(([][a-zA-Z0-9_]+), ("[^"]+")\)/\*\1 << \2 << std::endl/' tex.c
-sed -i.bak -E 's/write_ln\(([][a-zA-Z0-9_]+), ("[^"]+"), ("[^"]+")\)/\*\1 << \2 << \3 << std::endl/' tex.c
-sed -i.bak -E 's/write_ln\(([][a-zA-Z0-9_]+), ("[^"]+"), ("[^"]+"), ([][a-zA-Z0-9_]+)\)/\*\1 << \2 << \3 << \4 << std::endl/' tex.c
-sed -i.bak -E 's/fwrite\(([][\&a-zA-Z0-9_+-\ ]+), ([a-zA-Z0-9()_]+), ([a-zA-Z0-9_]+), ([][a-zA-Z0-9_]+)\)/\4->write(reinterpret_cast<const char *>(\1), \2)/' tex.c
-sed -i.bak -E 's/read_ln\(([][a-zA-Z0-9_]+)\);/\1->ignore(); \/\/ skip the newline/' tex.c
-sed -i.bak -E 's/fread\(([][\&a-zA-Z0-9_+-\ ]+), ([a-zA-Z0-9()_]+), ([a-zA-Z0-9_]+), ([][a-zA-Z0-9_]+)\)/\4->read(reinterpret_cast<char *>(\1), \2)/' tex.c
-sed -i.bak -E 's/fflush\(([a-zA-Z0-9_]+)\);/\1->flush();/' tex.c
-sed -i.bak -E 's/fpeek\(([a-zA-Z0-9_]+)\)/\1->peek()/' tex.c
-sed -i.bak -E 's/fgetc\(([a-zA-Z0-9_]+)\)/\1->get()/' tex.c
-sed -i.bak -E 's/feof\(([a-zA-Z0-9_]+)\)/\1->eof()/' tex.c
+sed -i.bak -E '{
+	s/FILE /std::iostream /
+	s/WRITE\(([][a-zA-Z0-9_]+), ([][a-zA-Z0-9_[:punct:]\ ]+)\)/\*\1 << \2/
+	s/write_ln\(([][a-zA-Z0-9_]+)\)/\*\1 << std::endl/
+	s/write_ln\(([][a-zA-Z0-9_]+), ("[^"]+")\)/\*\1 << \2 << std::endl/
+	s/write_ln\(([][a-zA-Z0-9_]+), ("[^"]+"), ("[^"]+")\)/\*\1 << \2 << \3 << std::endl/
+	s/write_ln\(([][a-zA-Z0-9_]+), ("[^"]+"), ("[^"]+"), ([][a-zA-Z0-9_]+)\)/\*\1 << \2 << \3 << \4 << std::endl/
+	s/fwrite\(([][\&a-zA-Z0-9_+-\ ]+), ([a-zA-Z0-9()_]+), ([a-zA-Z0-9_]+), ([][a-zA-Z0-9_]+)\)/\4->write(reinterpret_cast<const char *>(\1), \2)/
+	s/read_ln\(([][a-zA-Z0-9_]+)\);/\1->ignore(); \/\/ skip the newline/
+	s/fread\(([][\&a-zA-Z0-9_+-\ ]+), ([a-zA-Z0-9()_]+), ([a-zA-Z0-9_]+), ([][a-zA-Z0-9_]+)\)/\4->read(reinterpret_cast<char *>(\1), \2)/
+	s/fflush\(([a-zA-Z0-9_]+)\);/\1->flush();/
+	s/fpeek\(([a-zA-Z0-9_]+)\)/\1->peek()/
+	s/fgetc\(([a-zA-Z0-9_]+)\)/\1->get()/
+	s/feof\(([a-zA-Z0-9_]+)\)/\1->eof()/
+}' tex.c
 
 # don’t overwrite the supplied iostream
-sed -i.bak -E 's/(!b_open_out\(dvi_file\))/!dvi_file and \1/' tex.c
-sed -i.bak -E '/dvi_file = nullptr;/d' tex.c
+sed -i.bak -E '{
+	s/(!b_open_out\(dvi_file\))/!dvi_file and \1/
+}' tex.c
 
 # redirect input and output to the appropriate iostreams
-sed -i.bak -E 's/fopen\("TTY:", "rb"\)/input_stream/' tex.c
-sed -i.bak -E 's/fopen\("TTY:", "wb"\)/output_stream/' tex.c
+sed -i.bak -E '
+{
+	s/fopen\("TTY:", "rb"\)/input_stream/
+	s/fopen\("TTY:", "wb"\)/output_stream/
+}' tex.c
+
+# split the declaration
+sed -i.bak -E '{
+	s/(pool_pointer) (str_start\[max_strings \+ 1\]), (pool_ptr);/\1 \2;\
+\1 \3;/
+}' tex.c
+
+# move the buffers into std::vectors
+sed -i.bak -E '{
+	s/ASCII_code buffer\[buf_size \+ 1\];/std::vector<ASCII_code> buffer;/
+	s/hyph_pointer z;/hyph_pointer z;\
+	buffer.resize(buf_size + 1);/
+	
+	s/pool_pointer str_start\[max_strings \+ 1\];/std::vector<pool_pointer> str_start;/
+	s/hyph_pointer z;/hyph_pointer z;\
+	str_start.resize(max_strings + 1);/
+	
+	s/eight_bits dvi_buf\[dvi_buf_size \+ 1\];/std::vector<eight_bits> dvi_buf;/
+	s/hyph_pointer z;/hyph_pointer z;\
+	dvi_buf.resize(dvi_buf_size + 1);/
+	
+	s/packed_ASCII_code str_pool\[pool_size \+ 1\];/std::vector<packed_ASCII_code> str_pool;/
+	s/hyph_pointer z;/hyph_pointer z;\
+	str_pool.resize(pool_size + 1);/
+	
+	s/memory_word font_info\[font_mem_size \+ 1\];/std::vector<memory_word> font_info;/
+	s/hyph_pointer z;/hyph_pointer z;\
+	font_info.resize(font_mem_size + 1);/
+	
+	s/memory_word mem\[mem_max - mem_min \+ 1\];/std::vector<memory_word> mem;/
+	s/hyph_pointer z;/hyph_pointer z;\
+	\
+	mem.resize(mem_max - mem_min + 1);/
+}' tex.c
 
 # use std::bitset<> rather than a byte array and manual bit operations
 sed -i.bak -E 's/uint8_t trie_taken\[\(trie_size \+ 7\) \/ 8\]/std::bitset<trie_size> trie_taken/' tex.c
 
 # replace #defines with constexpr statics
 sed -i.bak -E 's/^#define ([a-z_]+) (.+)$/constexpr static auto \1 = \2;/' tex.c
+sed -i.bak -E '/bad = 0;/,/}/d' tex.c
 
 # change the character-set arrays to allow all eight-bits
-sed -i.bak -E "/xchr\[32\] = ' ';/,/for \(i = 0; i <= 126; \+\+i\)/D;s/	xord\[xchr\[i\]\] = i;/std::iota\(xchr, xchr+255, 0\); std::iota\(xord, xord+255, 0\);/" tex.c
-sed -i.bak -E 's/i, k;/k;/' tex.c # since ‘i’ is now unused…
+sed -i.bak -E '/xchr\[32\] = /,/for \(i = 0; i <= 126; \+\+i\)/D;s/	xord\[xchr\[i\]\] = i;/std::iota\(xchr, xchr+255, 0\);\
+	std::iota\(xord, xord+255, 0\);\
+/
+	s/i, k;/k;/' tex.c # since ‘i’ is now unused…
+
+# streams pointers are initialized to nullptr in the constructor instead
+sed -i.bak -E '{
+	/fmt_file = nullptr;/,/term_in = nullptr;/d
+}' tex.c
 
 # clean up the typedefs by removing the extra line between them
+sed -i.bak -E '{
+	s/integer__________________________________________/integer/g
+	s/												  /	/g
+}' tex.c
 sed -i.bak -E '/^typedef [^{]+$/N; s/\n//' tex.c
 sed -i.bak -E '/^typedef [^{]+$/N; s/(typedef struct)/\
 \1/' tex.c
-sed -i.bak -E 's/integer__________________________________________/integer/g' tex.c
-sed -i.bak -E 's/												  /	/g' tex.c
-
-# un-pad the string constants
-sed -i.bak -E 's/[ ]{2,}"/"/' tex.c
 
 # better default filename strings
-sed -i.bak -E 's/"TeXformats:/"tex\//' tex.c
-sed -i.bak -E 's/TEX.POOL/tex.pool/' tex.c
-
-# need enough room for absolute paths
-sed -i.bak -E 's/file_name_size = [0-9]+/file_name_size = PATH_MAX/' tex.c
+sed -i.bak -E '{
+	s/"TeXformats:/"tex\//
+	s/TEX.POOL/tex.pool/
+}' tex.c
+sed -i.bak -E '{
+	s/10TeXinputs:/04tex\//
+	s/09TeXfonts:/04tfm\//
+}' tex.pool
+rm tex.pool.bak
 
 # replace Knuth’s ‘case: others:’ with C’s ‘default:’
 sed -i.bak -E 's/case others:/default:/' tex.c
 
 # entry and exit points
-sed -i.bak -E 's/int main\(int argc, char \*argv\[\]\)/virtual void typeset\(const std::initializer_list<const char \*>\& args\)/' tex.c
-sed -i.bak -E 's/getopt\(argc, argv\);/getopt\(args\);/' tex.c
-sed -i.bak -E 's/exit\(EXIT_SUCCESS\)/\
-	return/' tex.c
+sed -i.bak -E '{
+	s/int main\(int argc, char \*argv\[\]\)/virtual void typeset\(const std::initializer_list<const char \*>\& args\)/
+	s/getopt\(argc, argv\);/getopt\(args\);/
+	s/exit\(EXIT_SUCCESS\)/\
+	return/
+}' tex.c
 
 # p2c bug work-around: when StructFiles=0, p2c forgets to RESETBUF
 sed -i.bak -E 's/file_opened = true;/file_opened = true; tfm_file_mode = 1;/' tex.c
 
 # inline the I/O macros
 cpp -C -P -ansi tex.c tex.d
-sed -i.bak -E 's/##//g' tex.d
-
-# remove the extra blank lines left by cpp
-sed -i.bak -E '/./,/^$/!d' tex.d
+sed -i.bak -E '{ # remove the blank lines and #’s left by cpp
+	/./,/^$/!d
+	s/##//g
+}' tex.d
 
 tex_source_code=$(<tex.d)
 
@@ -122,6 +179,7 @@ cat > tex.hpp <<EOH
 #include <setjmp.h>
 
 #include <string>
+#include <vector>
 #include <numeric>
 #include <stdexcept>
 
@@ -226,15 +284,15 @@ uint8_t tfm_file_value;
 int fmt_file_mode;
 memory_word fmt_file_value;
 
-tex() : fmt_file_value({ 0 }), tfm_file_mode(0), tfm_file_value(0), fmt_file_mode(0) // clear members added above
+tex() : fmt_file_value({ 0 }), tfm_file_mode(0), tfm_file_value(0), fmt_file_mode(0), // clear members added above
+		fmt_file(nullptr), tfm_file(nullptr), dvi_file(nullptr), log_file(nullptr), pool_file(nullptr), term_out(nullptr), term_in(nullptr)  // clear file pointers
 {
-
+	
 }
 
 virtual ~tex() = default;
 
 };
-
 
 class plain : public tex {
 
@@ -253,7 +311,7 @@ bool a_open_in(std::iostream *& ios) override
 	}
 
 	if (found == false) {
-		const std::string& absolute_path = input_path + name_of_file; // look relative to the the input directory; user macro definitions will be found their
+		const std::string& absolute_path = input_path + name_of_file; // look relative to the the input directory; user macro definitions will be found there
 		strncpy(name_of_file, absolute_path.c_str(), file_name_size - 1);
 
 		found = tex::a_open_in(ios);
@@ -372,4 +430,3 @@ EOH
 
 rm tex.c.bak tex.c
 rm tex.d.bak tex.d
-

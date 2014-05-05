@@ -1,10 +1,10 @@
 {4:}{9:}{$C-,A+,D-}{[$C+,D+]}{:9}program TEX;label{6:}1,9998,9999;
-{:6}const{11:}mem_max=30000;mem_min=0;buf_size=500;error_line=72;
-half_error_line=42;max_print_line=79;stack_size=200;max_in_open=6;
-font_max=75;font_mem_size=20000;param_size=60;nest_size=40;
-max_strings=3000;string_vacancies=8000;pool_size=32000;save_size=600;
-trie_size=8000;trie_op_size=500;dvi_buf_size=800;file_name_size=40;
-pool_name='TeXformats:TEX.POOL                     ';
+{:6}const{11:}mem_max=65530;mem_min=0;buf_size=2000;error_line=79;
+half_error_line=50;max_print_line=79;stack_size=200;max_in_open=15;
+font_max=120;font_mem_size=36000;param_size=60;nest_size=40;
+max_strings=4400;string_vacancies=15000;pool_size=45000;save_size=2000;
+trie_size=8000;trie_op_size=500;dvi_buf_size=16384;
+file_name_size=FILENAME_MAX;pool_name='tex/tex.pool';
 {:11}type{18:}ASCII_code=0..255;{:18}{25:}eight_bits=0..255;
 alpha_file=packed file of char;byte_file=packed file of eight_bits;
 {:25}{38:}pool_pointer=0..pool_size;str_number=0..max_strings;
@@ -231,11 +231,11 @@ for i:=0 to 126 do xord[xchr[i]]:=i;{:24}{74:}interaction:=3;
 OK_to_interrupt:=true;{:97}{166:}{was_mem_end:=mem_min;
 was_lo_max:=mem_min;was_hi_min:=mem_max;panicking:=false;}
 {:166}{215:}nest_ptr:=0;max_nest_stack:=0;cur_list.mode_field:=1;
-cur_list.head_field:=29999;cur_list.tail_field:=29999;
+cur_list.head_field:=mem_max-1;cur_list.tail_field:=mem_max-1;
 cur_list.aux_field.int:=-65536000;cur_list.ml_field:=0;
 cur_list.pg_field:=0;shown_mode:=0;{991:}page_contents:=0;
-page_tail:=29998;mem[29998].hh.rh:=0;last_glue:=65535;last_penalty:=0;
-last_kern:=0;page_so_far[7]:=0;page_max_depth:=0{:991};
+page_tail:=mem_max-2;mem[mem_max-2].hh.rh:=0;last_glue:=65535;
+last_penalty:=0;last_kern:=0;page_so_far[7]:=0;page_max_depth:=0{:991};
 {:215}{254:}for k:=5263 to 6106 do xeq_level[k]:=1;
 {:254}{257:}no_new_control_sequence:=true;hash[514].lh:=0;
 hash[514].rh:=0;for k:=515 to 2880 do hash[k]:=hash[514];
@@ -274,18 +274,18 @@ mem[rover].hh.rh:=65535;mem[rover].hh.lh:=1000;
 mem[rover+1].hh.lh:=rover;mem[rover+1].hh.rh:=rover;
 lo_mem_max:=rover+1000;mem[lo_mem_max].hh.rh:=0;
 mem[lo_mem_max].hh.lh:=0;
-for k:=29987 to 30000 do mem[k]:=mem[lo_mem_max];
-{790:}mem[29990].hh.lh:=6714;{:790}{797:}mem[29991].hh.rh:=256;
-mem[29991].hh.lh:=0;{:797}{820:}mem[29993].hh.b0:=1;
-mem[29994].hh.lh:=65535;mem[29993].hh.b1:=0;
-{:820}{981:}mem[30000].hh.b1:=255;mem[30000].hh.b0:=1;
-mem[30000].hh.rh:=30000;{:981}{988:}mem[29998].hh.b0:=10;
-mem[29998].hh.b1:=0;{:988};avail:=0;mem_end:=30000;hi_mem_min:=29987;
-var_used:=20;dyn_used:=14;{:164}{222:}eqtb[2881].hh.b0:=101;
-eqtb[2881].hh.rh:=0;eqtb[2881].hh.b1:=0;
-for k:=1 to 2880 do eqtb[k]:=eqtb[2881];{:222}{228:}eqtb[2882].hh.rh:=0;
-eqtb[2882].hh.b1:=1;eqtb[2882].hh.b0:=117;
-for k:=2883 to 3411 do eqtb[k]:=eqtb[2882];
+for k:=mem_max-13 to mem_max do mem[k]:=mem[lo_mem_max];
+{790:}mem[mem_max-10].hh.lh:=6714;{:790}{797:}mem[mem_max-9].hh.rh:=256;
+mem[mem_max-9].hh.lh:=0;{:797}{820:}mem[mem_max-7].hh.b0:=1;
+mem[mem_max-6].hh.lh:=65535;mem[mem_max-7].hh.b1:=0;
+{:820}{981:}mem[mem_max].hh.b1:=255;mem[mem_max].hh.b0:=1;
+mem[mem_max].hh.rh:=mem_max;{:981}{988:}mem[mem_max-2].hh.b0:=10;
+mem[mem_max-2].hh.b1:=0;{:988};avail:=0;mem_end:=mem_max;
+hi_mem_min:=mem_max-13;var_used:=20;dyn_used:=14;
+{:164}{222:}eqtb[2881].hh.b0:=101;eqtb[2881].hh.rh:=0;
+eqtb[2881].hh.b1:=0;for k:=1 to 2880 do eqtb[k]:=eqtb[2881];
+{:222}{228:}eqtb[2882].hh.rh:=0;eqtb[2882].hh.b1:=1;
+eqtb[2882].hh.b0:=117;for k:=2883 to 3411 do eqtb[k]:=eqtb[2882];
 mem[0].hh.rh:=mem[0].hh.rh+530;{:228}{232:}eqtb[3412].hh.rh:=0;
 eqtb[3412].hh.b0:=118;eqtb[3412].hh.b1:=1;
 for k:=3413 to 3677 do eqtb[k]:=eqtb[2881];eqtb[3678].hh.rh:=0;
@@ -639,7 +639,7 @@ end{:293};p:=mem[p].hh.rh;end;if p<>0 then print_esc(554);10:end;
 {:292}{306:}procedure runaway;var p:halfword;
 begin if scanner_status>1 then begin print_nl(569);
 case scanner_status of 2:begin print(570);p:=def_ref;end;
-3:begin print(571);p:=29997;end;4:begin print(572);p:=29996;end;
+3:begin print(571);p:=mem_max-3;end;4:begin print(572);p:=mem_max-4;end;
 5:begin print(573);p:=def_ref;end;end;print_char(63);print_ln;
 show_token_list(mem[p].hh.rh,0,error_line-10);end;end;
 {:306}{:119}{120:}function get_avail:halfword;var p:halfword;
@@ -1028,19 +1028,19 @@ print_int(nest[p].pg_field mod 65536);print(366);
 print_int(nest[p].pg_field div 4194304);print_char(44);
 print_int((nest[p].pg_field div 65536)mod 64);print_char(41);end;
 if nest[p].ml_field<0 then print(367);
-if p=0 then begin{986:}if 29998<>page_tail then begin print_nl(979);
-if output_active then print(980);show_box(mem[29998].hh.rh);
+if p=0 then begin{986:}if mem_max-2<>page_tail then begin print_nl(979);
+if output_active then print(980);show_box(mem[mem_max-2].hh.rh);
 if page_contents>0 then begin print_nl(981);print_totals;print_nl(982);
-print_scaled(page_so_far[0]);r:=mem[30000].hh.rh;
-while r<>30000 do begin print_ln;print_esc(330);t:=mem[r].hh.b1-0;
+print_scaled(page_so_far[0]);r:=mem[mem_max].hh.rh;
+while r<>mem_max do begin print_ln;print_esc(330);t:=mem[r].hh.b1-0;
 print_int(t);print(983);
 if eqtb[5318+t].int=1000 then t:=mem[r+3].int else t:=x_over_n(mem[r+3].
 int,1000)*eqtb[5318+t].int;print_scaled(t);
-if mem[r].hh.b0=1 then begin q:=29998;t:=0;repeat q:=mem[q].hh.rh;
+if mem[r].hh.b0=1 then begin q:=mem_max-2;t:=0;repeat q:=mem[q].hh.rh;
 if(mem[q].hh.b0=3)and(mem[q].hh.b1=mem[r].hh.b1)then t:=t+1;
 until q=mem[r+1].hh.lh;print(984);print_int(t);print(985);end;
 r:=mem[r].hh.rh;end;end;end{:986};
-if mem[29999].hh.rh<>0 then print_nl(368);end;
+if mem[mem_max-1].hh.rh<>0 then print_nl(368);end;
 show_box(mem[nest[p].head_field].hh.rh);
 {219:}case abs(m)div(101)of 0:begin print_nl(369);
 if a.int<=-65536000 then print(370)else print_scaled(a.int);
@@ -1601,9 +1601,9 @@ goto 20;end{:357};
 {342:}if cur_cmd<=5 then if cur_cmd>=4 then if align_state=0 then{789:}
 begin if(scanner_status=4)or(cur_align=0)then fatal_error(595);
 cur_cmd:=mem[cur_align+5].hh.lh;mem[cur_align+5].hh.lh:=cur_chr;
-if cur_cmd=63 then begin_token_list(29990,2)else begin_token_list(mem[
-cur_align+2].int,2);align_state:=1000000;goto 20;end{:789}{:342};10:end;
-{:341}{363:}procedure firm_up_the_line;var k:0..buf_size;
+if cur_cmd=63 then begin_token_list(mem_max-10,2)else begin_token_list(
+mem[cur_align+2].int,2);align_state:=1000000;goto 20;end{:789}{:342};
+10:end;{:341}{363:}procedure firm_up_the_line;var k:0..buf_size;
 begin cur_input.limit_field:=last;
 if eqtb[5291].int>0 then if interaction>1 then begin;print_ln;
 if cur_input.start_field<cur_input.limit_field then for k:=cur_input.
@@ -1628,9 +1628,9 @@ print_cs(warning_index);token_show(ref_count);end_diagnostic(false);
 end{:401};if mem[r].hh.lh<>3584 then{391:}begin scanner_status:=3;
 unbalance:=0;long_state:=eqtb[cur_cs].hh.b0;
 if long_state>=113 then long_state:=long_state-2;
-repeat mem[29997].hh.rh:=0;
+repeat mem[mem_max-3].hh.rh:=0;
 if(mem[r].hh.lh>3583)or(mem[r].hh.lh<3328)then s:=0 else begin match_chr
-:=mem[r].hh.lh-3328;s:=mem[r].hh.rh;r:=s;p:=29997;m:=0;end;
+:=mem[r].hh.lh-3328;s:=mem[r].hh.rh;r:=s;p:=mem_max-3;m:=0;end;
 {392:}22:get_token;
 if cur_tok=mem[r].hh.lh then{394:}begin r:=mem[r].hh.rh;
 if(mem[r].hh.lh>=3328)and(mem[r].hh.lh<=3584)then begin if cur_tok<512
@@ -1649,7 +1649,7 @@ if cur_tok=par_token then if long_state<>112 then{396:}begin if
 long_state=111 then begin runaway;begin if interaction=3 then;
 print_nl(262);print(645);end;sprint_cs(warning_index);print(646);
 begin help_ptr:=3;help_line[2]:=647;help_line[1]:=648;help_line[0]:=649;
-end;back_error;end;pstack[n]:=mem[29997].hh.rh;
+end;back_error;end;pstack[n]:=mem[mem_max-3].hh.rh;
 align_state:=align_state-unbalance;
 for m:=0 to n do flush_list(pstack[m]);goto 10;end{:396};
 if cur_tok<768 then if cur_tok<512 then{399:}begin unbalance:=1;
@@ -1661,7 +1661,7 @@ if cur_tok=par_token then if long_state<>112 then{396:}begin if
 long_state=111 then begin runaway;begin if interaction=3 then;
 print_nl(262);print(645);end;sprint_cs(warning_index);print(646);
 begin help_ptr:=3;help_line[2]:=647;help_line[1]:=648;help_line[0]:=649;
-end;back_error;end;pstack[n]:=mem[29997].hh.rh;
+end;back_error;end;pstack[n]:=mem[mem_max-3].hh.rh;
 align_state:=align_state-unbalance;
 for m:=0 to n do flush_list(pstack[m]);goto 10;end{:396};
 if cur_tok<768 then if cur_tok<512 then unbalance:=unbalance+1 else
@@ -1677,15 +1677,15 @@ end{:395}else{393:}begin if cur_tok=2592 then if mem[r].hh.lh<=3584 then
 if mem[r].hh.lh>=3328 then goto 22;begin q:=get_avail;mem[p].hh.rh:=q;
 mem[q].hh.lh:=cur_tok;p:=q;end;end{:393};m:=m+1;
 if mem[r].hh.lh>3584 then goto 22;if mem[r].hh.lh<3328 then goto 22;
-40:if s<>0 then{400:}begin if(m=1)and(mem[p].hh.lh<768)and(p<>29997)then
-begin mem[rbrace_ptr].hh.rh:=0;begin mem[p].hh.rh:=avail;avail:=p;
-{dyn_used:=dyn_used-1;}end;p:=mem[29997].hh.rh;pstack[n]:=mem[p].hh.rh;
-begin mem[p].hh.rh:=avail;avail:=p;{dyn_used:=dyn_used-1;}end;
-end else pstack[n]:=mem[29997].hh.rh;n:=n+1;
-if eqtb[5293].int>0 then begin begin_diagnostic;print_nl(match_chr);
-print_int(n);print(656);show_token_list(pstack[n-1],0,1000);
-end_diagnostic(false);end;end{:400}{:392};until mem[r].hh.lh=3584;
-end{:391};
+40:if s<>0 then{400:}begin if(m=1)and(mem[p].hh.lh<768)and(p<>mem_max-3)
+then begin mem[rbrace_ptr].hh.rh:=0;begin mem[p].hh.rh:=avail;avail:=p;
+{dyn_used:=dyn_used-1;}end;p:=mem[mem_max-3].hh.rh;
+pstack[n]:=mem[p].hh.rh;begin mem[p].hh.rh:=avail;avail:=p;
+{dyn_used:=dyn_used-1;}end;end else pstack[n]:=mem[mem_max-3].hh.rh;
+n:=n+1;if eqtb[5293].int>0 then begin begin_diagnostic;
+print_nl(match_chr);print_int(n);print(656);
+show_token_list(pstack[n-1],0,1000);end_diagnostic(false);end;
+end{:400}{:392};until mem[r].hh.lh=3584;end{:391};
 {390:}while(cur_input.state_field=0)and(cur_input.loc_field=0)and(
 cur_input.index_field<>2)do end_token_list;
 begin_token_list(ref_count,5);cur_input.name_field:=warning_index;
@@ -1705,7 +1705,7 @@ procedure expand;var t:halfword;p,q,r:halfword;j:0..buf_size;
 cv_backup:integer;cvl_backup,radix_backup,co_backup:small_number;
 backup_backup:halfword;save_scanner_status:small_number;
 begin cv_backup:=cur_val;cvl_backup:=cur_val_level;radix_backup:=radix;
-co_backup:=cur_order;backup_backup:=mem[29987].hh.rh;
+co_backup:=cur_order;backup_backup:=mem[mem_max-13].hh.rh;
 if cur_cmd<111 then{367:}begin if eqtb[5299].int>1 then show_cur_cmd_chr
 ;case cur_cmd of 110:{386:}begin if cur_mark[cur_chr]<>0 then
 begin_token_list(cur_mark[cur_chr],14);end{:386};
@@ -1749,8 +1749,9 @@ end{:370}end;
 end{:367}else if cur_cmd<115 then macro_call else{375:}begin cur_tok:=
 6715;back_input;end{:375};cur_val:=cv_backup;cur_val_level:=cvl_backup;
 radix:=radix_backup;cur_order:=co_backup;
-mem[29987].hh.rh:=backup_backup;end;{:366}{380:}procedure get_x_token;
-label 20,30;begin 20:get_next;if cur_cmd<=100 then goto 30;
+mem[mem_max-13].hh.rh:=backup_backup;end;
+{:366}{380:}procedure get_x_token;label 20,30;begin 20:get_next;
+if cur_cmd<=100 then goto 30;
 if cur_cmd>=111 then if cur_cmd<115 then macro_call else begin cur_cs:=
 2620;cur_cmd:=9;goto 30;end else expand;goto 20;
 30:if cur_cs=0 then cur_tok:=(cur_cmd*256)+cur_chr else cur_tok:=4095+
@@ -1767,13 +1768,14 @@ cur_cmd:=1;cur_chr:=123;align_state:=align_state+1;end;end;
 begin{406:}repeat get_x_token;until cur_cmd<>10{:406};
 if cur_tok<>3133 then back_input;end;
 {:405}{407:}function scan_keyword(s:str_number):boolean;label 10;
-var p:halfword;q:halfword;k:pool_pointer;begin p:=29987;mem[p].hh.rh:=0;
-k:=str_start[s];while k<str_start[s+1]do begin get_x_token;
+var p:halfword;q:halfword;k:pool_pointer;begin p:=mem_max-13;
+mem[p].hh.rh:=0;k:=str_start[s];
+while k<str_start[s+1]do begin get_x_token;
 if(cur_cs=0)and((cur_chr=str_pool[k])or(cur_chr=str_pool[k]-32))then
 begin begin q:=get_avail;mem[p].hh.rh:=q;mem[q].hh.lh:=cur_tok;p:=q;end;
-k:=k+1;end else if(cur_cmd<>10)or(p<>29987)then begin back_input;
-if p<>29987 then begin_token_list(mem[29987].hh.rh,3);
-scan_keyword:=false;goto 10;end;end;flush_list(mem[29987].hh.rh);
+k:=k+1;end else if(cur_cmd<>10)or(p<>mem_max-13)then begin back_input;
+if p<>mem_max-13 then begin_token_list(mem[mem_max-13].hh.rh,3);
+scan_keyword:=false;goto 10;end;end;flush_list(mem[mem_max-13].hh.rh);
 scan_keyword:=true;10:end;{:407}{408:}procedure mu_error;
 begin begin if interaction=3 then;print_nl(262);print(662);end;
 begin help_ptr:=1;help_line[0]:=663;end;error;end;
@@ -2044,7 +2046,7 @@ mem[q+2].int:=cur_val;goto 21;end;scan_rule_spec:=q;end;
 {:463}{464:}function str_toks(b:pool_pointer):halfword;var p:halfword;
 q:halfword;t:halfword;k:pool_pointer;
 begin begin if pool_ptr+1>pool_size then overflow(257,pool_size-
-init_pool_ptr);end;p:=29997;mem[p].hh.rh:=0;k:=b;
+init_pool_ptr);end;p:=mem_max-3;mem[p].hh.rh:=0;k:=b;
 while k<pool_ptr do begin t:=str_pool[k];
 if t=32 then t:=2592 else t:=3072+t;begin begin q:=avail;
 if q=0 then q:=get_avail else begin avail:=mem[q].hh.rh;mem[q].hh.rh:=0;
@@ -2053,7 +2055,7 @@ k:=k+1;end;pool_ptr:=b;str_toks:=p;end;
 {:464}{465:}function the_toks:halfword;var old_setting:0..21;
 p,q,r:halfword;b:pool_pointer;begin get_x_token;
 scan_something_internal(5,false);
-if cur_val_level>=4 then{466:}begin p:=29997;mem[p].hh.rh:=0;
+if cur_val_level>=4 then{466:}begin p:=mem_max-3;mem[p].hh.rh:=0;
 if cur_val_level=4 then begin q:=get_avail;mem[p].hh.rh:=q;
 mem[q].hh.lh:=4095+cur_val;p:=q;
 end else if cur_val<>0 then begin r:=mem[cur_val].hh.rh;
@@ -2067,8 +2069,9 @@ case cur_val_level of 0:print_int(cur_val);
 2:begin print_spec(cur_val,397);delete_glue_ref(cur_val);end;
 3:begin print_spec(cur_val,337);delete_glue_ref(cur_val);end;end;
 selector:=old_setting;the_toks:=str_toks(b);end;end;
-{:465}{467:}procedure ins_the_toks;begin mem[29988].hh.rh:=the_toks;
-begin_token_list(mem[29997].hh.rh,4);end;
+{:465}{467:}procedure ins_the_toks;
+begin mem[mem_max-12].hh.rh:=the_toks;
+begin_token_list(mem[mem_max-3].hh.rh,4);end;
 {:467}{470:}procedure conv_toks;var old_setting:0..21;c:0..5;
 save_scanner_status:small_number;b:pool_pointer;begin c:=cur_chr;
 {471:}case c of 0,1:scan_int;
@@ -2081,8 +2084,8 @@ selector:=21;b:=pool_ptr;{472:}case c of 0:print_int(cur_val);
 3:print_meaning;4:begin print(font_name[cur_val]);
 if font_size[cur_val]<>font_dsize[cur_val]then begin print(741);
 print_scaled(font_size[cur_val]);print(397);end;end;5:print(job_name);
-end{:472};selector:=old_setting;mem[29988].hh.rh:=str_toks(b);
-begin_token_list(mem[29997].hh.rh,4);end;
+end{:472};selector:=old_setting;mem[mem_max-12].hh.rh:=str_toks(b);
+begin_token_list(mem[mem_max-3].hh.rh,4);end;
 {:470}{473:}function scan_toks(macro_def,xpand:boolean):halfword;
 label 40,30,31,32;var t:halfword;s:halfword;p:halfword;q:halfword;
 unbalance:halfword;hash_brace:halfword;
@@ -2110,8 +2113,8 @@ help_line[1]:=742;help_line[0]:=743;end;error;goto 40;end{:475};
 while true do begin if xpand then{478:}begin while true do begin
 get_next;if cur_cmd<=100 then goto 32;
 if cur_cmd<>109 then expand else begin q:=the_toks;
-if mem[29997].hh.rh<>0 then begin mem[p].hh.rh:=mem[29997].hh.rh;p:=q;
-end;end;end;32:x_token end{:478}else get_token;
+if mem[mem_max-3].hh.rh<>0 then begin mem[p].hh.rh:=mem[mem_max-3].hh.rh
+;p:=q;end;end;end;32:x_token end{:478}else get_token;
 if cur_tok<768 then if cur_cmd<2 then unbalance:=unbalance+1 else begin
 unbalance:=unbalance-1;if unbalance=0 then goto 40;
 end else if cur_cmd=6 then if macro_def then{479:}begin s:=cur_tok;
@@ -2690,8 +2693,9 @@ if mem[leader_box].hh.b0=1 then vlist_out else hlist_out;
 doing_leaders:=outer_doing_leaders;dvi_v:=save_v;dvi_h:=save_h;
 cur_v:=base_line;cur_h:=save_h+leader_wd+lx;end{:628};cur_h:=edge-10;
 goto 15;end;end{:626};goto 13;end{:625};11,9:cur_h:=cur_h+mem[p+1].int;
-6:{652:}begin mem[29988]:=mem[p+1];mem[29988].hh.rh:=mem[p].hh.rh;
-p:=29988;goto 21;end{:652};others:end;goto 15;
+6:{652:}begin mem[mem_max-12]:=mem[p+1];
+mem[mem_max-12].hh.rh:=mem[p].hh.rh;p:=mem_max-12;goto 21;end{:652};
+others:end;goto 15;
 14:{624:}if(rule_ht=-1073741824)then rule_ht:=mem[this_box+3].int;
 if(rule_dp=-1073741824)then rule_dp:=mem[this_box+2].int;
 rule_ht:=rule_ht+rule_dp;
@@ -2865,9 +2869,9 @@ total_shrink[o]:=total_shrink[o]+mem[g+3].int;
 if mem[p].hh.b1>=100 then begin g:=mem[p+1].hh.rh;
 if mem[g+3].int>h then h:=mem[g+3].int;
 if mem[g+2].int>d then d:=mem[g+2].int;end;end{:656};
-11,9:x:=x+mem[p+1].int;6:{652:}begin mem[29988]:=mem[p+1];
-mem[29988].hh.rh:=mem[p].hh.rh;p:=29988;goto 21;end{:652};others:end;
-p:=mem[p].hh.rh;end;end{:651};
+11,9:x:=x+mem[p+1].int;6:{652:}begin mem[mem_max-12]:=mem[p+1];
+mem[mem_max-12].hh.rh:=mem[p].hh.rh;p:=mem_max-12;goto 21;end{:652};
+others:end;p:=mem[p].hh.rh;end;end{:651};
 if adjust_tail<>0 then mem[adjust_tail].hh.rh:=0;mem[r+3].int:=h;
 mem[r+2].int:=d;{657:}if m=1 then w:=x+w;mem[r+1].int:=w;x:=w-x;
 if x=0 then begin mem[r+5].hh.b0:=0;mem[r+5].hh.b1:=0;mem[r+6].gr:=0.0;
@@ -3066,7 +3070,7 @@ begin case mem[p].hh.rh of 1:begin cur_mlist:=new_noad;
 mem[cur_mlist+1]:=mem[p];end;2:begin q:=mem[p].hh.lh;goto 40;end;
 3:cur_mlist:=mem[p].hh.lh;others:begin q:=new_null_box;goto 40;end end;
 save_style:=cur_style;cur_style:=s;mlist_penalties:=false;
-mlist_to_hlist;q:=mem[29997].hh.rh;cur_style:=save_style;
+mlist_to_hlist;q:=mem[mem_max-3].hh.rh;cur_style:=save_style;
 {703:}begin if cur_style<4 then cur_size:=0 else cur_size:=16*((
 cur_style-2)div 2);
 cur_mu:=x_over_n(font_info[6+param_base[eqtb[3937+cur_size].hh.rh]].int,
@@ -3369,14 +3373,14 @@ mlist_penalties:=false;mlist_to_hlist;cur_style:=save_style;
 {703:}begin if cur_style<4 then cur_size:=0 else cur_size:=16*((
 cur_style-2)div 2);
 cur_mu:=x_over_n(font_info[6+param_base[eqtb[3937+cur_size].hh.rh]].int,
-18);end{:703};p:=hpack(mem[29997].hh.rh,0,1);end;
+18);end{:703};p:=hpack(mem[mem_max-3].hh.rh,0,1);end;
 others:confusion(889)end;mem[q+1].int:=p;
 if(mem[q+3].hh.rh=0)and(mem[q+2].hh.rh=0)then goto 82;
 make_scripts(q,delta){:754}{:728};82:z:=hpack(mem[q+1].int,0,1);
 if mem[z+3].int>max_h then max_h:=mem[z+3].int;
 if mem[z+2].int>max_d then max_d:=mem[z+2].int;free_node(z,7);80:r:=q;
 r_type:=mem[r].hh.b0;81:q:=mem[q].hh.rh;end{:727};
-{729:}if r_type=18 then mem[r].hh.b0:=16{:729};{760:}p:=29997;
+{729:}if r_type=18 then mem[r].hh.b0:=16{:729};{760:}p:=mem_max-3;
 mem[p].hh.rh:=0;q:=mlist;r_type:=0;cur_style:=style;
 {703:}begin if cur_style<4 then cur_size:=0 else cur_size:=16*((
 cur_style-2)div 2);
@@ -3408,7 +3412,7 @@ if r_type<>12 then if r_type<>19 then begin z:=new_penalty(pen);
 mem[p].hh.rh:=z;p:=z;end;end{:767};r_type:=t;83:r:=q;q:=mem[q].hh.rh;
 free_node(r,s);30:end{:760};end;{:726}{772:}procedure push_alignment;
 var p:halfword;begin p:=get_node(5);mem[p].hh.rh:=align_ptr;
-mem[p].hh.lh:=cur_align;mem[p+1].hh.lh:=mem[29992].hh.rh;
+mem[p].hh.lh:=cur_align;mem[p+1].hh.lh:=mem[mem_max-8].hh.rh;
 mem[p+1].hh.rh:=cur_span;mem[p+2].int:=cur_loop;
 mem[p+3].int:=align_state;mem[p+4].hh.lh:=cur_head;
 mem[p+4].hh.rh:=cur_tail;align_ptr:=p;cur_head:=get_avail;end;
@@ -3417,7 +3421,7 @@ begin begin mem[cur_head].hh.rh:=avail;avail:=cur_head;
 {dyn_used:=dyn_used-1;}end;p:=align_ptr;cur_tail:=mem[p+4].hh.rh;
 cur_head:=mem[p+4].hh.lh;align_state:=mem[p+3].int;
 cur_loop:=mem[p+2].int;cur_span:=mem[p+1].hh.rh;
-mem[29992].hh.rh:=mem[p+1].hh.lh;cur_align:=mem[p].hh.lh;
+mem[mem_max-8].hh.rh:=mem[p+1].hh.lh;cur_align:=mem[p].hh.lh;
 align_ptr:=mem[p].hh.rh;free_node(p,5);end;
 {:772}{774:}{782:}procedure get_preamble_token;label 20;
 begin 20:get_token;while(cur_chr=256)and(cur_cmd=4)do begin get_token;
@@ -3438,31 +3442,31 @@ end;error;flush_math;end{:776};push_nest;
 {775:}if cur_list.mode_field=203 then begin cur_list.mode_field:=-1;
 cur_list.aux_field.int:=nest[nest_ptr-2].aux_field.int;
 end else if cur_list.mode_field>0 then cur_list.mode_field:=-cur_list.
-mode_field{:775};scan_spec(6,false);{777:}mem[29992].hh.rh:=0;
-cur_align:=29992;cur_loop:=0;scanner_status:=4;
+mode_field{:775};scan_spec(6,false);{777:}mem[mem_max-8].hh.rh:=0;
+cur_align:=mem_max-8;cur_loop:=0;scanner_status:=4;
 warning_index:=save_cs_ptr;align_state:=-1000000;
 while true do begin{778:}mem[cur_align].hh.rh:=new_param_glue(11);
 cur_align:=mem[cur_align].hh.rh{:778};if cur_cmd=5 then goto 30;
-{779:}{783:}p:=29996;mem[p].hh.rh:=0;
+{779:}{783:}p:=mem_max-4;mem[p].hh.rh:=0;
 while true do begin get_preamble_token;if cur_cmd=6 then goto 31;
-if(cur_cmd<=5)and(cur_cmd>=4)and(align_state=-1000000)then if(p=29996)
-and(cur_loop=0)and(cur_cmd=4)then cur_loop:=cur_align else begin begin
-if interaction=3 then;print_nl(262);print(902);end;begin help_ptr:=3;
-help_line[2]:=903;help_line[1]:=904;help_line[0]:=905;end;back_error;
-goto 31;
-end else if(cur_cmd<>10)or(p<>29996)then begin mem[p].hh.rh:=get_avail;
-p:=mem[p].hh.rh;mem[p].hh.lh:=cur_tok;end;end;31:{:783};
+if(cur_cmd<=5)and(cur_cmd>=4)and(align_state=-1000000)then if(p=mem_max
+-4)and(cur_loop=0)and(cur_cmd=4)then cur_loop:=cur_align else begin
+begin if interaction=3 then;print_nl(262);print(902);end;
+begin help_ptr:=3;help_line[2]:=903;help_line[1]:=904;help_line[0]:=905;
+end;back_error;goto 31;
+end else if(cur_cmd<>10)or(p<>mem_max-4)then begin mem[p].hh.rh:=
+get_avail;p:=mem[p].hh.rh;mem[p].hh.lh:=cur_tok;end;end;31:{:783};
 mem[cur_align].hh.rh:=new_null_box;cur_align:=mem[cur_align].hh.rh;
-mem[cur_align].hh.lh:=29991;mem[cur_align+1].int:=-1073741824;
-mem[cur_align+3].int:=mem[29996].hh.rh;{784:}p:=29996;mem[p].hh.rh:=0;
-while true do begin 22:get_preamble_token;
+mem[cur_align].hh.lh:=mem_max-9;mem[cur_align+1].int:=-1073741824;
+mem[cur_align+3].int:=mem[mem_max-4].hh.rh;{784:}p:=mem_max-4;
+mem[p].hh.rh:=0;while true do begin 22:get_preamble_token;
 if(cur_cmd<=5)and(cur_cmd>=4)and(align_state=-1000000)then goto 32;
 if cur_cmd=6 then begin begin if interaction=3 then;print_nl(262);
 print(906);end;begin help_ptr:=3;help_line[2]:=903;help_line[1]:=904;
 help_line[0]:=907;end;error;goto 22;end;mem[p].hh.rh:=get_avail;
 p:=mem[p].hh.rh;mem[p].hh.lh:=cur_tok;end;32:mem[p].hh.rh:=get_avail;
 p:=mem[p].hh.rh;mem[p].hh.lh:=6714{:784};
-mem[cur_align+2].int:=mem[29996].hh.rh{:779};end;
+mem[cur_align+2].int:=mem[mem_max-4].hh.rh{:779};end;
 30:scanner_status:=0{:777};new_save_level(6);
 if eqtb[3420].hh.rh<>0 then begin_token_list(eqtb[3420].hh.rh,13);
 align_peek;end;{:774}{786:}{787:}procedure init_span(p:halfword);
@@ -3473,10 +3477,10 @@ cur_span:=p;end;{:787}procedure init_row;begin push_nest;
 cur_list.mode_field:=(-103)-cur_list.mode_field;
 if cur_list.mode_field=-102 then cur_list.aux_field.hh.lh:=0 else
 cur_list.aux_field.int:=0;
-begin mem[cur_list.tail_field].hh.rh:=new_glue(mem[mem[29992].hh.rh+1].
-hh.lh);cur_list.tail_field:=mem[cur_list.tail_field].hh.rh;end;
+begin mem[cur_list.tail_field].hh.rh:=new_glue(mem[mem[mem_max-8].hh.rh
++1].hh.lh);cur_list.tail_field:=mem[cur_list.tail_field].hh.rh;end;
 mem[cur_list.tail_field].hh.b1:=12;
-cur_align:=mem[mem[29992].hh.rh].hh.rh;cur_tail:=cur_head;
+cur_align:=mem[mem[mem_max-8].hh.rh].hh.rh;cur_tail:=cur_head;
 init_span(cur_align);end;{:786}{788:}procedure init_col;
 begin mem[cur_align+5].hh.lh:=cur_cmd;
 if cur_cmd=63 then align_state:=0 else begin back_input;
@@ -3488,14 +3492,14 @@ if q=0 then confusion(908);if align_state<500000 then fatal_error(595);
 p:=mem[q].hh.rh;
 {792:}if(p=0)and(mem[cur_align+5].hh.lh<257)then if cur_loop<>0 then
 {793:}begin mem[q].hh.rh:=new_null_box;p:=mem[q].hh.rh;
-mem[p].hh.lh:=29991;mem[p+1].int:=-1073741824;
-cur_loop:=mem[cur_loop].hh.rh;{794:}q:=29996;r:=mem[cur_loop+3].int;
+mem[p].hh.lh:=mem_max-9;mem[p+1].int:=-1073741824;
+cur_loop:=mem[cur_loop].hh.rh;{794:}q:=mem_max-4;r:=mem[cur_loop+3].int;
 while r<>0 do begin mem[q].hh.rh:=get_avail;q:=mem[q].hh.rh;
 mem[q].hh.lh:=mem[r].hh.lh;r:=mem[r].hh.rh;end;mem[q].hh.rh:=0;
-mem[p+3].int:=mem[29996].hh.rh;q:=29996;r:=mem[cur_loop+2].int;
+mem[p+3].int:=mem[mem_max-4].hh.rh;q:=mem_max-4;r:=mem[cur_loop+2].int;
 while r<>0 do begin mem[q].hh.rh:=get_avail;q:=mem[q].hh.rh;
 mem[q].hh.lh:=mem[r].hh.lh;r:=mem[r].hh.rh;end;mem[q].hh.rh:=0;
-mem[p+2].int:=mem[29996].hh.rh{:794};cur_loop:=mem[cur_loop].hh.rh;
+mem[p+2].int:=mem[mem_max-4].hh.rh{:794};cur_loop:=mem[cur_loop].hh.rh;
 mem[p].hh.rh:=new_glue(mem[cur_loop+1].hh.lh);
 end{:793}else begin begin if interaction=3 then;print_nl(262);
 print(909);end;print_esc(898);begin help_ptr:=3;help_line[2]:=910;
@@ -3546,34 +3550,35 @@ n:halfword;rule_save:scaled;aux_save:memory_word;
 begin if cur_group<>6 then confusion(914);unsave;
 if cur_group<>6 then confusion(915);unsave;
 if nest[nest_ptr-1].mode_field=203 then o:=eqtb[5845].int else o:=0;
-{801:}q:=mem[mem[29992].hh.rh].hh.rh;repeat flush_list(mem[q+3].int);
-flush_list(mem[q+2].int);p:=mem[mem[q].hh.rh].hh.rh;
+{801:}q:=mem[mem[mem_max-8].hh.rh].hh.rh;
+repeat flush_list(mem[q+3].int);flush_list(mem[q+2].int);
+p:=mem[mem[q].hh.rh].hh.rh;
 if mem[q+1].int=-1073741824 then{802:}begin mem[q+1].int:=0;
 r:=mem[q].hh.rh;s:=mem[r+1].hh.lh;
 if s<>0 then begin mem[0].hh.rh:=mem[0].hh.rh+1;delete_glue_ref(s);
 mem[r+1].hh.lh:=0;end;end{:802};
-if mem[q].hh.lh<>29991 then{803:}begin t:=mem[q+1].int+mem[mem[mem[q].hh
-.rh+1].hh.lh+1].int;r:=mem[q].hh.lh;s:=29991;mem[s].hh.lh:=p;n:=1;
-repeat mem[r+1].int:=mem[r+1].int-t;u:=mem[r].hh.lh;
+if mem[q].hh.lh<>mem_max-9 then{803:}begin t:=mem[q+1].int+mem[mem[mem[q
+].hh.rh+1].hh.lh+1].int;r:=mem[q].hh.lh;s:=mem_max-9;mem[s].hh.lh:=p;
+n:=1;repeat mem[r+1].int:=mem[r+1].int-t;u:=mem[r].hh.lh;
 while mem[r].hh.rh>n do begin s:=mem[s].hh.lh;
 n:=mem[mem[s].hh.lh].hh.rh+1;end;
 if mem[r].hh.rh<n then begin mem[r].hh.lh:=mem[s].hh.lh;mem[s].hh.lh:=r;
 mem[r].hh.rh:=mem[r].hh.rh-1;s:=r;
 end else begin if mem[r+1].int>mem[mem[s].hh.lh+1].int then mem[mem[s].
-hh.lh+1].int:=mem[r+1].int;free_node(r,2);end;r:=u;until r=29991;
+hh.lh+1].int:=mem[r+1].int;free_node(r,2);end;r:=u;until r=mem_max-9;
 end{:803};mem[q].hh.b0:=13;mem[q].hh.b1:=0;mem[q+3].int:=0;
 mem[q+2].int:=0;mem[q+5].hh.b1:=0;mem[q+5].hh.b0:=0;mem[q+6].int:=0;
 mem[q+4].int:=0;q:=p;until q=0{:801};{804:}save_ptr:=save_ptr-2;
 pack_begin_line:=-cur_list.ml_field;
 if cur_list.mode_field=-1 then begin rule_save:=eqtb[5846].int;
 eqtb[5846].int:=0;
-p:=hpack(mem[29992].hh.rh,save_stack[save_ptr+1].int,save_stack[save_ptr
-+0].int);eqtb[5846].int:=rule_save;
-end else begin q:=mem[mem[29992].hh.rh].hh.rh;
+p:=hpack(mem[mem_max-8].hh.rh,save_stack[save_ptr+1].int,save_stack[
+save_ptr+0].int);eqtb[5846].int:=rule_save;
+end else begin q:=mem[mem[mem_max-8].hh.rh].hh.rh;
 repeat mem[q+3].int:=mem[q+1].int;mem[q+1].int:=0;
 q:=mem[mem[q].hh.rh].hh.rh;until q=0;
-p:=vpackage(mem[29992].hh.rh,save_stack[save_ptr+1].int,save_stack[
-save_ptr+0].int,1073741823);q:=mem[mem[29992].hh.rh].hh.rh;
+p:=vpackage(mem[mem_max-8].hh.rh,save_stack[save_ptr+1].int,save_stack[
+save_ptr+0].int,1073741823);q:=mem[mem[mem_max-8].hh.rh].hh.rh;
 repeat mem[q+1].int:=mem[q+3].int;mem[q+3].int:=0;
 q:=mem[mem[q].hh.rh].hh.rh;until q=0;end;pack_begin_line:=0{:804};
 {805:}q:=mem[cur_list.head_field].hh.rh;s:=cur_list.head_field;
@@ -3583,7 +3588,7 @@ mem[q+1].int:=mem[p+1].int;end else begin mem[q].hh.b0:=1;
 mem[q+3].int:=mem[p+3].int;end;mem[q+5].hh.b1:=mem[p+5].hh.b1;
 mem[q+5].hh.b0:=mem[p+5].hh.b0;mem[q+6].gr:=mem[p+6].gr;mem[q+4].int:=o;
 r:=mem[mem[q+5].hh.rh].hh.rh;s:=mem[mem[p+5].hh.rh].hh.rh;
-repeat{808:}n:=mem[r].hh.b1;t:=mem[s+1].int;w:=t;u:=29996;
+repeat{808:}n:=mem[r].hh.b1;t:=mem[s+1].int;w:=t;u:=mem_max-4;
 while n>0 do begin n:=n-1;{809:}s:=mem[s].hh.rh;v:=mem[s+1].hh.lh;
 mem[u].hh.rh:=new_glue(v);u:=mem[u].hh.rh;mem[u].hh.b1:=12;
 t:=t+mem[v+1].int;
@@ -3615,8 +3620,8 @@ mem[r+5].hh.b0:=2;
 if mem[r+4].int=0 then mem[r+6].gr:=0.0 else if(mem[r+5].hh.b1=0)and(mem
 [r+3].int-t>mem[r+4].int)then mem[r+6].gr:=1.0 else mem[r+6].gr:=(mem[r
 +3].int-t)/mem[r+4].int;end;mem[r+3].int:=w;mem[r].hh.b0:=1;end{:811};
-mem[r+4].int:=0;if u<>29996 then begin mem[u].hh.rh:=mem[r].hh.rh;
-mem[r].hh.rh:=mem[29996].hh.rh;r:=u;end{:808};
+mem[r+4].int:=0;if u<>mem_max-4 then begin mem[u].hh.rh:=mem[r].hh.rh;
+mem[r].hh.rh:=mem[mem_max-4].hh.rh;r:=u;end{:808};
 r:=mem[mem[r].hh.rh].hh.rh;s:=mem[mem[s].hh.rh].hh.rh;until r=0;
 end{:807}else if mem[q].hh.b0=2 then{806:}begin if(mem[q+1].int=
 -1073741824)then mem[q+1].int:=mem[p+1].int;
@@ -3668,7 +3673,7 @@ node_r_stays_active:boolean;line_width:scaled;fit_class:0..3;b:halfword;
 d:integer;artificial_demerits:boolean;save_link:halfword;
 shortfall:scaled;
 {:830}begin{831:}if abs(pi)>=10000 then if pi>0 then goto 10 else pi:=
--10000{:831};no_break_yet:=true;prev_r:=29993;old_l:=0;
+-10000{:831};no_break_yet:=true;prev_r:=mem_max-7;old_l:=0;
 cur_active_width[1]:=active_width[1];
 cur_active_width[2]:=active_width[2];
 cur_active_width[3]:=active_width[3];
@@ -3685,8 +3690,8 @@ cur_active_width[6]:=cur_active_width[6]+mem[r+6].int;
 prev_prev_r:=prev_r;prev_r:=r;goto 22;end{:832};
 {835:}begin l:=mem[r+1].hh.lh;
 if l>old_l then begin if(minimum_demerits<1073741823)and((old_l<>
-easy_line)or(r=29993))then{836:}begin if no_break_yet then{837:}begin
-no_break_yet:=false;break_width[1]:=background[1];
+easy_line)or(r=mem_max-7))then{836:}begin if no_break_yet then{837:}
+begin no_break_yet:=false;break_width[1]:=background[1];
 break_width[2]:=background[2];break_width[3]:=background[3];
 break_width[4]:=background[4];break_width[5]:=background[5];
 break_width[6]:=background[6];s:=cur_p;
@@ -3725,7 +3730,7 @@ mem[prev_r+3].int:=mem[prev_r+3].int-cur_active_width[3]+break_width[3];
 mem[prev_r+4].int:=mem[prev_r+4].int-cur_active_width[4]+break_width[4];
 mem[prev_r+5].int:=mem[prev_r+5].int-cur_active_width[5]+break_width[5];
 mem[prev_r+6].int:=mem[prev_r+6].int-cur_active_width[6]+break_width[6];
-end else if prev_r=29993 then begin active_width[1]:=break_width[1];
+end else if prev_r=mem_max-7 then begin active_width[1]:=break_width[1];
 active_width[2]:=break_width[2];active_width[3]:=break_width[3];
 active_width[4]:=break_width[4];active_width[5]:=break_width[5];
 active_width[6]:=break_width[6];end else begin q:=get_node(7);
@@ -3756,7 +3761,7 @@ if mem[passive+1].hh.lh=0 then print_char(48)else print_int(mem[mem[
 passive+1].hh.lh].hh.lh);end[:846];}end{:845};
 minimal_demerits[fit_class]:=1073741823;end;
 minimum_demerits:=1073741823;
-{844:}if r<>29993 then begin q:=get_node(7);mem[q].hh.rh:=r;
+{844:}if r<>mem_max-7 then begin q:=get_node(7);mem[q].hh.rh:=r;
 mem[q].hh.b0:=2;mem[q].hh.b1:=0;
 mem[q+1].int:=cur_active_width[1]-break_width[1];
 mem[q+2].int:=cur_active_width[2]-break_width[2];
@@ -3765,7 +3770,7 @@ mem[q+4].int:=cur_active_width[4]-break_width[4];
 mem[q+5].int:=cur_active_width[5]-break_width[5];
 mem[q+6].int:=cur_active_width[6]-break_width[6];mem[prev_r].hh.rh:=q;
 prev_prev_r:=prev_r;prev_r:=q;end{:844};end{:836};
-if r=29993 then goto 10;
+if r=mem_max-7 then goto 10;
 {850:}if l>easy_line then begin line_width:=second_width;old_l:=65534;
 end else begin old_l:=l;
 if l>last_special_line then line_width:=second_width else if eqtb[3412].
@@ -3783,9 +3788,9 @@ if b>12 then if b>99 then fit_class:=0 else fit_class:=1 else fit_class
 10001 else b:=badness(-shortfall,cur_active_width[6]);
 if b>12 then fit_class:=3 else fit_class:=2;end{:853};
 if(b>10000)or(pi=-10000)then{854:}begin if final_pass and(
-minimum_demerits=1073741823)and(mem[r].hh.rh=29993)and(prev_r=29993)then
-artificial_demerits:=true else if b>threshold then goto 60;
-node_r_stays_active:=false;end{:854}else begin prev_r:=r;
+minimum_demerits=1073741823)and(mem[r].hh.rh=mem_max-7)and(prev_r=
+mem_max-7)then artificial_demerits:=true else if b>threshold then goto
+60;node_r_stays_active:=false;end{:854}else begin prev_r:=r;
 if b>threshold then goto 22;node_r_stays_active:=true;end;
 {855:}if artificial_demerits then d:=0 else{859:}begin d:=eqtb[5265].int
 +b;if abs(d)>=10000 then d:=100000000 else d:=d*d;
@@ -3813,7 +3818,7 @@ if d<=minimal_demerits[fit_class]then begin minimal_demerits[fit_class]
 if d<minimum_demerits then minimum_demerits:=d;end{:855};
 if node_r_stays_active then goto 22;
 60:{860:}mem[prev_r].hh.rh:=mem[r].hh.rh;free_node(r,3);
-if prev_r=29993 then{861:}begin r:=mem[29993].hh.rh;
+if prev_r=mem_max-7 then{861:}begin r:=mem[mem_max-7].hh.rh;
 if mem[r].hh.b0=2 then begin active_width[1]:=active_width[1]+mem[r+1].
 int;active_width[2]:=active_width[2]+mem[r+2].int;
 active_width[3]:=active_width[3]+mem[r+3].int;
@@ -3825,17 +3830,18 @@ cur_active_width[2]:=active_width[2];
 cur_active_width[3]:=active_width[3];
 cur_active_width[4]:=active_width[4];
 cur_active_width[5]:=active_width[5];
-cur_active_width[6]:=active_width[6];mem[29993].hh.rh:=mem[r].hh.rh;
+cur_active_width[6]:=active_width[6];mem[mem_max-7].hh.rh:=mem[r].hh.rh;
 free_node(r,7);end;
 end{:861}else if mem[prev_r].hh.b0=2 then begin r:=mem[prev_r].hh.rh;
-if r=29993 then begin cur_active_width[1]:=cur_active_width[1]-mem[
+if r=mem_max-7 then begin cur_active_width[1]:=cur_active_width[1]-mem[
 prev_r+1].int;
 cur_active_width[2]:=cur_active_width[2]-mem[prev_r+2].int;
 cur_active_width[3]:=cur_active_width[3]-mem[prev_r+3].int;
 cur_active_width[4]:=cur_active_width[4]-mem[prev_r+4].int;
 cur_active_width[5]:=cur_active_width[5]-mem[prev_r+5].int;
 cur_active_width[6]:=cur_active_width[6]-mem[prev_r+6].int;
-mem[prev_prev_r].hh.rh:=29993;free_node(prev_r,7);prev_r:=prev_prev_r;
+mem[prev_prev_r].hh.rh:=mem_max-7;free_node(prev_r,7);
+prev_r:=prev_prev_r;
 end else if mem[r].hh.b0=2 then begin cur_active_width[1]:=
 cur_active_width[1]+mem[r+1].int;
 cur_active_width[2]:=cur_active_width[2]+mem[r+2].int;
@@ -3877,10 +3883,10 @@ if mem[q+1].hh.lh<>0 then{885:}begin s:=mem[q+1].hh.lh;mem[q].hh.rh:=s;
 while mem[s].hh.rh<>0 do s:=mem[s].hh.rh;mem[q+1].hh.lh:=0;q:=s;
 end{:885};mem[q].hh.rh:=r;disc_break:=true;
 end{:882}else if(mem[q].hh.b0=9)or(mem[q].hh.b0=11)then mem[q+1].int:=0;
-end else begin q:=29997;while mem[q].hh.rh<>0 do q:=mem[q].hh.rh;end;
-{886:}r:=new_param_glue(8);mem[r].hh.rh:=mem[q].hh.rh;mem[q].hh.rh:=r;
-q:=r{:886};30:{:881};{887:}r:=mem[q].hh.rh;mem[q].hh.rh:=0;
-q:=mem[29997].hh.rh;mem[29997].hh.rh:=r;
+end else begin q:=mem_max-3;while mem[q].hh.rh<>0 do q:=mem[q].hh.rh;
+end;{886:}r:=new_param_glue(8);mem[r].hh.rh:=mem[q].hh.rh;
+mem[q].hh.rh:=r;q:=r{:886};30:{:881};{887:}r:=mem[q].hh.rh;
+mem[q].hh.rh:=0;q:=mem[mem_max-3].hh.rh;mem[mem_max-3].hh.rh:=r;
 if eqtb[2889].hh.rh<>0 then begin r:=new_param_glue(7);mem[r].hh.rh:=q;
 q:=r;end{:887};
 {889:}if cur_line>last_special_line then begin cur_width:=second_width;
@@ -3889,10 +3895,11 @@ end else if eqtb[3412].hh.rh=0 then begin cur_width:=first_width;
 cur_indent:=first_indent;
 end else begin cur_width:=mem[eqtb[3412].hh.rh+2*cur_line].int;
 cur_indent:=mem[eqtb[3412].hh.rh+2*cur_line-1].int;end;
-adjust_tail:=29995;just_box:=hpack(q,cur_width,0);
+adjust_tail:=mem_max-5;just_box:=hpack(q,cur_width,0);
 mem[just_box+4].int:=cur_indent{:889};{888:}append_to_vlist(just_box);
-if 29995<>adjust_tail then begin mem[cur_list.tail_field].hh.rh:=mem[
-29995].hh.rh;cur_list.tail_field:=adjust_tail;end;adjust_tail:=0{:888};
+if mem_max-5<>adjust_tail then begin mem[cur_list.tail_field].hh.rh:=mem
+[mem_max-5].hh.rh;cur_list.tail_field:=adjust_tail;end;
+adjust_tail:=0{:888};
 {890:}if cur_line+1<>best_line then begin pen:=eqtb[5276].int;
 if cur_line=cur_list.pg_field+1 then pen:=pen+eqtb[5268].int;
 if cur_line+2=best_line then pen:=pen+final_widow_penalty;
@@ -3900,21 +3907,21 @@ if disc_break then pen:=pen+eqtb[5271].int;
 if pen<>0 then begin r:=new_penalty(pen);
 mem[cur_list.tail_field].hh.rh:=r;cur_list.tail_field:=r;end;
 end{:890}{:880};cur_line:=cur_line+1;cur_p:=mem[cur_p+1].hh.lh;
-if cur_p<>0 then if not post_disc_break then{879:}begin r:=29997;
+if cur_p<>0 then if not post_disc_break then{879:}begin r:=mem_max-3;
 while true do begin q:=mem[r].hh.rh;
 if q=mem[cur_p+1].hh.rh then goto 31;if(q>=hi_mem_min)then goto 31;
 if(mem[q].hh.b0<9)then goto 31;
 if mem[q].hh.b0=11 then if mem[q].hh.b1<>1 then goto 31;r:=q;end;
-31:if r<>29997 then begin mem[r].hh.rh:=0;
-flush_node_list(mem[29997].hh.rh);mem[29997].hh.rh:=q;end;end{:879};
-until cur_p=0;
-if(cur_line<>best_line)or(mem[29997].hh.rh<>0)then confusion(938);
+31:if r<>mem_max-3 then begin mem[r].hh.rh:=0;
+flush_node_list(mem[mem_max-3].hh.rh);mem[mem_max-3].hh.rh:=q;end;
+end{:879};until cur_p=0;
+if(cur_line<>best_line)or(mem[mem_max-3].hh.rh<>0)then confusion(938);
 cur_list.pg_field:=best_line-1;end;
 {:877}{895:}{906:}function reconstitute(j,n:small_number;
 bchar,hchar:halfword):small_number;label 22,30;var p:halfword;
 t:halfword;q:four_quarters;cur_rh:halfword;test_char:halfword;w:scaled;
-k:font_index;begin hyphen_passed:=0;t:=29996;w:=0;mem[29996].hh.rh:=0;
-{908:}cur_l:=hu[j]+0;cur_q:=t;
+k:font_index;begin hyphen_passed:=0;t:=mem_max-4;w:=0;
+mem[mem_max-4].hh.rh:=0;{908:}cur_l:=hu[j]+0;cur_q:=t;
 if j=0 then begin ligature_present:=init_lig;p:=init_list;
 if ligature_present then lft_hit:=init_lft;
 while p>0 do begin begin mem[t].hh.rh:=get_avail;t:=mem[t].hh.rh;
@@ -4018,38 +4025,39 @@ end else begin if not(r>=hi_mem_min)then if mem[r].hh.b0=6 then if mem[r
 while mem[s].hh.rh<>ha do s:=mem[s].hh.rh;j:=0;goto 50;42:s:=ha;j:=0;
 hu[0]:=256;init_lig:=false;init_list:=0;50:flush_node_list(r);
 {913:}repeat l:=j;j:=reconstitute(j,hn,bchar,hyf_char+0)+1;
-if hyphen_passed=0 then begin mem[s].hh.rh:=mem[29996].hh.rh;
+if hyphen_passed=0 then begin mem[s].hh.rh:=mem[mem_max-4].hh.rh;
 while mem[s].hh.rh>0 do s:=mem[s].hh.rh;if odd(hyf[j-1])then begin l:=j;
-hyphen_passed:=j-1;mem[29996].hh.rh:=0;end;end;
+hyphen_passed:=j-1;mem[mem_max-4].hh.rh:=0;end;end;
 if hyphen_passed>0 then{914:}repeat r:=get_node(2);
-mem[r].hh.rh:=mem[29996].hh.rh;mem[r].hh.b0:=7;major_tail:=r;r_count:=0;
+mem[r].hh.rh:=mem[mem_max-4].hh.rh;mem[r].hh.b0:=7;major_tail:=r;
+r_count:=0;
 while mem[major_tail].hh.rh>0 do begin major_tail:=mem[major_tail].hh.rh
 ;r_count:=r_count+1;end;i:=hyphen_passed;hyf[i]:=0;{915:}minor_tail:=0;
 mem[r+1].hh.lh:=0;hyf_node:=new_character(hf,hyf_char);
 if hyf_node<>0 then begin i:=i+1;c:=hu[i];hu[i]:=hyf_char;
 begin mem[hyf_node].hh.rh:=avail;avail:=hyf_node;{dyn_used:=dyn_used-1;}
 end;end;while l<=i do begin l:=reconstitute(l,i,font_bchar[hf],256)+1;
-if mem[29996].hh.rh>0 then begin if minor_tail=0 then mem[r+1].hh.lh:=
-mem[29996].hh.rh else mem[minor_tail].hh.rh:=mem[29996].hh.rh;
-minor_tail:=mem[29996].hh.rh;
+if mem[mem_max-4].hh.rh>0 then begin if minor_tail=0 then mem[r+1].hh.lh
+:=mem[mem_max-4].hh.rh else mem[minor_tail].hh.rh:=mem[mem_max-4].hh.rh;
+minor_tail:=mem[mem_max-4].hh.rh;
 while mem[minor_tail].hh.rh>0 do minor_tail:=mem[minor_tail].hh.rh;end;
 end;if hyf_node<>0 then begin hu[i]:=c;l:=i;i:=i-1;end{:915};
 {916:}minor_tail:=0;mem[r+1].hh.rh:=0;c_loc:=0;
 if bchar_label[hf]<>0 then begin l:=l-1;c:=hu[l];c_loc:=l;hu[l]:=256;
 end;while l<j do begin repeat l:=reconstitute(l,hn,bchar,256)+1;
 if c_loc>0 then begin hu[c_loc]:=c;c_loc:=0;end;
-if mem[29996].hh.rh>0 then begin if minor_tail=0 then mem[r+1].hh.rh:=
-mem[29996].hh.rh else mem[minor_tail].hh.rh:=mem[29996].hh.rh;
-minor_tail:=mem[29996].hh.rh;
+if mem[mem_max-4].hh.rh>0 then begin if minor_tail=0 then mem[r+1].hh.rh
+:=mem[mem_max-4].hh.rh else mem[minor_tail].hh.rh:=mem[mem_max-4].hh.rh;
+minor_tail:=mem[mem_max-4].hh.rh;
 while mem[minor_tail].hh.rh>0 do minor_tail:=mem[minor_tail].hh.rh;end;
 until l>=j;while l>j do{917:}begin j:=reconstitute(j,hn,bchar,256)+1;
-mem[major_tail].hh.rh:=mem[29996].hh.rh;
+mem[major_tail].hh.rh:=mem[mem_max-4].hh.rh;
 while mem[major_tail].hh.rh>0 do begin major_tail:=mem[major_tail].hh.rh
 ;r_count:=r_count+1;end;end{:917};end{:916};
 {918:}if r_count>127 then begin mem[s].hh.rh:=mem[r].hh.rh;
 mem[r].hh.rh:=0;flush_node_list(r);end else begin mem[s].hh.rh:=r;
 mem[r].hh.b1:=r_count;end;s:=major_tail{:918};hyphen_passed:=j-1;
-mem[29996].hh.rh:=0;until not odd(hyf[j-1]){:914};until j>hn;
+mem[mem_max-4].hh.rh:=0;until not odd(hyf[j-1]){:914};until j>hn;
 mem[s].hh.rh:=q{:913};flush_list(init_list){:903};10:end;
 {:895}{942:}{944:}function new_trie_op(d,n:small_number;
 v:quarterword):quarterword;label 10;var h:-trie_op_size..trie_op_size;
@@ -4134,8 +4142,8 @@ print_nl(262);print(954);end;print_esc(952);begin help_ptr:=1;
 help_line[0]:=955;end;error;end end;end;30:{:961};
 end else begin begin if interaction=3 then;print_nl(262);print(951);end;
 print_esc(952);begin help_ptr:=1;help_line[0]:=953;end;error;
-mem[29988].hh.rh:=scan_toks(false,false);flush_list(def_ref);end;end;
-{:960}{966:}procedure init_trie;var p:trie_pointer;j,k,t:integer;
+mem[mem_max-12].hh.rh:=scan_toks(false,false);flush_list(def_ref);end;
+end;{:960}{966:}procedure init_trie;var p:trie_pointer;j,k,t:integer;
 r,s:trie_pointer;h:two_halves;begin{952:}{945:}op_start[0]:=-0;
 for j:=1 to 255 do op_start[j]:=op_start[j-1]+trie_used[j-1]-0;
 for j:=1 to trie_op_ptr do trie_op_hash[j]:=op_start[trie_op_lang[j]]+
@@ -4159,7 +4167,7 @@ label 30,31,32,33,34,35,22;var{862:}auto_breaking:boolean;
 prev_p:halfword;q,r,s,prev_s:halfword;f:internal_font_number;
 {:862}{893:}j:small_number;c:0..255;
 {:893}begin pack_begin_line:=cur_list.ml_field;
-{816:}mem[29997].hh.rh:=mem[cur_list.head_field].hh.rh;
+{816:}mem[mem_max-3].hh.rh:=mem[cur_list.head_field].hh.rh;
 if(cur_list.tail_field>=hi_mem_min)then begin mem[cur_list.tail_field].
 hh.rh:=new_penalty(10000);
 cur_list.tail_field:=mem[cur_list.tail_field].hh.rh;
@@ -4213,16 +4221,17 @@ while true do begin if threshold>10000 then threshold:=10000;
 if second_pass then{891:}begin if trie_not_ready then init_trie;
 cur_lang:=init_cur_lang;l_hyf:=init_l_hyf;r_hyf:=init_r_hyf;end{:891};
 {864:}q:=get_node(3);mem[q].hh.b0:=0;mem[q].hh.b1:=2;
-mem[q].hh.rh:=29993;mem[q+1].hh.rh:=0;
-mem[q+1].hh.lh:=cur_list.pg_field+1;mem[q+2].int:=0;mem[29993].hh.rh:=q;
-active_width[1]:=background[1];active_width[2]:=background[2];
-active_width[3]:=background[3];active_width[4]:=background[4];
-active_width[5]:=background[5];active_width[6]:=background[6];
-passive:=0;printed_node:=29997;pass_number:=0;
-font_in_short_display:=0{:864};cur_p:=mem[29997].hh.rh;
-auto_breaking:=true;prev_p:=cur_p;
-while(cur_p<>0)and(mem[29993].hh.rh<>29993)do{866:}begin if(cur_p>=
-hi_mem_min)then{867:}begin prev_p:=cur_p;repeat f:=mem[cur_p].hh.b0;
+mem[q].hh.rh:=mem_max-7;mem[q+1].hh.rh:=0;
+mem[q+1].hh.lh:=cur_list.pg_field+1;mem[q+2].int:=0;
+mem[mem_max-7].hh.rh:=q;active_width[1]:=background[1];
+active_width[2]:=background[2];active_width[3]:=background[3];
+active_width[4]:=background[4];active_width[5]:=background[5];
+active_width[6]:=background[6];passive:=0;printed_node:=mem_max-3;
+pass_number:=0;font_in_short_display:=0{:864};
+cur_p:=mem[mem_max-3].hh.rh;auto_breaking:=true;prev_p:=cur_p;
+while(cur_p<>0)and(mem[mem_max-7].hh.rh<>mem_max-7)do{866:}begin if(
+cur_p>=hi_mem_min)then{867:}begin prev_p:=cur_p;
+repeat f:=mem[cur_p].hh.b0;
 active_width[1]:=active_width[1]+font_info[width_base[f]+font_info[
 char_base[f]+mem[cur_p].hh.b1].qqqq.b0].int;cur_p:=mem[cur_p].hh.rh;
 until not(cur_p>=hi_mem_min);end{:867};
@@ -4305,12 +4314,12 @@ active_width[1]:=active_width[1]+mem[cur_p+1].int;end;end;
 12:try_break(mem[cur_p+1].int,0);4,3,5:;others:confusion(935)end;
 prev_p:=cur_p;cur_p:=mem[cur_p].hh.rh;35:end{:866};
 if cur_p=0 then{873:}begin try_break(-10000,1);
-if mem[29993].hh.rh<>29993 then begin{874:}r:=mem[29993].hh.rh;
-fewest_demerits:=1073741823;
+if mem[mem_max-7].hh.rh<>mem_max-7 then begin{874:}r:=mem[mem_max-7].hh.
+rh;fewest_demerits:=1073741823;
 repeat if mem[r].hh.b0<>2 then if mem[r+2].int<fewest_demerits then
 begin fewest_demerits:=mem[r+2].int;best_bet:=r;end;r:=mem[r].hh.rh;
-until r=29993;best_line:=mem[best_bet+1].hh.lh{:874};
-if eqtb[5282].int=0 then goto 30;{875:}begin r:=mem[29993].hh.rh;
+until r=mem_max-7;best_line:=mem[best_bet+1].hh.lh{:874};
+if eqtb[5282].int=0 then goto 30;{875:}begin r:=mem[mem_max-7].hh.rh;
 actual_looseness:=0;
 repeat if mem[r].hh.b0<>2 then begin line_diff:=mem[r+1].hh.lh-best_line
 ;if((line_diff<actual_looseness)and(eqtb[5282].int<=line_diff))or((
@@ -4318,10 +4327,10 @@ line_diff>actual_looseness)and(eqtb[5282].int>=line_diff))then begin
 best_bet:=r;actual_looseness:=line_diff;fewest_demerits:=mem[r+2].int;
 end else if(line_diff=actual_looseness)and(mem[r+2].int<fewest_demerits)
 then begin best_bet:=r;fewest_demerits:=mem[r+2].int;end;end;
-r:=mem[r].hh.rh;until r=29993;best_line:=mem[best_bet+1].hh.lh;
+r:=mem[r].hh.rh;until r=mem_max-7;best_line:=mem[best_bet+1].hh.lh;
 end{:875};if(actual_looseness=eqtb[5282].int)or final_pass then goto 30;
-end;end{:873};{865:}q:=mem[29993].hh.rh;
-while q<>29993 do begin cur_p:=mem[q].hh.rh;
+end;end{:873};{865:}q:=mem[mem_max-7].hh.rh;
+while q<>mem_max-7 do begin cur_p:=mem[q].hh.rh;
 if mem[q].hh.b0=2 then free_node(q,7)else free_node(q,3);q:=cur_p;end;
 q:=passive;while q<>0 do begin cur_p:=mem[q].hh.rh;free_node(q,2);
 q:=cur_p;end{:865};
@@ -4333,7 +4342,8 @@ background[2]:=background[2]+eqtb[5850].int;final_pass:=true;end;end;
 30:{if eqtb[5295].int>0 then begin end_diagnostic(true);
 normalize_selector;end;}{:863};
 {876:}post_line_break(final_widow_penalty){:876};
-{865:}q:=mem[29993].hh.rh;while q<>29993 do begin cur_p:=mem[q].hh.rh;
+{865:}q:=mem[mem_max-7].hh.rh;
+while q<>mem_max-7 do begin cur_p:=mem[q].hh.rh;
 if mem[q].hh.b0=2 then free_node(q,7)else free_node(q,3);q:=cur_p;end;
 q:=passive;while q<>0 do begin cur_p:=mem[q].hh.rh;free_node(q,2);
 q:=cur_p;end{:865};pack_begin_line:=0;end;
@@ -4371,14 +4381,15 @@ others:{936:}begin begin if interaction=3 then;print_nl(262);print(680);
 end;print_esc(940);print(941);begin help_ptr:=2;help_line[1]:=942;
 help_line[0]:=943;end;error;end{:936}end;end{:935};10:end;
 {:934}{968:}function prune_page_top(p:halfword):halfword;
-var prev_p:halfword;q:halfword;begin prev_p:=29997;mem[29997].hh.rh:=p;
+var prev_p:halfword;q:halfword;begin prev_p:=mem_max-3;
+mem[mem_max-3].hh.rh:=p;
 while p<>0 do case mem[p].hh.b0 of 0,1,2:{969:}begin q:=new_skip_param(
 10);mem[prev_p].hh.rh:=q;mem[q].hh.rh:=p;
 if mem[temp_ptr+1].int>mem[p+3].int then mem[temp_ptr+1].int:=mem[
 temp_ptr+1].int-mem[p+3].int else mem[temp_ptr+1].int:=0;p:=0;end{:969};
 8,4,3:begin prev_p:=p;p:=mem[prev_p].hh.rh;end;10,11,12:begin q:=p;
 p:=mem[q].hh.rh;mem[q].hh.rh:=0;mem[prev_p].hh.rh:=p;flush_node_list(q);
-end;others:confusion(958)end;prune_page_top:=mem[29997].hh.rh;end;
+end;others:confusion(958)end;prune_page_top:=mem[mem_max-3].hh.rh;end;
 {:968}{970:}function vert_break(p:halfword;h,d:scaled):halfword;
 label 30,45,90;var prev_p:halfword;q,r:halfword;pi:integer;b:integer;
 least_cost:integer;best_place:halfword;prev_dp:scaled;t:small_number;
@@ -4476,15 +4487,15 @@ print_nl(262);print(338);end;print_esc(409);print(1002);
 begin help_ptr:=2;help_line[1]:=1003;help_line[0]:=991;end;
 box_error(255);end{:1015};insert_penalties:=0;
 save_split_top_skip:=eqtb[2892].hh.rh;
-if eqtb[5316].int<=0 then{1018:}begin r:=mem[30000].hh.rh;
-while r<>30000 do begin if mem[r+2].hh.lh<>0 then begin n:=mem[r].hh.b1
--0;ensure_vbox(n);
+if eqtb[5316].int<=0 then{1018:}begin r:=mem[mem_max].hh.rh;
+while r<>mem_max do begin if mem[r+2].hh.lh<>0 then begin n:=mem[r].hh.
+b1-0;ensure_vbox(n);
 if eqtb[3678+n].hh.rh=0 then eqtb[3678+n].hh.rh:=new_null_box;
 p:=eqtb[3678+n].hh.rh+5;while mem[p].hh.rh<>0 do p:=mem[p].hh.rh;
-mem[r+2].hh.rh:=p;end;r:=mem[r].hh.rh;end;end{:1018};q:=29996;
-mem[q].hh.rh:=0;prev_p:=29998;p:=mem[prev_p].hh.rh;
+mem[r+2].hh.rh:=p;end;r:=mem[r].hh.rh;end;end{:1018};q:=mem_max-4;
+mem[q].hh.rh:=0;prev_p:=mem_max-2;p:=mem[prev_p].hh.rh;
 while p<>best_page_break do begin if mem[p].hh.b0=3 then begin if eqtb[
-5316].int<=0 then{1020:}begin r:=mem[30000].hh.rh;
+5316].int<=0 then{1020:}begin r:=mem[mem_max].hh.rh;
 while mem[r].hh.b1<>mem[p].hh.b1 do r:=mem[r].hh.rh;
 if mem[r+2].hh.lh=0 then wait:=true else begin wait:=false;
 s:=mem[r+2].hh.rh;mem[s].hh.rh:=mem[p+4].hh.lh;
@@ -4511,22 +4522,23 @@ if cur_mark[2]<>0 then delete_token_ref(cur_mark[2]);
 cur_mark[2]:=mem[p+1].int;
 mem[cur_mark[2]].hh.lh:=mem[cur_mark[2]].hh.lh+1;end{:1016};prev_p:=p;
 p:=mem[prev_p].hh.rh;end;eqtb[2892].hh.rh:=save_split_top_skip;
-{1017:}if p<>0 then begin if mem[29999].hh.rh=0 then if nest_ptr=0 then
-cur_list.tail_field:=page_tail else nest[0].tail_field:=page_tail;
-mem[page_tail].hh.rh:=mem[29999].hh.rh;mem[29999].hh.rh:=p;
+{1017:}if p<>0 then begin if mem[mem_max-1].hh.rh=0 then if nest_ptr=0
+then cur_list.tail_field:=page_tail else nest[0].tail_field:=page_tail;
+mem[page_tail].hh.rh:=mem[mem_max-1].hh.rh;mem[mem_max-1].hh.rh:=p;
 mem[prev_p].hh.rh:=0;end;save_vbadness:=eqtb[5290].int;
 eqtb[5290].int:=10000;save_vfuzz:=eqtb[5839].int;
 eqtb[5839].int:=1073741823;
-eqtb[3933].hh.rh:=vpackage(mem[29998].hh.rh,best_size,0,page_max_depth);
-eqtb[5290].int:=save_vbadness;eqtb[5839].int:=save_vfuzz;
+eqtb[3933].hh.rh:=vpackage(mem[mem_max-2].hh.rh,best_size,0,
+page_max_depth);eqtb[5290].int:=save_vbadness;
+eqtb[5839].int:=save_vfuzz;
 if last_glue<>65535 then delete_glue_ref(last_glue);
-{991:}page_contents:=0;page_tail:=29998;mem[29998].hh.rh:=0;
+{991:}page_contents:=0;page_tail:=mem_max-2;mem[mem_max-2].hh.rh:=0;
 last_glue:=65535;last_penalty:=0;last_kern:=0;page_so_far[7]:=0;
 page_max_depth:=0{:991};
-if q<>29996 then begin mem[29998].hh.rh:=mem[29996].hh.rh;page_tail:=q;
-end{:1017};{1019:}r:=mem[30000].hh.rh;
-while r<>30000 do begin q:=mem[r].hh.rh;free_node(r,4);r:=q;end;
-mem[30000].hh.rh:=30000{:1019}{:1014};
+if q<>mem_max-4 then begin mem[mem_max-2].hh.rh:=mem[mem_max-4].hh.rh;
+page_tail:=q;end{:1017};{1019:}r:=mem[mem_max].hh.rh;
+while r<>mem_max do begin q:=mem[r].hh.rh;free_node(r,4);r:=q;end;
+mem[mem_max].hh.rh:=mem_max{:1019}{:1014};
 if(cur_mark[0]<>0)and(cur_mark[1]=0)then begin cur_mark[1]:=cur_mark[0];
 mem[cur_mark[0]].hh.lh:=mem[cur_mark[0]].hh.lh+1;end;
 if eqtb[3413].hh.rh<>0 then if dead_cycles>=eqtb[5303].int then{1024:}
@@ -4538,15 +4550,16 @@ dead_cycles:=dead_cycles+1;push_nest;cur_list.mode_field:=-1;
 cur_list.aux_field.int:=-65536000;cur_list.ml_field:=-line;
 begin_token_list(eqtb[3413].hh.rh,6);new_save_level(8);normal_paragraph;
 scan_left_brace;goto 10;end{:1025};
-{1023:}begin if mem[29998].hh.rh<>0 then begin if mem[29999].hh.rh=0
-then if nest_ptr=0 then cur_list.tail_field:=page_tail else nest[0].
-tail_field:=page_tail else mem[page_tail].hh.rh:=mem[29999].hh.rh;
-mem[29999].hh.rh:=mem[29998].hh.rh;mem[29998].hh.rh:=0;page_tail:=29998;
-end;ship_out(eqtb[3933].hh.rh);eqtb[3933].hh.rh:=0;end{:1023};10:end;
-{:1012}procedure build_page;label 10,30,31,22,80,90;var p:halfword;
-q,r:halfword;b,c:integer;pi:integer;n:0..255;delta,h,w:scaled;
-begin if(mem[29999].hh.rh=0)or output_active then goto 10;
-repeat 22:p:=mem[29999].hh.rh;
+{1023:}begin if mem[mem_max-2].hh.rh<>0 then begin if mem[mem_max-1].hh.
+rh=0 then if nest_ptr=0 then cur_list.tail_field:=page_tail else nest[0]
+.tail_field:=page_tail else mem[page_tail].hh.rh:=mem[mem_max-1].hh.rh;
+mem[mem_max-1].hh.rh:=mem[mem_max-2].hh.rh;mem[mem_max-2].hh.rh:=0;
+page_tail:=mem_max-2;end;ship_out(eqtb[3933].hh.rh);eqtb[3933].hh.rh:=0;
+end{:1023};10:end;{:1012}procedure build_page;label 10,30,31,22,80,90;
+var p:halfword;q,r:halfword;b,c:integer;pi:integer;n:0..255;
+delta,h,w:scaled;
+begin if(mem[mem_max-1].hh.rh=0)or output_active then goto 10;
+repeat 22:p:=mem[mem_max-1].hh.rh;
 {996:}if last_glue<>65535 then delete_glue_ref(last_glue);
 last_penalty:=0;last_kern:=0;
 if mem[p].hh.b0=10 then begin last_glue:=mem[p+1].hh.lh;
@@ -4559,7 +4572,7 @@ begin if page_contents=0 then freeze_page_specs(2)else page_contents:=2;
 q:=new_skip_param(9);
 if mem[temp_ptr+1].int>mem[p+3].int then mem[temp_ptr+1].int:=mem[
 temp_ptr+1].int-mem[p+3].int else mem[temp_ptr+1].int:=0;
-mem[q].hh.rh:=p;mem[29999].hh.rh:=q;goto 22;
+mem[q].hh.rh:=p;mem[mem_max-1].hh.rh:=q;goto 22;
 end{:1001}else{1002:}begin page_so_far[1]:=page_so_far[1]+page_so_far[7]
 +mem[p+3].int;page_so_far[7]:=mem[p+2].int;goto 80;end{:1002};
 8:{1364:}goto 80{:1364};
@@ -4569,7 +4582,7 @@ pi:=0 else goto 90;
 else if mem[mem[p].hh.rh].hh.b0=10 then pi:=0 else goto 90;
 12:if page_contents<2 then goto 31 else pi:=mem[p+1].int;4:goto 80;
 3:{1008:}begin if page_contents=0 then freeze_page_specs(1);
-n:=mem[p].hh.b1;r:=30000;
+n:=mem[p].hh.b1;r:=mem_max;
 while n>=mem[mem[r].hh.rh].hh.b1 do r:=mem[r].hh.rh;n:=n-0;
 if mem[r].hh.b1<>n+0 then{1009:}begin q:=get_node(4);
 mem[q].hh.rh:=mem[r].hh.rh;mem[r].hh.rh:=q;r:=q;mem[r].hh.b1:=n+0;
@@ -4627,9 +4640,10 @@ print(930);print_int(pi);print(996);
 if c=1073741823 then print_char(42)else print_int(c);
 if c<=least_page_cost then print_char(35);end_diagnostic(false);
 end[:1006];}if c<=least_page_cost then begin best_page_break:=p;
-best_size:=page_so_far[0];least_page_cost:=c;r:=mem[30000].hh.rh;
-while r<>30000 do begin mem[r+2].hh.lh:=mem[r+2].hh.rh;r:=mem[r].hh.rh;
-end;end;if(c=1073741823)or(pi<=-10000)then begin fire_up(p);
+best_size:=page_so_far[0];least_page_cost:=c;r:=mem[mem_max].hh.rh;
+while r<>mem_max do begin mem[r+2].hh.lh:=mem[r+2].hh.rh;
+r:=mem[r].hh.rh;end;end;
+if(c=1073741823)or(pi<=-10000)then begin fire_up(p);
 if output_active then goto 10;goto 30;end;end{:1005};
 if(mem[p].hh.b0<10)or(mem[p].hh.b0>11)then goto 80;
 90:{1004:}if mem[p].hh.b0=11 then q:=p else begin q:=mem[p+1].hh.lh;
@@ -4645,12 +4659,12 @@ page_so_far[7]:=0{:1004};
 page_so_far[1]+page_so_far[7]-page_max_depth;
 page_so_far[7]:=page_max_depth;end;{:1003};
 {998:}mem[page_tail].hh.rh:=p;page_tail:=p;
-mem[29999].hh.rh:=mem[p].hh.rh;mem[p].hh.rh:=0;goto 30{:998};
-31:{999:}mem[29999].hh.rh:=mem[p].hh.rh;mem[p].hh.rh:=0;
-flush_node_list(p){:999};30:{:997};until mem[29999].hh.rh=0;
-{995:}if nest_ptr=0 then cur_list.tail_field:=29999 else nest[0].
-tail_field:=29999{:995};10:end;{:994}{1030:}{1043:}procedure app_space;
-var q:halfword;
+mem[mem_max-1].hh.rh:=mem[p].hh.rh;mem[p].hh.rh:=0;goto 30{:998};
+31:{999:}mem[mem_max-1].hh.rh:=mem[p].hh.rh;mem[p].hh.rh:=0;
+flush_node_list(p){:999};30:{:997};until mem[mem_max-1].hh.rh=0;
+{995:}if nest_ptr=0 then cur_list.tail_field:=mem_max-1 else nest[0].
+tail_field:=mem_max-1{:995};10:end;
+{:994}{1030:}{1043:}procedure app_space;var q:halfword;
 begin if(cur_list.aux_field.hh.lh>=2000)and(eqtb[2895].hh.rh<>0)then q:=
 new_param_glue(13)else begin if eqtb[2894].hh.rh<>0 then main_p:=eqtb[
 2894].hh.rh else{1042:}begin main_p:=font_glue[eqtb[3934].hh.rh];
@@ -4681,7 +4695,7 @@ help_line[1]:=1022;help_line[0]:=1023;end;error;end;
 begin if cur_list.mode_field>0 then privileged:=true else begin
 report_illegal_case;privileged:=false;end;end;
 {:1051}{1054:}function its_all_over:boolean;label 10;
-begin if privileged then begin if(29998=page_tail)and(cur_list.
+begin if privileged then begin if(mem_max-2=page_tail)and(cur_list.
 head_field=cur_list.tail_field)and(dead_cycles=0)then begin its_all_over
 :=true;goto 10;end;back_input;
 begin mem[cur_list.tail_field].hh.rh:=new_null_box;
@@ -4707,14 +4721,14 @@ var p:halfword;
 begin if cur_group=0 then{1066:}begin begin if interaction=3 then;
 print_nl(262);print(776);end;print_cmd_chr(cur_cmd,cur_chr);
 begin help_ptr:=1;help_line[0]:=1042;end;error;
-end{:1066}else begin back_input;p:=get_avail;mem[29997].hh.rh:=p;
+end{:1066}else begin back_input;p:=get_avail;mem[mem_max-3].hh.rh:=p;
 begin if interaction=3 then;print_nl(262);print(625);end;
 {1065:}case cur_group of 14:begin mem[p].hh.lh:=6711;print_esc(516);end;
 15:begin mem[p].hh.lh:=804;print_char(36);end;
 16:begin mem[p].hh.lh:=6712;mem[p].hh.rh:=get_avail;p:=mem[p].hh.rh;
 mem[p].hh.lh:=3118;print_esc(1041);end;others:begin mem[p].hh.lh:=637;
 print_char(125);end end{:1065};print(626);
-begin_token_list(mem[29997].hh.rh,4);begin help_ptr:=5;
+begin_token_list(mem[mem_max-3].hh.rh,4);begin help_ptr:=5;
 help_line[4]:=1036;help_line[3]:=1037;help_line[2]:=1038;
 help_line[1]:=1039;help_line[0]:=1040;end;error;end;end;
 {:1064}{1069:}procedure extra_right_brace;
@@ -4731,8 +4745,8 @@ if eqtb[3412].hh.rh<>0 then eq_define(3412,118,0);end;
 begin if box_context<1073741824 then{1076:}begin if cur_box<>0 then
 begin mem[cur_box+4].int:=box_context;
 if abs(cur_list.mode_field)=1 then begin append_to_vlist(cur_box);
-if adjust_tail<>0 then begin if 29995<>adjust_tail then begin mem[
-cur_list.tail_field].hh.rh:=mem[29995].hh.rh;
+if adjust_tail<>0 then begin if mem_max-5<>adjust_tail then begin mem[
+cur_list.tail_field].hh.rh:=mem[mem_max-5].hh.rh;
 cur_list.tail_field:=adjust_tail;end;adjust_tail:=0;end;
 if cur_list.mode_field>0 then build_page;
 end else begin if abs(cur_list.mode_field)=102 then cur_list.aux_field.
@@ -4992,8 +5006,8 @@ while p<>0 do begin{1147:}21:if(p>=hi_mem_min)then begin f:=mem[p].hh.b0
 ;
 d:=font_info[width_base[f]+font_info[char_base[f]+mem[p].hh.b1].qqqq.b0]
 .int;goto 40;end;case mem[p].hh.b0 of 0,1,2:begin d:=mem[p+1].int;
-goto 40;end;6:{652:}begin mem[29988]:=mem[p+1];
-mem[29988].hh.rh:=mem[p].hh.rh;p:=29988;goto 21;end{:652};
+goto 40;end;6:{652:}begin mem[mem_max-12]:=mem[p+1];
+mem[mem_max-12].hh.rh:=mem[p].hh.rh;p:=mem_max-12;goto 21;end{:652};
 11,9:d:=mem[p+1].int;10:{1148:}begin q:=mem[p+1].hh.lh;d:=mem[q+1].int;
 if mem[just_box+5].hh.b0=1 then begin if(mem[just_box+5].hh.b1=mem[q].hh
 .b0)and(mem[q+2].int<>0)then v:=1073741823;
@@ -5127,7 +5141,7 @@ end;begin help_ptr:=1;help_line[0]:=1145;end;end;error;end;end{:1177};
 scan_math(p);end;{:1176}{1181:}procedure math_fraction;
 var c:small_number;begin c:=cur_chr;
 if cur_list.aux_field.int<>0 then{1183:}begin if c>=3 then begin
-scan_delimiter(29988,false);scan_delimiter(29988,false);end;
+scan_delimiter(mem_max-12,false);scan_delimiter(mem_max-12,false);end;
 if c mod 3=0 then scan_dimen(false,false,false);
 begin if interaction=3 then;print_nl(262);print(1152);end;
 begin help_ptr:=3;help_line[2]:=1153;help_line[1]:=1154;
@@ -5151,12 +5165,13 @@ mem[cur_list.aux_field.int+1].int:=cur_val;end;
 {:1181}{1191:}procedure math_left_right;var t:small_number;p:halfword;
 begin t:=cur_chr;
 if(t=31)and(cur_group<>16)then{1192:}begin if cur_group=15 then begin
-scan_delimiter(29988,false);begin if interaction=3 then;print_nl(262);
-print(776);end;print_esc(876);begin help_ptr:=1;help_line[0]:=1156;end;
-error;end else off_save;end{:1192}else begin p:=new_noad;
-mem[p].hh.b0:=t;scan_delimiter(p+1,false);
-if t=30 then begin push_math(16);mem[cur_list.head_field].hh.rh:=p;
-cur_list.tail_field:=p;end else begin p:=fin_mlist(p);unsave;
+scan_delimiter(mem_max-12,false);begin if interaction=3 then;
+print_nl(262);print(776);end;print_esc(876);begin help_ptr:=1;
+help_line[0]:=1156;end;error;end else off_save;
+end{:1192}else begin p:=new_noad;mem[p].hh.b0:=t;
+scan_delimiter(p+1,false);if t=30 then begin push_math(16);
+mem[cur_list.head_field].hh.rh:=p;cur_list.tail_field:=p;
+end else begin p:=fin_mlist(p);unsave;
 begin mem[cur_list.tail_field].hh.rh:=new_noad;
 cur_list.tail_field:=mem[cur_list.tail_field].hh.rh;end;
 mem[cur_list.tail_field].hh.b0:=23;mem[cur_list.tail_field+1].hh.rh:=3;
@@ -5180,8 +5195,8 @@ if cur_list.mode_field=-m then begin{1197:}begin get_x_token;
 if cur_cmd<>3 then begin begin if interaction=3 then;print_nl(262);
 print(1165);end;begin help_ptr:=2;help_line[1]:=1166;help_line[0]:=1167;
 end;back_error;end;end{:1197};cur_mlist:=p;cur_style:=2;
-mlist_penalties:=false;mlist_to_hlist;a:=hpack(mem[29997].hh.rh,0,1);
-unsave;save_ptr:=save_ptr-1;
+mlist_penalties:=false;mlist_to_hlist;
+a:=hpack(mem[mem_max-3].hh.rh,0,1);unsave;save_ptr:=save_ptr-1;
 if save_stack[save_ptr+0].int=1 then l:=true;danger:=false;
 {1195:}if(font_params[eqtb[3937].hh.rh]<22)or(font_params[eqtb[3953].hh.
 rh]<22)or(font_params[eqtb[3969].hh.rh]<22)then begin begin if
@@ -5197,7 +5212,7 @@ p:=fin_mlist(0);end else a:=0;
 if m<0 then{1196:}begin begin mem[cur_list.tail_field].hh.rh:=new_math(
 eqtb[5831].int,0);cur_list.tail_field:=mem[cur_list.tail_field].hh.rh;
 end;cur_mlist:=p;cur_style:=2;mlist_penalties:=(cur_list.mode_field>0);
-mlist_to_hlist;mem[cur_list.tail_field].hh.rh:=mem[29997].hh.rh;
+mlist_to_hlist;mem[cur_list.tail_field].hh.rh:=mem[mem_max-3].hh.rh;
 while mem[cur_list.tail_field].hh.rh<>0 do cur_list.tail_field:=mem[
 cur_list.tail_field].hh.rh;
 begin mem[cur_list.tail_field].hh.rh:=new_math(eqtb[5831].int,1);
@@ -5207,8 +5222,8 @@ end{:1196}else begin if a=0 then{1197:}begin get_x_token;
 if cur_cmd<>3 then begin begin if interaction=3 then;print_nl(262);
 print(1165);end;begin help_ptr:=2;help_line[1]:=1166;help_line[0]:=1167;
 end;back_error;end;end{:1197};{1199:}cur_mlist:=p;cur_style:=0;
-mlist_penalties:=false;mlist_to_hlist;p:=mem[29997].hh.rh;
-adjust_tail:=29995;b:=hpack(p,0,1);p:=mem[b+5].hh.rh;t:=adjust_tail;
+mlist_penalties:=false;mlist_to_hlist;p:=mem[mem_max-3].hh.rh;
+adjust_tail:=mem_max-5;b:=hpack(p,0,1);p:=mem[b+5].hh.rh;t:=adjust_tail;
 adjust_tail:=0;w:=mem[b+1].int;z:=eqtb[5844].int;s:=eqtb[5845].int;
 if(a=0)or danger then begin e:=0;q:=0;end else begin e:=mem[a+1].int;
 q:=e+font_info[6+param_base[eqtb[3937].hh.rh]].int;end;
@@ -5236,8 +5251,8 @@ mem[b+4].int:=s+d;append_to_vlist(b){:1204};
 tail_field].hh.rh:=new_penalty(10000);
 cur_list.tail_field:=mem[cur_list.tail_field].hh.rh;end;
 mem[a+4].int:=s+z-mem[a+1].int;append_to_vlist(a);g2:=0;end;
-if t<>29995 then begin mem[cur_list.tail_field].hh.rh:=mem[29995].hh.rh;
-cur_list.tail_field:=t;end;
+if t<>mem_max-5 then begin mem[cur_list.tail_field].hh.rh:=mem[mem_max-5
+].hh.rh;cur_list.tail_field:=t;end;
 begin mem[cur_list.tail_field].hh.rh:=new_penalty(eqtb[5275].int);
 cur_list.tail_field:=mem[cur_list.tail_field].hh.rh;end;
 if g2>0 then begin mem[cur_list.tail_field].hh.rh:=new_param_glue(g2);
@@ -5493,9 +5508,10 @@ if cur_ext=338 then cur_ext:=790;
 pack_file_name(cur_name,cur_area,cur_ext);
 if a_open_in(read_file[n])then read_open[n]:=1;end;end;
 {:1275}{1279:}procedure issue_message;var old_setting:0..21;c:0..1;
-s:str_number;begin c:=cur_chr;mem[29988].hh.rh:=scan_toks(false,true);
-old_setting:=selector;selector:=21;token_show(def_ref);
-selector:=old_setting;flush_list(def_ref);
+s:str_number;begin c:=cur_chr;
+mem[mem_max-12].hh.rh:=scan_toks(false,true);old_setting:=selector;
+selector:=21;token_show(def_ref);selector:=old_setting;
+flush_list(def_ref);
 begin if pool_ptr+1>pool_size then overflow(257,pool_size-init_pool_ptr)
 ;end;s:=make_string;
 if c=0 then{1280:}begin if term_offset+(str_start[s+1]-str_start[s])>
@@ -5525,8 +5541,8 @@ cur_val].hh.rh);end{:1296};0:{1294:}begin get_token;
 if interaction=3 then;print_nl(1247);
 if cur_cs<>0 then begin sprint_cs(cur_cs);print_char(61);end;
 print_meaning;goto 50;end{:1294};others:{1297:}begin p:=the_toks;
-if interaction=3 then;print_nl(1247);token_show(29997);
-flush_list(mem[29997].hh.rh);goto 50;end{:1297}end;
+if interaction=3 then;print_nl(1247);token_show(mem_max-3);
+flush_list(mem[mem_max-3].hh.rh);goto 50;end{:1297}end;
 {1298:}end_diagnostic(true);begin if interaction=3 then;print_nl(262);
 print(1254);end;
 if selector=19 then if eqtb[5292].int<=0 then begin selector:=17;
@@ -5553,9 +5569,9 @@ print_nl(1273);slow_print(w_make_name_string(fmt_file));
 begin str_ptr:=str_ptr-1;pool_ptr:=str_start[str_ptr];end;print_nl(338);
 slow_print(format_ident){:1328};{1307:}begin fmt_file^.int:=117275187;
 put(fmt_file);end;begin fmt_file^.int:=0;put(fmt_file);end;
-begin fmt_file^.int:=30000;put(fmt_file);end;begin fmt_file^.int:=6106;
-put(fmt_file);end;begin fmt_file^.int:=1777;put(fmt_file);end;
-begin fmt_file^.int:=307;put(fmt_file);end{:1307};
+begin fmt_file^.int:=mem_max;put(fmt_file);end;
+begin fmt_file^.int:=6106;put(fmt_file);end;begin fmt_file^.int:=1777;
+put(fmt_file);end;begin fmt_file^.int:=307;put(fmt_file);end{:1307};
 {1309:}begin fmt_file^.int:=pool_ptr;put(fmt_file);end;
 begin fmt_file^.int:=str_ptr;put(fmt_file);end;
 for k:=0 to str_ptr do begin fmt_file^.int:=str_start[k];put(fmt_file);
@@ -5706,10 +5722,11 @@ f:integer;begin case cur_group of 1:unsave;
 0:begin begin if interaction=3 then;print_nl(262);print(1043);end;
 begin help_ptr:=2;help_line[1]:=1044;help_line[0]:=1045;end;error;end;
 14,15,16:extra_right_brace;{1085:}2:package(0);
-3:begin adjust_tail:=29995;package(0);end;4:begin end_graf;package(0);
-end;5:begin end_graf;package(4);end;{:1085}{1100:}11:begin end_graf;
-q:=eqtb[2892].hh.rh;mem[q].hh.rh:=mem[q].hh.rh+1;d:=eqtb[5836].int;
-f:=eqtb[5305].int;unsave;save_ptr:=save_ptr-1;
+3:begin adjust_tail:=mem_max-5;package(0);end;4:begin end_graf;
+package(0);end;5:begin end_graf;package(4);end;
+{:1085}{1100:}11:begin end_graf;q:=eqtb[2892].hh.rh;
+mem[q].hh.rh:=mem[q].hh.rh+1;d:=eqtb[5836].int;f:=eqtb[5305].int;unsave;
+save_ptr:=save_ptr-1;
 p:=vpackage(mem[cur_list.head_field].hh.rh,0,1,1073741823);pop_nest;
 if save_stack[save_ptr+0].int<255 then begin begin mem[cur_list.
 tail_field].hh.rh:=get_node(5);
@@ -5737,14 +5754,15 @@ begin help_ptr:=3;help_line[2]:=1013;help_line[1]:=1014;
 help_line[0]:=1015;end;box_error(255);end{:1028};
 if cur_list.tail_field<>cur_list.head_field then begin mem[page_tail].hh
 .rh:=mem[cur_list.head_field].hh.rh;page_tail:=cur_list.tail_field;end;
-if mem[29998].hh.rh<>0 then begin if mem[29999].hh.rh=0 then nest[0].
-tail_field:=page_tail;mem[page_tail].hh.rh:=mem[29999].hh.rh;
-mem[29999].hh.rh:=mem[29998].hh.rh;mem[29998].hh.rh:=0;page_tail:=29998;
-end;pop_nest;build_page;end{:1026};{:1100}{1118:}10:build_discretionary;
-{:1118}{1132:}6:begin back_input;cur_tok:=6710;
-begin if interaction=3 then;print_nl(262);print(625);end;print_esc(898);
-print(626);begin help_ptr:=1;help_line[0]:=1124;end;ins_error;end;
-{:1132}{1133:}7:begin end_graf;unsave;align_peek;end;
+if mem[mem_max-2].hh.rh<>0 then begin if mem[mem_max-1].hh.rh=0 then
+nest[0].tail_field:=page_tail;
+mem[page_tail].hh.rh:=mem[mem_max-1].hh.rh;
+mem[mem_max-1].hh.rh:=mem[mem_max-2].hh.rh;mem[mem_max-2].hh.rh:=0;
+page_tail:=mem_max-2;end;pop_nest;build_page;end{:1026};
+{:1100}{1118:}10:build_discretionary;{:1118}{1132:}6:begin back_input;
+cur_tok:=6710;begin if interaction=3 then;print_nl(262);print(625);end;
+print_esc(898);print(626);begin help_ptr:=1;help_line[0]:=1124;end;
+ins_error;end;{:1132}{1133:}7:begin end_graf;unsave;align_peek;end;
 {:1133}{1168:}12:begin end_graf;unsave;save_ptr:=save_ptr-2;
 p:=vpackage(mem[cur_list.head_field].hh.rh,save_stack[save_ptr+1].int,
 save_stack[save_ptr+0].int,1073741823);pop_nest;
@@ -5999,7 +6017,7 @@ open_fmt_file:=true;10:end;{:524}function load_fmt_file:boolean;
 label 6666,10;var j,k:integer;p,q:halfword;x:integer;w:four_quarters;
 begin{1308:}x:=fmt_file^.int;if x<>117275187 then goto 6666;
 begin get(fmt_file);x:=fmt_file^.int;end;if x<>0 then goto 6666;
-begin get(fmt_file);x:=fmt_file^.int;end;if x<>30000 then goto 6666;
+begin get(fmt_file);x:=fmt_file^.int;end;if x<>mem_max then goto 6666;
 begin get(fmt_file);x:=fmt_file^.int;end;if x<>6106 then goto 6666;
 begin get(fmt_file);x:=fmt_file^.int;end;if x<>1777 then goto 6666;
 begin get(fmt_file);x:=fmt_file^.int;end;
@@ -6019,7 +6037,7 @@ w:=fmt_file^.qqqq;end;str_pool[k]:=w.b0-0;str_pool[k+1]:=w.b1-0;
 str_pool[k+2]:=w.b2-0;str_pool[k+3]:=w.b3-0;init_str_ptr:=str_ptr;
 init_pool_ptr:=pool_ptr{:1310};{1312:}begin begin get(fmt_file);
 x:=fmt_file^.int;end;
-if(x<1019)or(x>29986)then goto 6666 else lo_mem_max:=x;end;
+if(x<1019)or(x>mem_max-14)then goto 6666 else lo_mem_max:=x;end;
 begin begin get(fmt_file);x:=fmt_file^.int;end;
 if(x<20)or(x>lo_mem_max)then goto 6666 else rover:=x;end;p:=0;q:=rover;
 repeat for k:=p to q+1 do begin get(fmt_file);mem[k]:=fmt_file^;end;
@@ -6032,9 +6050,9 @@ mem[mem_min].hh.rh:=0;mem[mem_min].hh.lh:=0;mem[p+1].hh.rh:=q;
 mem[rover+1].hh.lh:=q;mem[q+1].hh.rh:=rover;mem[q+1].hh.lh:=p;
 mem[q].hh.rh:=65535;mem[q].hh.lh:=-0-q;end;begin begin get(fmt_file);
 x:=fmt_file^.int;end;
-if(x<lo_mem_max+1)or(x>29987)then goto 6666 else hi_mem_min:=x;end;
+if(x<lo_mem_max+1)or(x>mem_max-13)then goto 6666 else hi_mem_min:=x;end;
 begin begin get(fmt_file);x:=fmt_file^.int;end;
-if(x<0)or(x>30000)then goto 6666 else avail:=x;end;mem_end:=30000;
+if(x<0)or(x>mem_max)then goto 6666 else avail:=x;end;mem_end:=mem_max;
 for k:=hi_mem_min to mem_end do begin get(fmt_file);mem[k]:=fmt_file^;
 end;begin get(fmt_file);var_used:=fmt_file^.int;end;begin get(fmt_file);
 dyn_used:=fmt_file^.int;end{:1312};{1314:}{1317:}k:=1;
@@ -6286,7 +6304,7 @@ eqtb[2618]:=eqtb[cur_val];primitive(774,106,4);primitive(775,106,3);
 eqtb[2624]:=eqtb[cur_val];{:553}{780:}primitive(897,4,256);
 primitive(898,5,257);hash[2615].rh:=898;eqtb[2615]:=eqtb[cur_val];
 primitive(899,5,258);hash[2619].rh:=900;hash[2620].rh:=900;
-eqtb[2620].hh.b0:=9;eqtb[2620].hh.rh:=29989;eqtb[2620].hh.b1:=1;
+eqtb[2620].hh.b0:=9;eqtb[2620].hh.rh:=mem_max-11;eqtb[2620].hh.b1:=1;
 eqtb[2619]:=eqtb[2620];eqtb[2619].hh.b0:=115;
 {:780}{983:}primitive(969,81,0);primitive(970,81,1);primitive(971,81,2);
 primitive(972,81,3);primitive(973,81,4);primitive(974,81,5);
@@ -6361,10 +6379,10 @@ short_display(n);end;16:panicking:=not panicking;
 if ready_already=314159 then goto 1;{14:}bad:=0;
 if(half_error_line<30)or(half_error_line>error_line-15)then bad:=1;
 if max_print_line<60 then bad:=2;if dvi_buf_size mod 8<>0 then bad:=3;
-if 1100>30000 then bad:=4;if 1777>2100 then bad:=5;
-if max_in_open>=128 then bad:=6;if 30000<267 then bad:=7;
-{:14}{111:}if(mem_min<>0)or(mem_max<>30000)then bad:=10;
-if(mem_min>0)or(mem_max<30000)then bad:=10;
+if 1100>mem_max then bad:=4;if 1777>2100 then bad:=5;
+if max_in_open>=128 then bad:=6;if mem_max<267 then bad:=7;
+{:14}{111:}if(mem_min<>0)or(mem_max<>mem_max)then bad:=10;
+if(mem_min>0)or(mem_max<mem_max)then bad:=10;
 if(0>0)or(255<127)then bad:=11;if(0>0)or(65535<32767)then bad:=12;
 if(0<0)or(255>65535)then bad:=13;
 if(mem_min<0)or(mem_max>=65535)or(-0-mem_min>65536)then bad:=14;
@@ -6373,7 +6391,7 @@ if(save_size>65535)or(max_strings>65535)then bad:=17;
 if buf_size>65535 then bad:=18;if 255<255 then bad:=19;
 {:111}{290:}if 6976>65535 then bad:=21;
 {:290}{522:}if 20>file_name_size then bad:=31;
-{:522}{1249:}if 2*65535<30000-mem_min then bad:=41;
+{:522}{1249:}if 2*65535<mem_max-mem_min then bad:=41;
 {:1249}if bad>0 then begin write_ln(term_out,
 'Ouch---my internal constants have been clobbered!','---case ',bad:1);
 goto 9999;end;initialize;if not get_strings_started then goto 9999;
