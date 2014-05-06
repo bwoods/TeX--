@@ -8,7 +8,7 @@ Only `plain.tex`, `hyphen.tex`, the `.tfm` files, and TeX itself are included. S
 
 ## A simple example
 
-Add the `tex` and `tfm` folders to your application. Include the `tex.hpp` header file, then it’s as simple as
+Add the `tex` and `tfm` folders to your application. Copy the `tex.pool` file into your application’s `tex` folder. Include the `tex.hpp` header file, then it’s as simple as
 
 ```c++ 
 	tex::plain typesetter;
