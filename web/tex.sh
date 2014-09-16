@@ -257,6 +257,7 @@ ${tex_source_code}
 
 static std::iostream * fopen(const char * name, const char * mode)
 {
+	// auto file = std::make_unique<std::fstream>(name, (mode[0] == 'r' ? std::ios::in|std::ios::binary : std::ios::out|std::ios::binary|std::ios::trunc));
 	std::unique_ptr<std::fstream> file(new std::fstream(name, (mode[0] == 'r' ? std::ios::in|std::ios::binary : std::ios::out|std::ios::binary|std::ios::trunc)));
 	if (erstat(file.get()))
 		return nullptr;
