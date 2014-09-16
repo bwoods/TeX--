@@ -108,24 +108,24 @@ static void io_error(int error, const char * name)
 
 // Output from p2c 1.21alpha-07.Dec.93, the Pascal-to-C translator
 
-constexpr static auto mem_max = 65530;
+constexpr static auto mem_max = 1000000;
 constexpr static auto mem_min = 0;
-constexpr static auto buf_size = 2000;
+constexpr static auto buf_size = 3000;
 constexpr static auto error_line = 79;
 constexpr static auto half_error_line = 50;
 constexpr static auto max_print_line = 79;
-constexpr static auto stack_size = 200;
+constexpr static auto stack_size = 300;
 constexpr static auto max_in_open = 15;
-constexpr static auto font_max = 120;
-constexpr static auto font_mem_size = 36000;
+constexpr static auto font_max = 255;
+constexpr static auto font_mem_size = 72000;
 constexpr static auto param_size = 60;
 constexpr static auto nest_size = 40;
-constexpr static auto max_strings = 4400;
-constexpr static auto string_vacancies = 15000;
-constexpr static auto pool_size = 45000;
-constexpr static auto save_size = 2000;
-constexpr static auto trie_size = 8000;
-constexpr static auto trie_op_size = 500;
+constexpr static auto max_strings = 7500;
+constexpr static auto string_vacancies = 74000;
+constexpr static auto pool_size = 100000;
+constexpr static auto save_size = 4000;
+constexpr static auto trie_size = 24000;
+constexpr static auto trie_op_size = 750;
 constexpr static auto dvi_buf_size = 16384;
 constexpr static auto file_name_size = FILENAME_MAX;
 
@@ -141,8 +141,8 @@ typedef int integer;
 typedef int nonnegative_integer;
 typedef char small_number;
 typedef double glue_ratio;
-typedef uint8_t quarterword;
-typedef unsigned short halfword;
+typedef unsigned short quarterword;
+typedef int halfword;
 typedef char two_choices;
 typedef char four_choices;
 
@@ -229,9 +229,9 @@ int nest_ptr, max_nest_stack;
 list_state_record cur_list;
 short shown_mode;
 char old_setting;
-memory_word eqtb[6107];
+memory_word eqtb[13007];
 quarterword xeq_level[844];
-two_halves hash[2367];
+two_halves hash[9267];
 halfword hash_used;
 bool no_new_control_sequence;
 memory_word save_stack[save_size + 1];
@@ -399,18 +399,18 @@ void initialize()
 	shown_mode = 0;
 	page_contents = 0;
 	page_tail = mem_max - 2;
-	mem[mem_max - mem_min - 2].hh.rh = 0;
-	last_glue = 65535;
+	mem[mem_max - mem_min - 2].hh.rh = -1073741824;
+	last_glue = 1073741824;
 	last_penalty = 0;
 	last_kern = 0;
 	page_so_far[7] = 0;
 	page_max_depth = 0;
-	for (k = 5263; k <= 6106; ++k)
-		xeq_level[k-5263] = 1;
+	for (k = 12163; k <= 13006; ++k)
+		xeq_level[k-12163] = 1;
 	no_new_control_sequence = true;
 	hash[0].lh = 0;
 	hash[0].rh = 0;
-	for (k = 515; k <= 2880; ++k)
+	for (k = 515; k <= 9780; ++k)
 		hash[k-514] = hash[0];
 	save_ptr = 0;
 	cur_level = 1;
@@ -418,18 +418,18 @@ void initialize()
 	cur_boundary = 0;
 	max_save_stack = 0;
 	mag_set = 0;
-	cur_mark[0] = 0;
-	cur_mark[1] = 0;
-	cur_mark[2] = 0;
-	cur_mark[3] = 0;
-	cur_mark[4] = 0;
+	cur_mark[0] = -1073741824;
+	cur_mark[1] = -1073741824;
+	cur_mark[2] = -1073741824;
+	cur_mark[3] = -1073741824;
+	cur_mark[4] = -1073741824;
 	cur_val = 0;
 	cur_val_level = 0;
 	radix = 0;
 	cur_order = 0;
 	for (k = 0; k <= 16; ++k)
 		read_open[k] = 2;
-	cond_ptr = 0;
+	cond_ptr = -1073741824;
 	if_limit = 0;
 	cur_if = 0;
 	if_line = 0;
@@ -453,26 +453,26 @@ void initialize()
 	dvi_ptr = 0;
 	dvi_offset = 0;
 	dvi_gone = 0;
-	down_ptr = 0;
-	right_ptr = 0;
-	adjust_tail = 0;
+	down_ptr = -1073741824;
+	right_ptr = -1073741824;
+	adjust_tail = -1073741824;
 	last_badness = 0;
 	pack_begin_line = 0;
 	empty_field.rh = 0;
-	empty_field.lh = 0;
+	empty_field.lh = -1073741824;
 	null_delimiter.b0 = 0;
 	null_delimiter.b1 = 0;
 	null_delimiter.b2 = 0;
 	null_delimiter.b3 = 0;
-	align_ptr = 0;
-	cur_align = 0;
-	cur_span = 0;
-	cur_loop = 0;
-	cur_head = 0;
-	cur_tail = 0;
+	align_ptr = -1073741824;
+	cur_align = -1073741824;
+	cur_span = -1073741824;
+	cur_loop = -1073741824;
+	cur_head = -1073741824;
+	cur_tail = -1073741824;
 	for (z = 0; z <= 307; ++z) {
 		hyph_word[z] = 0;
-		hyph_list[z] = 0;
+		hyph_list[z] = -1073741824;
 	}
 	hyph_count = 0;
 	output_active = false;
@@ -491,7 +491,7 @@ void initialize()
 		mem[k - mem_min].int_ = 0;
 	k = 0;
 	while (k <= 19) {
-		mem[k - mem_min].hh.rh = 1;
+		mem[k - mem_min].hh.rh = -1073741823;
 		mem[k - mem_min].hh.U2.b0 = 0;
 		mem[k - mem_min].hh.U2.b1 = 0;
 		k += 4;
@@ -507,103 +507,103 @@ void initialize()
 	mem[18 - mem_min].int_ = -65536;
 	mem[16 - mem_min].hh.U2.b0 = 1;
 	rover = 20;
-	mem[rover - mem_min].hh.rh = 65535;
+	mem[rover - mem_min].hh.rh = 1073741824;
 	mem[rover - mem_min].hh.lh = 1000;
 	mem[rover - mem_min + 1].hh.lh = rover;
 	mem[rover - mem_min + 1].hh.rh = rover;
 	lo_mem_max = rover + 1000;
-	mem[lo_mem_max - mem_min].hh.rh = 0;
-	mem[lo_mem_max - mem_min].hh.lh = 0;
+	mem[lo_mem_max - mem_min].hh.rh = -1073741824;
+	mem[lo_mem_max - mem_min].hh.lh = -1073741824;
 	for (k = mem_max - 13; k <= mem_max; ++k)
 		mem[k - mem_min] = mem[lo_mem_max - mem_min];
-	mem[mem_max - mem_min - 10].hh.lh = 6714;
-	mem[mem_max - mem_min - 9].hh.rh = 256;
-	mem[mem_max - mem_min - 9].hh.lh = 0;
+	mem[mem_max - mem_min - 10].hh.lh = 13614;
+	mem[mem_max - mem_min - 9].hh.rh = 65536;
+	mem[mem_max - mem_min - 9].hh.lh = -1073741824;
 	mem[mem_max - mem_min - 7].hh.U2.b0 = 1;
-	mem[mem_max - mem_min - 6].hh.lh = 65535;
+	mem[mem_max - mem_min - 6].hh.lh = 1073741824;
 	mem[mem_max - mem_min - 7].hh.U2.b1 = 0;
 	mem[mem_max - mem_min].hh.U2.b1 = 255;
 	mem[mem_max - mem_min].hh.U2.b0 = 1;
 	mem[mem_max - mem_min].hh.rh = mem_max;
 	mem[mem_max - mem_min - 2].hh.U2.b0 = 10;
 	mem[mem_max - mem_min - 2].hh.U2.b1 = 0;
-	avail = 0;
+	avail = -1073741824;
 	mem_end = mem_max;
 	hi_mem_min = mem_max - 13;
 	var_used = 20;
 	dyn_used = 14;
-	eqtb[2881].hh.U2.b0 = 101;
-	eqtb[2881].hh.rh = 0;
-	eqtb[2881].hh.U2.b1 = 0;
-	for (k = 1; k <= 2880; ++k)
-		eqtb[k] = eqtb[2881];
-	eqtb[2882].hh.rh = 0;
-	eqtb[2882].hh.U2.b1 = 1;
-	eqtb[2882].hh.U2.b0 = 117;
-	for (k = 2883; k <= 3411; ++k)
-		eqtb[k] = eqtb[2882];
+	eqtb[9781].hh.U2.b0 = 101;
+	eqtb[9781].hh.rh = -1073741824;
+	eqtb[9781].hh.U2.b1 = 0;
+	for (k = 1; k <= 9780; ++k)
+		eqtb[k] = eqtb[9781];
+	eqtb[9782].hh.rh = 0;
+	eqtb[9782].hh.U2.b1 = 1;
+	eqtb[9782].hh.U2.b0 = 117;
+	for (k = 9783; k <= 10311; ++k)
+		eqtb[k] = eqtb[9782];
 	mem[-mem_min].hh.rh += 530;
-	eqtb[3412].hh.rh = 0;
-	eqtb[3412].hh.U2.b0 = 118;
-	eqtb[3412].hh.U2.b1 = 1;
-	for (k = 3413; k <= 3677; ++k)
-		eqtb[k] = eqtb[2881];
-	eqtb[3678].hh.rh = 0;
-	eqtb[3678].hh.U2.b0 = 119;
-	eqtb[3678].hh.U2.b1 = 1;
-	for (k = 3679; k <= 3933; ++k)
-		eqtb[k] = eqtb[3678];
-	eqtb[3934].hh.rh = 0;
-	eqtb[3934].hh.U2.b0 = 120;
-	eqtb[3934].hh.U2.b1 = 1;
-	for (k = 3935; k <= 3982; ++k)
-		eqtb[k] = eqtb[3934];
-	eqtb[3983].hh.rh = 0;
-	eqtb[3983].hh.U2.b0 = 120;
-	eqtb[3983].hh.U2.b1 = 1;
-	for (k = 3984; k <= 5262; ++k)
-		eqtb[k] = eqtb[3983];
+	eqtb[10312].hh.rh = -1073741824;
+	eqtb[10312].hh.U2.b0 = 118;
+	eqtb[10312].hh.U2.b1 = 1;
+	for (k = 10313; k <= 10577; ++k)
+		eqtb[k] = eqtb[9781];
+	eqtb[10578].hh.rh = -1073741824;
+	eqtb[10578].hh.U2.b0 = 119;
+	eqtb[10578].hh.U2.b1 = 1;
+	for (k = 10579; k <= 10833; ++k)
+		eqtb[k] = eqtb[10578];
+	eqtb[10834].hh.rh = 0;
+	eqtb[10834].hh.U2.b0 = 120;
+	eqtb[10834].hh.U2.b1 = 1;
+	for (k = 10835; k <= 10882; ++k)
+		eqtb[k] = eqtb[10834];
+	eqtb[10883].hh.rh = 0;
+	eqtb[10883].hh.U2.b0 = 120;
+	eqtb[10883].hh.U2.b1 = 1;
+	for (k = 10884; k <= 12162; ++k)
+		eqtb[k] = eqtb[10883];
 	for (k = 0; k <= 255; ++k) {
-		eqtb[k+3983].hh.rh = 12;
-		eqtb[k+5007].hh.rh = k;
-		eqtb[k+4751].hh.rh = 1000;
+		eqtb[k+10883].hh.rh = 12;
+		eqtb[k+11907].hh.rh = k - 1073741824;
+		eqtb[k+11651].hh.rh = 1000;
 	}
-	eqtb[3996].hh.rh = 5;
-	eqtb[4015].hh.rh = 10;
-	eqtb[4075].hh.rh = 0;
-	eqtb[4020].hh.rh = 14;
-	eqtb[4110].hh.rh = 15;
-	eqtb[3983].hh.rh = 9;
+	eqtb[10896].hh.rh = 5;
+	eqtb[10915].hh.rh = 10;
+	eqtb[10975].hh.rh = 0;
+	eqtb[10920].hh.rh = 14;
+	eqtb[11010].hh.rh = 15;
+	eqtb[10883].hh.rh = 9;
 	for (k = 48; k <= 57; ++k)
-		eqtb[k+5007].hh.rh = k + 28672;
+		eqtb[k+11907].hh.rh = k - 1073713152;
 	for (k = 65; k <= 90; ++k) {
-		eqtb[k+3983].hh.rh = 11;
-		eqtb[k+4015].hh.rh = 11;
-		eqtb[k+5007].hh.rh = k + 28928;
-		eqtb[k+5039].hh.rh = k + 28960;
-		eqtb[k+4239].hh.rh = k + 32;
-		eqtb[k+4271].hh.rh = k + 32;
-		eqtb[k+4495].hh.rh = k;
-		eqtb[k+4527].hh.rh = k;
-		eqtb[k+4751].hh.rh = 999;
+		eqtb[k+10883].hh.rh = 11;
+		eqtb[k+10915].hh.rh = 11;
+		eqtb[k+11907].hh.rh = k - 1073712896;
+		eqtb[k+11939].hh.rh = k - 1073712864;
+		eqtb[k+11139].hh.rh = k + 32;
+		eqtb[k+11171].hh.rh = k + 32;
+		eqtb[k+11395].hh.rh = k;
+		eqtb[k+11427].hh.rh = k;
+		eqtb[k+11651].hh.rh = 999;
 	}
-	for (k = 5263; k <= 5573; ++k)
+	for (k = 12163; k <= 12473; ++k)
 		eqtb[k].int_ = 0;
-	eqtb[5280].int_ = 1000;
-	eqtb[5264].int_ = 10000;
-	eqtb[5304].int_ = 1;
-	eqtb[5303].int_ = 25;
-	eqtb[5308].int_ = 92;
-	eqtb[5311].int_ = 13;
+	eqtb[12180].int_ = 1000;
+	eqtb[12164].int_ = 10000;
+	eqtb[12204].int_ = 1;
+	eqtb[12203].int_ = 25;
+	eqtb[12208].int_ = 92;
+	eqtb[12211].int_ = 13;
 	for (k = 0; k <= 255; ++k)
-		eqtb[k+5574].int_ = -1;
-	eqtb[5620].int_ = 0;
-	for (k = 5830; k <= 6106; ++k)
+		eqtb[k+12474].int_ = -1;
+	eqtb[12520].int_ = 0;
+	for (k = 12730; k <= 13006; ++k)
 		eqtb[k].int_ = 0;
-	hash_used = 2614;
+	hash_used = 9514;
 	cs_count = 0;
-	eqtb[2623].hh.U2.b0 = 116;
-	hash[2109].rh = 502;
+	eqtb[9523].hh.U2.b0 = 116;
+	hash[9009].rh = 502;
 	font_ptr = 0;
 	fmem_ptr = 7;
 	font_name[0] = 800;
@@ -625,7 +625,7 @@ void initialize()
 	lig_kern_base[0] = 0;
 	kern_base[0] = 0;
 	exten_base[0] = 0;
-	font_glue[0] = 0;
+	font_glue[0] = -1073741824;
 	font_params[0] = 7;
 	param_base[0] = -1;
 	for (k = 0; k <= 6; ++k)
@@ -639,12 +639,12 @@ void initialize()
 	trie_l[0] = 0;
 	trie_c[0] = 0;
 	trie_ptr = 0;
-	hash[2100].rh = 1189;
+	hash[9000].rh = 1189;
 	format_ident = 1256;
-	hash[2108].rh = 1295;
-	eqtb[2622].hh.U2.b1 = 1;
-	eqtb[2622].hh.U2.b0 = 113;
-	eqtb[2622].hh.rh = 0;
+	hash[9008].rh = 1295;
+	eqtb[9522].hh.U2.b1 = 1;
+	eqtb[9522].hh.U2.b0 = 113;
+	eqtb[9522].hh.rh = -1073741824;
 }
 
 void print_ln()
@@ -680,7 +680,7 @@ void print_ln()
 
 void print_char(ASCII_code s)
 {
-	if (s == eqtb[5312].int_) {
+	if (s == eqtb[12212].int_) {
 		if (selector < 20) {
 			print_ln();
 			goto _L10;
@@ -755,20 +755,20 @@ void print(integer s)
 				print_char(s);
 				goto _L10;
 			}
-			if (s == eqtb[5312].int_) {
+			if (s == eqtb[12212].int_) {
 				if (selector < 20) {
 					print_ln();
 					goto _L10;
 				}
 			}
-			nl = eqtb[5312].int_;
-			eqtb[5312].int_ = -1;
+			nl = eqtb[12212].int_;
+			eqtb[12212].int_ = -1;
 			j = str_start[s];
 			while (j < str_start[s+1]) {
 				print_char(str_pool[j]);
 				++j;
 			}
-			eqtb[5312].int_ = nl;
+			eqtb[12212].int_ = nl;
 			goto _L10;
 		}
 		s = 259;
@@ -805,7 +805,7 @@ void print_nl(str_number s)
 
 void print_esc(str_number s)
 {
-	integer c = eqtb[5308].int_;
+	integer c = eqtb[12208].int_;
 
 	if (c >= 0) {
 		if (c < 256)
@@ -867,7 +867,7 @@ void print_cs(integer p)
 				return;
 			}
 			print_esc(p - 257);
-			if (eqtb[p+3726].hh.rh == 11)
+			if (eqtb[p+10626].hh.rh == 11)
 				print_char(32);
 			return;
 		}
@@ -877,11 +877,11 @@ void print_cs(integer p)
 			print(p - 1);
 		return;
 	}
-	if (p >= 2881) {
+	if (p >= 9781) {
 		print_esc(506);
 		return;
 	}
-	if (hash[p-514].rh >= str_ptr) {
+	if (((unsigned)hash[p-514].rh) >= str_ptr) {
 		print_esc(507);
 	}
 	else {
@@ -1767,7 +1767,7 @@ void show_token_list(integer p, integer q,
 	ASCII_code match_chr = 35, n = 48;
 
 	tally = 0;
-	while (p && (tally < l)) {
+	while ((p != (-1073741824)) && (tally < l)) {
 		if (p == q) {
 			first_count = tally;
 			trick_count = tally + error_line - half_error_line + 1;
@@ -1829,7 +1829,7 @@ void show_token_list(integer p, integer q,
 		}
 		p = mem[p - mem_min].hh.rh;
 	}
-	if (p)
+	if (p != (-1073741824))
 		print_esc(554);
 _L10: ;
 }
@@ -1865,14 +1865,14 @@ void runaway()
 	}
 	print_char(63);
 	print_ln();
-	show_token_list(mem[p - mem_min].hh.rh, 0, error_line - 10);
+	show_token_list(mem[p - mem_min].hh.rh, -1073741824, error_line - 10);
 }
 
 halfword get_avail()
 {
 	halfword p = avail;
 
-	if (p) {
+	if (p != (-1073741824)) {
 		avail = mem[avail - mem_min].hh.rh;
 	}
 	else if (mem_end < mem_max) {
@@ -1887,7 +1887,7 @@ halfword get_avail()
 			overflow(300, mem_max - mem_min + 1);
 		}
 	}
-	mem[p - mem_min].hh.rh = 0;
+	mem[p - mem_min].hh.rh = -1073741824;
 	return p;
 }
 
@@ -1895,13 +1895,13 @@ void flush_list(halfword p)
 {
 	halfword q, r;
 
-	if (!p)
+	if (p == (-1073741824))
 		return;
 	r = p;
 	do {
 		q = r;
 		r = mem[r - mem_min].hh.rh;
-	} while (r);
+	} while (r != (-1073741824));
 	mem[q - mem_min].hh.rh = avail;
 	avail = p;
 }
@@ -1915,7 +1915,7 @@ _L20:
 	p = rover;
 	do {
 		q = p + mem[p - mem_min].hh.lh;
-		while (mem[q - mem_min].hh.rh == 65535) {
+		while (mem[q - mem_min].hh.rh == 1073741824) {
 			t = mem[q - mem_min + 1].hh.rh;
 			if (q == rover)
 				rover = t;
@@ -1942,11 +1942,11 @@ _L20:
 		p = mem[p - mem_min + 1].hh.rh;
 	} while (p != rover);
 	if (s == 1073741824) {
-		result = 65535;
+		result = 1073741824;
 		goto _L10;
 	}
 	if (lo_mem_max + 2 < hi_mem_min) {
-		if (lo_mem_max <= 65533) {
+		if (lo_mem_max <= 1073741822) {
 			if (hi_mem_min - lo_mem_max >= 1998)
 				t = lo_mem_max + 1000;
 			else
@@ -1955,22 +1955,22 @@ _L20:
 			q = lo_mem_max;
 			mem[p - mem_min + 1].hh.rh = q;
 			mem[rover - mem_min + 1].hh.lh = q;
-			if (t > 65535)
-				t = 65535;
+			if (t > 1073741824)
+				t = 1073741824;
 			mem[q - mem_min + 1].hh.rh = rover;
 			mem[q - mem_min + 1].hh.lh = p;
-			mem[q - mem_min].hh.rh = 65535;
+			mem[q - mem_min].hh.rh = 1073741824;
 			mem[q - mem_min].hh.lh = t - lo_mem_max;
 			lo_mem_max = t;
-			mem[lo_mem_max - mem_min].hh.rh = 0;
-			mem[lo_mem_max - mem_min].hh.lh = 0;
+			mem[lo_mem_max - mem_min].hh.rh = -1073741824;
+			mem[lo_mem_max - mem_min].hh.lh = -1073741824;
 			rover = q;
 			goto _L20;
 		}
 	}
 	overflow(300, mem_max - mem_min + 1);
 _L40:
-	mem[r - mem_min].hh.rh = 0;
+	mem[r - mem_min].hh.rh = -1073741824;
 	result = r;
 _L10:
 	return result;
@@ -1981,7 +1981,7 @@ void free_node(halfword p, halfword s)
 	halfword q;
 
 	mem[p - mem_min].hh.lh = s;
-	mem[p - mem_min].hh.rh = 65535;
+	mem[p - mem_min].hh.rh = 1073741824;
 	q = mem[rover - mem_min + 1].hh.lh;
 	mem[p - mem_min + 1].hh.lh = q;
 	mem[p - mem_min + 1].hh.rh = rover;
@@ -1995,7 +1995,7 @@ void sort_avail()
 	halfword p = get_node(1073741824);
 
 	p = mem[rover - mem_min + 1].hh.rh;
-	mem[rover - mem_min + 1].hh.rh = 65535;
+	mem[rover - mem_min + 1].hh.rh = 1073741824;
 	old_rover = rover;
 	while (p != old_rover) {
 		if (p < rover) {
@@ -2014,7 +2014,7 @@ void sort_avail()
 		p = r;
 	}
 	p = rover;
-	while (mem[p - mem_min + 1].hh.rh != 65535) {
+	while (mem[p - mem_min + 1].hh.rh != 1073741824) {
 		mem[mem[p - mem_min + 1].hh.rh - mem_min + 1].hh.lh = p;
 		p = mem[p - mem_min + 1].hh.rh;
 	}
@@ -2032,7 +2032,7 @@ halfword new_null_box()
 	mem[p - mem_min + 2].int_ = 0;
 	mem[p - mem_min + 3].int_ = 0;
 	mem[p - mem_min + 4].int_ = 0;
-	mem[p - mem_min + 5].hh.rh = 0;
+	mem[p - mem_min + 5].hh.rh = -1073741824;
 	mem[p - mem_min + 5].hh.U2.b0 = 0;
 	mem[p - mem_min + 5].hh.U2.b1 = 0;
 	mem[p - mem_min + 6].gr = 0.0;
@@ -2068,7 +2068,7 @@ halfword new_lig_item(quarterword c)
 	halfword p = get_node(2);
 
 	mem[p - mem_min].hh.U2.b1 = c;
-	mem[p - mem_min + 1].hh.rh = 0;
+	mem[p - mem_min + 1].hh.rh = -1073741824;
 	return p;
 }
 
@@ -2078,8 +2078,8 @@ halfword new_disc()
 
 	mem[p - mem_min].hh.U2.b0 = 7;
 	mem[p - mem_min].hh.U2.b1 = 0;
-	mem[p - mem_min + 1].hh.lh = 0;
-	mem[p - mem_min + 1].hh.rh = 0;
+	mem[p - mem_min + 1].hh.lh = -1073741824;
+	mem[p - mem_min + 1].hh.rh = -1073741824;
 	return p;
 }
 
@@ -2098,7 +2098,7 @@ halfword new_spec(halfword p)
 	halfword q = get_node(4);
 
 	mem[q - mem_min] = mem[p - mem_min];
-	mem[q - mem_min].hh.rh = 0;
+	mem[q - mem_min].hh.rh = -1073741824;
 	mem[q - mem_min + 1].int_ = mem[p - mem_min + 1].int_;
 	mem[q - mem_min + 2].int_ = mem[p - mem_min + 2].int_;
 	mem[q - mem_min + 3].int_ = mem[p - mem_min + 3].int_;
@@ -2112,8 +2112,8 @@ halfword new_param_glue(small_number n)
 
 	mem[p - mem_min].hh.U2.b0 = 10;
 	mem[p - mem_min].hh.U2.b1 = n + 1;
-	mem[p - mem_min + 1].hh.rh = 0;
-	q = eqtb[n+2882].hh.rh;
+	mem[p - mem_min + 1].hh.rh = -1073741824;
+	q = eqtb[n+9782].hh.rh;
 	mem[p - mem_min + 1].hh.lh = q;
 	++mem[q - mem_min].hh.rh;
 	return p;
@@ -2125,7 +2125,7 @@ halfword new_glue(halfword q)
 
 	mem[p - mem_min].hh.U2.b0 = 10;
 	mem[p - mem_min].hh.U2.b1 = 0;
-	mem[p - mem_min + 1].hh.rh = 0;
+	mem[p - mem_min + 1].hh.rh = -1073741824;
 	mem[p - mem_min + 1].hh.lh = q;
 	++mem[q - mem_min].hh.rh;
 	return p;
@@ -2135,9 +2135,9 @@ halfword new_skip_param(small_number n)
 {
 	halfword p;
 
-	temp_ptr = new_spec(eqtb[n+2882].hh.rh);
+	temp_ptr = new_spec(eqtb[n+9782].hh.rh);
 	p = new_glue(temp_ptr);
-	mem[temp_ptr - mem_min].hh.rh = 0;
+	mem[temp_ptr - mem_min].hh.rh = -1073741824;
 	mem[p - mem_min].hh.U2.b1 = n + 1;
 	return p;
 }
@@ -2173,7 +2173,7 @@ void short_display(integer p)
 					if (mem[p - mem_min].hh.U2.b0 > font_max)
 						print_char(42);
 					else
-						print_esc(hash[mem[p - mem_min].hh.U2.b0 + 2110].rh);
+						print_esc(hash[mem[p - mem_min].hh.U2.b0 + 9010].rh);
 					print_char(32);
 					font_in_short_display = mem[p - mem_min].hh.U2.b0;
 				}
@@ -2209,7 +2209,7 @@ void short_display(integer p)
 				short_display(mem[p - mem_min + 1].hh.rh);
 				n = mem[p - mem_min].hh.U2.b1;
 				while (n > 0) {
-					if (mem[p - mem_min].hh.rh)
+					if (mem[p - mem_min].hh.rh != (-1073741824))
 						p = mem[p - mem_min].hh.rh;
 					--n;
 				}
@@ -2232,7 +2232,7 @@ void print_font_and_char(integer p)
 	if (mem[p - mem_min].hh.U2.b0 > font_max)
 		print_char(42);
 	else
-		print_esc(hash[mem[p - mem_min].hh.U2.b0 + 2110].rh);
+		print_esc(hash[mem[p - mem_min].hh.U2.b0 + 9010].rh);
 	print_char(32);
 	print(mem[p - mem_min].hh.U2.b1);
 }
@@ -2243,7 +2243,7 @@ void print_mark(integer p)
 	if ((p < hi_mem_min) || (p > mem_end))
 		print_esc(309);
 	else
-		show_token_list(mem[p - mem_min].hh.rh, 0, max_print_line - 10);
+		show_token_list(mem[p - mem_min].hh.rh, -1073741824, max_print_line - 10);
 	print_char(125);
 }
 
@@ -2335,7 +2335,7 @@ void print_subsidiary_data(halfword p, ASCII_code c)
 		break;
 
 	case 3:
-		if (!mem[p - mem_min].hh.lh) {
+		if (mem[p - mem_min].hh.lh == (-1073741824)) {
 			print_ln();
 			print_current_string();
 			print(859);
@@ -2465,7 +2465,7 @@ void show_node_list(integer p)
 	double g;
 
 	if (pool_ptr - str_start[str_ptr] > depth_threshold) {
-		if (p > 0)
+		if (p > (-1073741824))
 			print(314);
 		goto _L10;
 	}
@@ -2860,8 +2860,8 @@ _L10: ;
 
 void show_box(halfword p)
 {
-	depth_threshold = eqtb[5288].int_;
-	breadth_max = eqtb[5287].int_;
+	depth_threshold = eqtb[12188].int_;
+	breadth_max = eqtb[12187].int_;
 	if (breadth_max <= 0)
 		breadth_max = 5;
 	if (pool_ptr + depth_threshold >= pool_size)
@@ -2872,7 +2872,7 @@ void show_box(halfword p)
 
 void delete_token_ref(halfword p)
 {
-	if (!mem[p - mem_min].hh.lh)
+	if (mem[p - mem_min].hh.lh == (-1073741824))
 		flush_list(p);
 	else
 		--mem[p - mem_min].hh.lh;
@@ -2880,7 +2880,7 @@ void delete_token_ref(halfword p)
 
 void delete_glue_ref(halfword p)
 {
-	if (!mem[p - mem_min].hh.rh)
+	if (mem[p - mem_min].hh.rh == (-1073741824))
 		free_node(p, 4);
 	else
 		--mem[p - mem_min].hh.rh;
@@ -2890,7 +2890,7 @@ void flush_node_list(halfword p)
 {
 	halfword q;
 
-	while (p) {
+	while (p != (-1073741824)) {
 		q = mem[p - mem_min].hh.rh;
 		if (p >= hi_mem_min) {
 			mem[p - mem_min].hh.rh = avail;
@@ -2942,11 +2942,11 @@ void flush_node_list(halfword p)
 				break;
 
 			case 10:
-				if (!mem[mem[p - mem_min + 1].hh.lh - mem_min].hh.rh)
+				if (mem[mem[p - mem_min + 1].hh.lh - mem_min].hh.rh == (-1073741824))
 					free_node(mem[p - mem_min + 1].hh.lh, 4);
 				else
 					--mem[mem[p - mem_min + 1].hh.lh - mem_min].hh.rh;
-				if (mem[p - mem_min + 1].hh.rh)
+				if (mem[p - mem_min + 1].hh.rh != (-1073741824))
 					flush_node_list(mem[p - mem_min + 1].hh.rh);
 				break;
 
@@ -3032,7 +3032,7 @@ halfword copy_node_list(halfword p)
 	halfword h = get_avail();
 	halfword q = h;
 
-	while (p) {
+	while (p != (-1073741824)) {
 		words = 1;
 		if (p >= hi_mem_min) {
 			r = get_avail();
@@ -3134,7 +3134,7 @@ halfword copy_node_list(halfword p)
 		q = r;
 		p = mem[p - mem_min].hh.rh;
 	}
-	mem[q - mem_min].hh.rh = 0;
+	mem[q - mem_min].hh.rh = -1073741824;
 	q = mem[h - mem_min].hh.rh;
 	mem[h - mem_min].hh.rh = avail;
 	avail = h;
@@ -3253,10 +3253,10 @@ void show_activities()
 						t = mem[r - mem_min].hh.U2.b1;
 						print_int(t);
 						print(983);
-						if (eqtb[t+5318].int_ == 1000)
+						if (eqtb[t+12218].int_ == 1000)
 							t = mem[r - mem_min + 3].int_;
 						else
-							t = x_over_n(mem[r - mem_min + 3].int_, 1000) * eqtb[t+5318].int_;
+							t = x_over_n(mem[r - mem_min + 3].int_, 1000) * eqtb[t+12218].int_;
 						print_scaled(t);
 						if (mem[r - mem_min].hh.U2.b0 == 1) {
 							q = mem_max - 2;
@@ -3274,7 +3274,7 @@ void show_activities()
 					}
 				}
 			}
-			if (mem[mem_max - mem_min - 1].hh.rh)
+			if (mem[mem_max - mem_min - 1].hh.rh != (-1073741824))
 				print_nl(368);
 		}
 		show_box(mem[nest[p].head_field - mem_min].hh.rh);
@@ -3307,7 +3307,7 @@ void show_activities()
 			break;
 
 		case 2:
-			if (a.int_) {
+			if (a.int_ != (-1073741824)) {
 				print(375);
 				show_box(a.int_);
 			}
@@ -3548,16 +3548,16 @@ void print_param(integer n)
 
 void fix_date_and_time()
 {
-	eqtb[5283].int_ = 720;
-	eqtb[5284].int_ = 4;
-	eqtb[5285].int_ = 7;
-	eqtb[5286].int_ = 1776;
+	eqtb[12183].int_ = 720;
+	eqtb[12184].int_ = 4;
+	eqtb[12185].int_ = 7;
+	eqtb[12186].int_ = 1776;
 }
 
 void begin_diagnostic()
 {
 	old_setting = selector;
-	if ((eqtb[5292].int_ > 0) || (selector != 19))
+	if ((eqtb[12192].int_ > 0) || (selector != 19))
 		return;
 	--selector;
 	if (!history)
@@ -3720,56 +3720,56 @@ void print_cmd_chr(quarterword cmd, halfword chr_code)
 		break;
 
 	case 75: case 76:
-		if (chr_code < 2900) {
-			print_skip_param(chr_code - 2882);
+		if (chr_code < 9800) {
+			print_skip_param(chr_code - 9782);
 		}
-		else if (chr_code < 3156) {
+		else if (chr_code < 10056) {
 			print_esc(395);
-			print_int(chr_code - 2900);
+			print_int(chr_code - 9800);
 		}
 		else {
 			print_esc(396);
-			print_int(chr_code - 3156);
+			print_int(chr_code - 10056);
 		}
 		break;
 
 	case 72:
-		if (chr_code >= 3422) {
+		if (chr_code >= 10322) {
 			print_esc(407);
-			print_int(chr_code - 3422);
+			print_int(chr_code - 10322);
 		}
 		else {
 			switch (chr_code) {
 
-			case 3413:
+			case 10313:
 				print_esc(398);
 				break;
 
-			case 3414:
+			case 10314:
 				print_esc(399);
 				break;
 
-			case 3415:
+			case 10315:
 				print_esc(400);
 				break;
 
-			case 3416:
+			case 10316:
 				print_esc(401);
 				break;
 
-			case 3417:
+			case 10317:
 				print_esc(402);
 				break;
 
-			case 3418:
+			case 10318:
 				print_esc(403);
 				break;
 
-			case 3419:
+			case 10319:
 				print_esc(404);
 				break;
 
-			case 3420:
+			case 10320:
 				print_esc(405);
 				break;
 
@@ -3781,22 +3781,22 @@ void print_cmd_chr(quarterword cmd, halfword chr_code)
 		break;
 
 	case 73:
-		if (chr_code < 5318) {
-			print_param(chr_code - 5263);
+		if (chr_code < 12218) {
+			print_param(chr_code - 12163);
 		}
 		else {
 			print_esc(476);
-			print_int(chr_code - 5318);
+			print_int(chr_code - 12218);
 		}
 		break;
 
 	case 74:
-		if (chr_code < 5851) {
-			print_length_param(chr_code - 5830);
+		if (chr_code < 12751) {
+			print_length_param(chr_code - 12730);
 		}
 		else {
 			print_esc(500);
-			print_int(chr_code - 5851);
+			print_int(chr_code - 12751);
 		}
 		break;
 
@@ -4579,26 +4579,26 @@ void print_cmd_chr(quarterword cmd, halfword chr_code)
 		break;
 
 	case 85:
-		if (chr_code == 3983) {
+		if (chr_code == 10883) {
 			print_esc(415);
 		}
-		else if (chr_code == 5007) {
+		else if (chr_code == 11907) {
 			print_esc(419);
 		}
-		else if (chr_code == 4239) {
+		else if (chr_code == 11139) {
 			print_esc(416);
 		}
-		else if (chr_code == 4495) {
+		else if (chr_code == 11395) {
 			print_esc(417);
 		}
-		else if (chr_code == 4751)
+		else if (chr_code == 11651)
 			print_esc(418);
 		else
 			print_esc(477);
 		break;
 
 	case 86:
-		print_size(chr_code - 3935);
+		print_size(chr_code - 10835);
 		break;
 
 	case 99:
@@ -4661,7 +4661,7 @@ void print_cmd_chr(quarterword cmd, halfword chr_code)
 		break;
 
 	case 57:
-		if (chr_code == 4239)
+		if (chr_code == 11139)
 			print_esc(1236);
 		else
 			print_esc(1237);
@@ -4760,8 +4760,8 @@ halfword id_lookup(integer j, integer l)
 
 	for (k = j + 1; k <= (j + l - 1); ++k) {
 		h += h + buffer[k];
-		while (h >= 1777)
-			h -= 1777;
+		while (h >= 7649)
+			h -= 7649;
 	}
 	p = h + 514;
 	while (true) {
@@ -4773,13 +4773,13 @@ halfword id_lookup(integer j, integer l)
 		}
 		if (!hash[p-514].lh) {
 			if (no_new_control_sequence) {
-				p = 2881;
+				p = 9781;
 			}
 			else {
 				if (hash[p-514].rh > 0) {
 					do {
 						if (hash_used == 514)
-							overflow(503, 2100);
+							overflow(503, 9000);
 						--hash_used;
 					} while (hash[hash_used-514].rh);
 					hash[p-514].lh = hash_used;
@@ -4840,8 +4840,8 @@ void new_save_level(group_code c)
 	save_stack[save_ptr].hh.U2.b0 = 3;
 	save_stack[save_ptr].hh.U2.b1 = cur_group;
 	save_stack[save_ptr].hh.rh = cur_boundary;
-	if (cur_level == 255)
-		overflow(542, 255);
+	if (cur_level == 65535)
+		overflow(542, 65535);
 	cur_boundary = save_ptr;
 	++cur_level;
 	++save_ptr;
@@ -4864,7 +4864,7 @@ void eq_destroy(memory_word w)
 
 	case 118:
 		q = w.hh.rh;
-		if (q)
+		if (q != (-1073741824))
 			free_node(q, mem[q - mem_min].hh.lh + mem[q - mem_min].hh.lh + 1);
 		break;
 
@@ -4911,9 +4911,9 @@ void eq_define(halfword p, quarterword t, halfword e)
 
 void eq_word_define(halfword p, integer w)
 {
-	if (xeq_level[p-5263] != cur_level) {
-		eq_save(p, xeq_level[p-5263]);
-		xeq_level[p-5263] = cur_level;
+	if (xeq_level[p-12163] != cur_level) {
+		eq_save(p, xeq_level[p-12163]);
+		xeq_level[p-12163] = cur_level;
 	}
 	eqtb[p].int_ = w;
 }
@@ -4929,7 +4929,7 @@ void geq_define(halfword p, quarterword t, halfword e)
 void geq_word_define(halfword p, integer w)
 {
 	eqtb[p].int_ = w;
-	xeq_level[p-5263] = 1;
+	xeq_level[p-12163] = 1;
 }
 
 void save_for_after(halfword t)
@@ -4975,9 +4975,9 @@ void unsave()
 			--save_ptr;
 		}
 		else {
-			save_stack[save_ptr] = eqtb[2881];
+			save_stack[save_ptr] = eqtb[9781];
 		}
-		if (p < 5263) {
+		if (p < 12163) {
 			if (eqtb[p].hh.U2.b1 == 1) {
 				eq_destroy(save_stack[save_ptr]);
 			}
@@ -4986,9 +4986,9 @@ void unsave()
 				eqtb[p] = save_stack[save_ptr];
 			}
 		}
-		else if (xeq_level[p-5263] != 1) {
+		else if (xeq_level[p-12163] != 1) {
 			eqtb[p] = save_stack[save_ptr];
-			xeq_level[p-5263] = l;
+			xeq_level[p-12163] = l;
 		}
 	}
 _L30:
@@ -4998,33 +4998,33 @@ _L30:
 
 void prepare_mag()
 {
-	if ((mag_set > 0) && (eqtb[5280].int_ != mag_set)) {
+	if ((mag_set > 0) && (eqtb[12180].int_ != mag_set)) {
 		print_nl(262);
 		print(547);
-		print_int(eqtb[5280].int_);
+		print_int(eqtb[12180].int_);
 		print(548);
 		print_nl(549);
 		help_ptr = 2;
 		help_line[1] = 550;
 		help_line[0] = 551;
 		int_error(mag_set);
-		geq_word_define(5280, mag_set);
+		geq_word_define(12180, mag_set);
 	}
-	if ((eqtb[5280].int_ <= 0) || (eqtb[5280].int_ > 32768)) {
+	if ((eqtb[12180].int_ <= 0) || (eqtb[12180].int_ > 32768)) {
 		print_nl(262);
 		print(552);
 		help_ptr = 1;
 		help_line[0] = 553;
-		int_error(eqtb[5280].int_);
-		geq_word_define(5280, 1000);
+		int_error(eqtb[12180].int_);
+		geq_word_define(12180, 1000);
 	}
-	mag_set = eqtb[5280].int_;
+	mag_set = eqtb[12180].int_;
 }
 
 void token_show(halfword p)
 {
-	if (p)
-		show_token_list(mem[p - mem_min].hh.rh, 0, 10000000);
+	if (p != (-1073741824))
+		show_token_list(mem[p - mem_min].hh.rh, -1073741824, 10000000);
 }
 
 void print_meaning()
@@ -5072,8 +5072,9 @@ void show_context()
 			if ((cur_input.name_field > 17) || (!base_ptr))
 				bottom_line = true;
 		}
-		if ((base_ptr == input_ptr) || bottom_line || (nn < eqtb[5317].int_)) {
-			if ((base_ptr == input_ptr) || cur_input.state_field || (cur_input.index_field != 3) || cur_input.loc_field) {
+		if ((base_ptr == input_ptr) || bottom_line || (nn < eqtb[12217].int_)) {
+			if ((base_ptr == input_ptr) || cur_input.state_field || (cur_input.index_field != 3)
+					|| (cur_input.loc_field != (-1073741824))) {
 				tally = 0;
 				old_setting = selector;
 				if (cur_input.state_field) {
@@ -5102,7 +5103,7 @@ void show_context()
 					tally = 0;
 					selector = 20;
 					trick_count = 1000000;
-					if (buffer[cur_input.limit_field] == eqtb[5311].int_)
+					if (buffer[cur_input.limit_field] == eqtb[12211].int_)
 						j = cur_input.limit_field;
 					else
 						j = cur_input.limit_field + 1;
@@ -5130,7 +5131,7 @@ void show_context()
 						break;
 
 					case 3:
-						if (!cur_input.loc_field)
+						if (cur_input.loc_field == (-1073741824))
 							print_nl(580);
 						else
 							print_nl(581);
@@ -5234,7 +5235,7 @@ void show_context()
 				++nn;
 			}
 		}
-		else if (nn == eqtb[5317].int_) {
+		else if (nn == eqtb[12217].int_) {
 			print_nl(277);
 			++nn;
 		}
@@ -5268,7 +5269,7 @@ void begin_token_list(halfword p, quarterword t)
 		return;
 	}
 	cur_input.loc_field = mem[p - mem_min].hh.rh;
-	if (eqtb[5293].int_ <= 1)
+	if (eqtb[12193].int_ <= 1)
 		return;
 	begin_diagnostic();
 	print_nl(338);
@@ -5283,7 +5284,7 @@ void begin_token_list(halfword p, quarterword t)
 		break;
 
 	default:
-		print_cmd_chr(72, t + 3407);
+		print_cmd_chr(72, t + 10307);
 		break;
 	}
 	print(556);
@@ -5323,7 +5324,7 @@ void back_input()
 {
 	halfword p;
 
-	while ((!cur_input.state_field) && (!cur_input.loc_field) && (cur_input.index_field != 2))
+	while ((!cur_input.state_field) && (cur_input.loc_field == (-1073741824)) && (cur_input.index_field != 2))
 		end_token_list();
 	p = get_avail();
 	mem[p - mem_min].hh.lh = cur_tok;
@@ -5451,7 +5452,7 @@ void check_outer_validity()
 			q = p;
 			p = get_avail();
 			mem[p - mem_min].hh.rh = q;
-			mem[p - mem_min].hh.lh = 6710;
+			mem[p - mem_min].hh.lh = 13610;
 			align_state = -1000000;
 			break;
 
@@ -5484,7 +5485,7 @@ void check_outer_validity()
 			cur_cs = 0;
 		else
 			help_line[2] = 603;
-		cur_tok = 6713;
+		cur_tok = 13613;
 		ins_error();
 	}
 	deletions_allowed = true;
@@ -5523,10 +5524,10 @@ _L25:
 					check_outer_validity();
 					goto _L20;
 				}
-				if (((unsigned)eqtb[5311].int_) > 255)
+				if (((unsigned)eqtb[12211].int_) > 255)
 					--cur_input.limit_field;
 				else
-					buffer[cur_input.limit_field] = eqtb[5311].int_;
+					buffer[cur_input.limit_field] = eqtb[12211].int_;
 				first = cur_input.limit_field + 1;
 				cur_input.loc_field = cur_input.start_field;
 			}
@@ -5543,7 +5544,7 @@ _L25:
 				if (selector < 18)
 					open_log_file();
 				if (interaction > 1) {
-					if (((unsigned)eqtb[5311].int_) > 255)
+					if (((unsigned)eqtb[12211].int_) > 255)
 						++cur_input.limit_field;
 					if (cur_input.limit_field == cur_input.start_field)
 						print_nl(616);
@@ -5552,10 +5553,10 @@ _L25:
 					print(42);
 					term_input();
 					cur_input.limit_field = last;
-					if (((unsigned)eqtb[5311].int_) > 255)
+					if (((unsigned)eqtb[12211].int_) > 255)
 						--cur_input.limit_field;
 					else
-						buffer[cur_input.limit_field] = eqtb[5311].int_;
+						buffer[cur_input.limit_field] = eqtb[12211].int_;
 					first = cur_input.limit_field + 1;
 					cur_input.loc_field = cur_input.start_field;
 				}
@@ -5570,7 +5571,7 @@ _L25:
 		cur_chr = buffer[cur_input.loc_field];
 		++cur_input.loc_field;
 _L21:
-		cur_cmd = eqtb[cur_chr+3983].hh.rh;
+		cur_cmd = eqtb[cur_chr+10883].hh.rh;
 		switch (cur_input.state_field + cur_cmd) {
 
 		case 10: case 26: case 42: case 27: case 43:
@@ -5585,7 +5586,7 @@ _L21:
 _L26:
 				k = cur_input.loc_field;
 				cur_chr = buffer[k];
-				cat = eqtb[cur_chr+3983].hh.rh;
+				cat = eqtb[cur_chr+10883].hh.rh;
 				++k;
 				if (cat == 11) {
 					cur_input.state_field = 17;
@@ -5597,7 +5598,7 @@ _L26:
 				if ((cat == 11) && (k <= cur_input.limit_field)) {
 					do {
 						cur_chr = buffer[k];
-						cat = eqtb[cur_chr+3983].hh.rh;
+						cat = eqtb[cur_chr+10883].hh.rh;
 						++k;
 					} while ((cat == 11) && (k <= cur_input.limit_field));
 					if (buffer[k] == cur_chr) {
@@ -5802,7 +5803,7 @@ _L40:
 			break;
 		}
 	}
-	else if (cur_input.loc_field) {
+	else if (cur_input.loc_field != (-1073741824)) {
 		t = mem[cur_input.loc_field - mem_min].hh.lh;
 		cur_input.loc_field = mem[cur_input.loc_field - mem_min].hh.rh;
 		if (t >= 4095) {
@@ -5812,7 +5813,7 @@ _L40:
 			if (cur_cmd >= 113) {
 				if (cur_cmd == 116) {
 					cur_cs = mem[cur_input.loc_field - mem_min].hh.lh - 4095;
-					cur_input.loc_field = 0;
+					cur_input.loc_field = -1073741824;
 					cur_cmd = eqtb[cur_cs].hh.U2.b0;
 					cur_chr = eqtb[cur_cs].hh.rh;
 					if (cur_cmd > 100) {
@@ -5855,7 +5856,7 @@ _L40:
 	if (cur_cmd <= 5) {
 		if (cur_cmd >= 4) {
 			if (!align_state) {
-				if ((scanner_status == 4) || (!cur_align))
+				if ((scanner_status == 4) || (cur_align == (-1073741824)))
 					fatal_error(595);
 				cur_cmd = mem[cur_align - mem_min + 5].hh.lh;
 				mem[cur_align - mem_min + 5].hh.lh = cur_chr;
@@ -5876,7 +5877,7 @@ void firm_up_the_line()
 	int k, N;
 
 	cur_input.limit_field = last;
-	if (eqtb[5291].int_ <= 0)
+	if (eqtb[12191].int_ <= 0)
 		return;
 	if (interaction <= 1)
 		return;
@@ -5918,7 +5919,7 @@ void macro_call()
 	warning_index = cur_cs;
 	ref_count = cur_chr;
 	r = mem[ref_count - mem_min].hh.rh;
-	if (eqtb[5293].int_ > 0) {
+	if (eqtb[12193].int_ > 0) {
 		begin_diagnostic();
 		print_ln();
 		print_cs(warning_index);
@@ -5932,9 +5933,9 @@ void macro_call()
 		if (long_state >= 113)
 			long_state -= 2;
 		do {
-			mem[mem_max - mem_min - 3].hh.rh = 0;
+			mem[mem_max - mem_min - 3].hh.rh = -1073741824;
 			if ((mem[r - mem_min].hh.lh > 3583) || (mem[r - mem_min].hh.lh < 3328)) {
-				s = 0;
+				s = -1073741824;
 			}
 			else {
 				match_chr = mem[r - mem_min].hh.lh - 3328;
@@ -5957,7 +5958,7 @@ _L22:
 				}
 			}
 			if (s != r) {
-				if (!s) {
+				if (s == (-1073741824)) {
 					print_nl(262);
 					print(650);
 					sprint_cs(warning_index);
@@ -6043,12 +6044,12 @@ _L30:
 				unbalance = 1;
 				while (true) {
 					q = avail;
-					if (!q) {
+					if (q == (-1073741824)) {
 						q = get_avail();
 					}
 					else {
 						avail = mem[q - mem_min].hh.rh;
-						mem[q - mem_min].hh.rh = 0;
+						mem[q - mem_min].hh.rh = -1073741824;
 					}
 					mem[p - mem_min].hh.rh = q;
 					mem[q - mem_min].hh.lh = cur_tok;
@@ -6111,9 +6112,9 @@ _L31:
 			if (mem[r - mem_min].hh.lh < 3328)
 				goto _L22;
 _L40:
-			if (s) {
+			if (s != (-1073741824)) {
 				if ((m == 1) && (mem[p - mem_min].hh.lh < 768) && (p != (mem_max - 3))) {
-					mem[rbrace_ptr - mem_min].hh.rh = 0;
+					mem[rbrace_ptr - mem_min].hh.rh = -1073741824;
 					mem[p - mem_min].hh.rh = avail;
 					avail = p;
 					p = mem[mem_max - mem_min - 3].hh.rh;
@@ -6125,18 +6126,18 @@ _L40:
 					pstack[n] = mem[mem_max - mem_min - 3].hh.rh;
 				}
 				++n;
-				if (eqtb[5293].int_ > 0) {
+				if (eqtb[12193].int_ > 0) {
 					begin_diagnostic();
 					print_nl(match_chr);
 					print_int(n);
 					print(656);
-					show_token_list(pstack[n-1], 0, 1000);
+					show_token_list(pstack[n-1], -1073741824, 1000);
 					end_diagnostic(false);
 				}
 			}
 		} while (mem[r - mem_min].hh.lh != 3584);
 	}
-	while ((!cur_input.state_field) && (!cur_input.loc_field) && (cur_input.index_field != 2))
+	while ((!cur_input.state_field) && (cur_input.loc_field == (-1073741824)) && (cur_input.index_field != 2))
 		end_token_list();
 	begin_token_list(ref_count, 5);
 	cur_input.name_field = warning_index;
@@ -6160,7 +6161,7 @@ void insert_relax()
 {
 	cur_tok = cur_cs + 4095;
 	back_input();
-	cur_tok = 6716;
+	cur_tok = 13616;
 	back_input();
 	cur_input.index_field = 4;
 }
@@ -6177,12 +6178,12 @@ void expand()
 	halfword backup_backup = mem[mem_max - mem_min - 13].hh.rh;
 
 	if (cur_cmd < 111) {
-		if (eqtb[5299].int_ > 1)
+		if (eqtb[12199].int_ > 1)
 			show_cur_cmd_chr();
 		switch (cur_cmd) {
 
 		case 110:
-			if (cur_mark[cur_chr])
+			if (cur_mark[cur_chr] != (-1073741824))
 				begin_token_list(cur_mark[cur_chr], 14);
 			break;
 
@@ -6207,7 +6208,7 @@ void expand()
 			back_input();
 			if (t >= 4095) {
 				p = get_avail();
-				mem[p - mem_min].hh.lh = 6718;
+				mem[p - mem_min].hh.lh = 13618;
 				mem[p - mem_min].hh.rh = cur_input.loc_field;
 				cur_input.start_field = p;
 				cur_input.loc_field = p;
@@ -6238,7 +6239,7 @@ void expand()
 			}
 			j = first;
 			p = mem[r - mem_min].hh.rh;
-			while (p) {
+			while (p != (-1073741824)) {
 				if (j >= max_buf_stack) {
 					max_buf_stack = j + 1;
 					if (max_buf_stack == buf_size)
@@ -6329,7 +6330,7 @@ void expand()
 		macro_call();
 	}
 	else {
-		cur_tok = 6715;
+		cur_tok = 13615;
 		back_input();
 	}
 	cur_val = cv_backup;
@@ -6347,7 +6348,7 @@ _L20:
 		goto _L30;
 	if (cur_cmd >= 111) {
 		if (cur_cmd >= 115) {
-			cur_cs = 2620;
+			cur_cs = 9520;
 			cur_cmd = 9;
 			goto _L30;
 		}
@@ -6412,7 +6413,7 @@ bool scan_keyword(str_number s)
 	halfword p = mem_max - 13, q;
 	pool_pointer k;
 
-	mem[p - mem_min].hh.rh = 0;
+	mem[p - mem_min].hh.rh = -1073741824;
 	k = str_start[s];
 	while (k < str_start[s+1]) {
 		get_x_token();
@@ -6528,7 +6529,7 @@ void scan_font_ident()
 		get_x_token();
 	} while (cur_cmd == 10);
 	if (cur_cmd == 88) {
-		f = eqtb[3934].hh.rh;
+		f = eqtb[10834].hh.rh;
 	}
 	else if (cur_cmd == 87) {
 		f = cur_chr;
@@ -6563,9 +6564,9 @@ void find_font_dimen(bool writing)
 		cur_val = fmem_ptr;
 	}
 	else {
-		if (writing && (n <= 4) && (n >= 2) && font_glue[f]) {
+		if (writing && (n <= 4) && (n >= 2) && (font_glue[f] != (-1073741824))) {
 			delete_glue_ref(font_glue[f]);
-			font_glue[f] = 0;
+			font_glue[f] = -1073741824;
 		}
 		if (n > font_params[f]) {
 			if (f < font_ptr) {
@@ -6590,7 +6591,7 @@ void find_font_dimen(bool writing)
 		return;
 	print_nl(262);
 	print(801);
-	print_esc(hash[f+2110].rh);
+	print_esc(hash[f+9010].rh);
 	print(819);
 	print_int(font_params[f]);
 	print(820);
@@ -6609,11 +6610,11 @@ void scan_something_internal(small_number level, bool negative)
 
 	case 85:
 		scan_char_num();
-		if (m == 5007) {
-			cur_val = eqtb[cur_val+5007].hh.rh;
+		if (m == 11907) {
+			cur_val = eqtb[cur_val+11907].hh.rh + 1073741824;
 			cur_val_level = 0;
 		}
-		else if (m < 5007) {
+		else if (m < 11907) {
 			cur_val = eqtb[m + cur_val].hh.rh;
 			cur_val_level = 0;
 		}
@@ -6638,7 +6639,7 @@ void scan_something_internal(small_number level, bool negative)
 		else if (cur_cmd <= 72) {
 			if (cur_cmd < 72) {
 				scan_eight_bit_int();
-				m = cur_val + 3422;
+				m = cur_val + 10322;
 			}
 			cur_val = eqtb[m].hh.rh;
 			cur_val_level = 5;
@@ -6646,7 +6647,7 @@ void scan_something_internal(small_number level, bool negative)
 		else {
 			back_input();
 			scan_font_ident();
-			cur_val += 2624;
+			cur_val += 9524;
 			cur_val_level = 4;
 		}
 		break;
@@ -6738,19 +6739,19 @@ void scan_something_internal(small_number level, bool negative)
 		break;
 
 	case 84:
-		if (!eqtb[3412].hh.rh)
+		if (eqtb[10312].hh.rh == (-1073741824))
 			cur_val = 0;
 		else
-			cur_val = mem[eqtb[3412].hh.rh - mem_min].hh.lh;
+			cur_val = mem[eqtb[10312].hh.rh - mem_min].hh.lh;
 		cur_val_level = 0;
 		break;
 
 	case 83:
 		scan_eight_bit_int();
-		if (!eqtb[cur_val+3678].hh.rh)
+		if (eqtb[cur_val+10578].hh.rh == (-1073741824))
 			cur_val = 0;
 		else
-			cur_val = mem[eqtb[cur_val+3678].hh.rh + m - mem_min].int_;
+			cur_val = mem[eqtb[cur_val+10578].hh.rh + m - mem_min].int_;
 		cur_val_level = 1;
 		break;
 
@@ -6783,19 +6784,19 @@ void scan_something_internal(small_number level, bool negative)
 		switch (m) {
 
 		case 0:
-			cur_val = eqtb[cur_val+5318].int_;
+			cur_val = eqtb[cur_val+12218].int_;
 			break;
 
 		case 1:
-			cur_val = eqtb[cur_val+5851].int_;
+			cur_val = eqtb[cur_val+12751].int_;
 			break;
 
 		case 2:
-			cur_val = eqtb[cur_val+2900].hh.rh;
+			cur_val = eqtb[cur_val+9800].hh.rh;
 			break;
 
 		case 3:
-			cur_val = eqtb[cur_val+3156].hh.rh;
+			cur_val = eqtb[cur_val+10056].hh.rh;
 			break;
 		}
 		cur_val_level = m;
@@ -6849,7 +6850,7 @@ void scan_something_internal(small_number level, bool negative)
 					break;
 
 				case 2:
-					if (last_glue != 65535)
+					if (last_glue != 1073741824)
 						cur_val = last_glue;
 					break;
 				}
@@ -7070,7 +7071,7 @@ void scan_dimen(bool mu, bool inf, bool shortcut)
 				cur_tok = 3118;
 			if ((radix == 10) && (cur_tok == 3118)) {
 				k = 0;
-				p = 0;
+				p = -1073741824;
 				get_token();
 				while (true) {
 					get_x_token();
@@ -7145,10 +7146,10 @@ _L31:
 	if (mu)
 		goto _L45;
 	if (scan_keyword(708)) {
-		v = font_info[param_base[eqtb[3934].hh.rh] + 6].int_;
+		v = font_info[param_base[eqtb[10834].hh.rh] + 6].int_;
 	}
 	else if (scan_keyword(709))
-		v = font_info[param_base[eqtb[3934].hh.rh] + 5].int_;
+		v = font_info[param_base[eqtb[10834].hh.rh] + 5].int_;
 	else
 		goto _L45;
 	get_x_token();
@@ -7177,9 +7178,9 @@ _L45:
 	}
 	if (scan_keyword(704)) {
 		prepare_mag();
-		if (eqtb[5280].int_ != 1000) {
-			cur_val = xn_over_d(cur_val, 1000, eqtb[5280].int_);
-			f = ((f * 1000) + (remainder_ * 65536)) / eqtb[5280].int_;
+		if (eqtb[12180].int_ != 1000) {
+			cur_val = xn_over_d(cur_val, 1000, eqtb[12180].int_);
+			f = ((f * 1000) + (remainder_ * 65536)) / eqtb[12180].int_;
 			cur_val += f / 65536;
 			f &= 65535;
 		}
@@ -7346,7 +7347,7 @@ halfword str_toks(pool_pointer b)
 
 	if (pool_ptr + 1 > pool_size)
 		overflow(257, pool_size - init_pool_ptr);
-	mem[p - mem_min].hh.rh = 0;
+	mem[p - mem_min].hh.rh = -1073741824;
 	k = b;
 	while (k < pool_ptr) {
 		t = str_pool[k];
@@ -7355,12 +7356,12 @@ halfword str_toks(pool_pointer b)
 		else
 			t += 3072;
 		q = avail;
-		if (!q) {
+		if (q == (-1073741824)) {
 			q = get_avail();
 		}
 		else {
 			avail = mem[q - mem_min].hh.rh;
-			mem[q - mem_min].hh.rh = 0;
+			mem[q - mem_min].hh.rh = -1073741824;
 		}
 		mem[p - mem_min].hh.rh = q;
 		mem[q - mem_min].hh.lh = t;
@@ -7381,7 +7382,7 @@ halfword the_toks()
 	scan_something_internal(5, false);
 	if (cur_val_level >= 4) {
 		p = mem_max - 3;
-		mem[p - mem_min].hh.rh = 0;
+		mem[p - mem_min].hh.rh = -1073741824;
 		if (cur_val_level == 4) {
 			q = get_avail();
 			mem[p - mem_min].hh.rh = q;
@@ -7389,17 +7390,17 @@ halfword the_toks()
 			p = q;
 			return p;
 		}
-		if (!cur_val)
+		if (cur_val == (-1073741824))
 			return p;
 		r = mem[cur_val - mem_min].hh.rh;
-		while (r) {
+		while (r != (-1073741824)) {
 			q = avail;
-			if (!q) {
+			if (q == (-1073741824)) {
 				q = get_avail();
 			}
 			else {
 				avail = mem[q - mem_min].hh.rh;
-				mem[q - mem_min].hh.rh = 0;
+				mem[q - mem_min].hh.rh = -1073741824;
 			}
 			mem[p - mem_min].hh.rh = q;
 			mem[q - mem_min].hh.lh = mem[r - mem_min].hh.lh;
@@ -7525,7 +7526,7 @@ halfword scan_toks(bool macro_def, bool xpand)
 		scanner_status = 5;
 	warning_index = cur_cs;
 	def_ref = get_avail();
-	mem[def_ref - mem_min].hh.lh = 0;
+	mem[def_ref - mem_min].hh.lh = -1073741824;
 	p = def_ref;
 	if (macro_def) {
 		while (true) {
@@ -7603,7 +7604,7 @@ _L30: ;
 				}
 				else {
 					q = the_toks();
-					if (mem[mem_max - mem_min - 3].hh.rh) {
+					if (mem[mem_max - mem_min - 3].hh.rh != (-1073741824)) {
 						mem[p - mem_min].hh.rh = mem[mem_max - mem_min - 3].hh.rh;
 						p = q;
 					}
@@ -7675,7 +7676,7 @@ void read_toks(integer n, halfword r)
 	scanner_status = 2;
 	warning_index = r;
 	def_ref = get_avail();
-	mem[def_ref - mem_min].hh.lh = 0;
+	mem[def_ref - mem_min].hh.lh = -1073741824;
 	p = def_ref;
 	q = get_avail();
 	mem[p - mem_min].hh.rh = q;
@@ -7732,10 +7733,10 @@ void read_toks(integer n, halfword r)
 			}
 		}
 		cur_input.limit_field = last;
-		if (((unsigned)eqtb[5311].int_) > 255)
+		if (((unsigned)eqtb[12211].int_) > 255)
 			--cur_input.limit_field;
 		else
-			buffer[cur_input.limit_field] = eqtb[5311].int_;
+			buffer[cur_input.limit_field] = eqtb[12211].int_;
 		first = cur_input.limit_field + 1;
 		cur_input.loc_field = cur_input.start_field;
 		cur_input.state_field = 33;
@@ -7795,7 +7796,7 @@ void change_if_limit(small_number l, halfword p)
 	else {
 		q = cond_ptr;
 		while (true) {
-			if (!q)
+			if (q == (-1073741824))
 				confusion(756);
 			if (mem[q - mem_min].hh.rh == p) {
 				mem[q - mem_min].hh.U2.b0 = l;
@@ -7927,11 +7928,11 @@ void conditional()
 
 	case 9: case 10: case 11:
 		scan_eight_bit_int();
-		p = eqtb[cur_val+3678].hh.rh;
+		p = eqtb[cur_val+10578].hh.rh;
 		if (this_if == 9) {
-			b = (p == 0);
+			b = (p == (-1073741824));
 		}
-		else if (!p) {
+		else if (p == (-1073741824)) {
 			b = false;
 		}
 		else if (this_if == 10)
@@ -7961,16 +7962,16 @@ void conditional()
 				b = true;
 			}
 			else {
-				while (p && q) {
+				while ((p != (-1073741824)) && (q != (-1073741824))) {
 					if (mem[p - mem_min].hh.lh != mem[q - mem_min].hh.lh) {
-						p = 0;
+						p = -1073741824;
 					}
 					else {
 						p = mem[p - mem_min].hh.rh;
 						q = mem[q - mem_min].hh.rh;
 					}
 				}
-				b = ((!p) && (!q));
+				b = ((p == (-1073741824)) && (q == (-1073741824)));
 			}
 		}
 		scanner_status = save_scanner_status;
@@ -7992,7 +7993,7 @@ void conditional()
 	case 16:
 		scan_int();
 		n = cur_val;
-		if (eqtb[5299].int_ > 1) {
+		if (eqtb[12199].int_ > 1) {
 			begin_diagnostic();
 			print(782);
 			print_int(n);
@@ -8020,7 +8021,7 @@ void conditional()
 		goto _L10;
 		break;
 	}
-	if (eqtb[5299].int_ > 1) {
+	if (eqtb[12199].int_ > 1) {
 		begin_diagnostic();
 		if (b)
 			print(778);
@@ -8305,21 +8306,21 @@ virtual void open_log_file()
 	*log_file << "This is TeX, Version 3.1415926";
 	slow_print(format_ident);
 	print(799);
-	print_int(eqtb[5284].int_);
+	print_int(eqtb[12184].int_);
 	print_char(32);
 	memcpy(months, "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC", 36);
-	for (N = eqtb[5285].int_ * 3, k = (eqtb[5285].int_ * 3) - 2; k <= N; ++k)
+	for (N = eqtb[12185].int_ * 3, k = (eqtb[12185].int_ * 3) - 2; k <= N; ++k)
 		*log_file << months[k-1];
 	print_char(32);
-	print_int(eqtb[5286].int_);
+	print_int(eqtb[12186].int_);
 	print_char(32);
-	print_two(eqtb[5283].int_ / 60);
+	print_two(eqtb[12183].int_ / 60);
 	print_char(58);
-	print_two(eqtb[5283].int_ % 60);
+	print_two(eqtb[12183].int_ % 60);
 	input_stack[input_ptr] = cur_input;
 	print_nl(797);
 	l = input_stack[0].limit_field;
-	if (buffer[l] == eqtb[5311].int_)
+	if (buffer[l] == eqtb[12211].int_)
 		--l;
 	for (k = 1; k <= l; ++k)
 		print(buffer[k]);
@@ -8370,10 +8371,10 @@ _L30:
 	line = 1;
 	input_ln(input_file[cur_input.index_field], false);
 	firm_up_the_line();
-	if (((unsigned)eqtb[5311].int_) > 255)
+	if (((unsigned)eqtb[12211].int_) > 255)
 		--cur_input.limit_field;
 	else
-		buffer[cur_input.limit_field] = eqtb[5311].int_;
+		buffer[cur_input.limit_field] = eqtb[12211].int_;
 	first = cur_input.limit_field + 1;
 	cur_input.loc_field = cur_input.start_field;
 }
@@ -8776,8 +8777,8 @@ _L45: ;
 		font_params[f] = np;
 	else
 		font_params[f] = 7;
-	hyphen_char[f] = eqtb[5309].int_;
-	skew_char[f] = eqtb[5310].int_;
+	hyphen_char[f] = eqtb[12209].int_;
+	skew_char[f] = eqtb[12210].int_;
 	if (bch_label < nl)
 		bchar_label[f] = bch_label + lig_kern_base[f];
 	else
@@ -8795,7 +8796,7 @@ _L45: ;
 	font_area[f] = aire;
 	font_bc[f] = bc;
 	font_ec[f] = ec;
-	font_glue[f] = 0;
+	font_glue[f] = -1073741824;
 	--param_base[f];
 	fmem_ptr += lf;
 	font_ptr = f;
@@ -8835,7 +8836,7 @@ _L30:
 
 void char_warning(internal_font_number f, eight_bits c)
 {
-	if (eqtb[5298].int_ <= 0)
+	if (eqtb[12198].int_ <= 0)
 		return;
 	begin_diagnostic();
 	print_nl(824);
@@ -8862,7 +8863,7 @@ halfword new_character(internal_font_number f, eight_bits c)
 		}
 	}
 	char_warning(f, c);
-	result = 0;
+	result = -1073741824;
 _L10:
 	return result;
 }
@@ -9004,7 +9005,7 @@ void movement(scaled w, eight_bits o)
 		right_ptr = q;
 	}
 	p = mem[q - mem_min].hh.rh;
-	while (p) {
+	while (p != (-1073741824)) {
 		if (mem[p - mem_min + 1].int_ == w) {
 			switch (mstate + mem[p - mem_min].hh.lh) {
 
@@ -9169,7 +9170,7 @@ void prune_movements(integer l)
 {
 	halfword p;
 
-	while (down_ptr) {
+	while (down_ptr != (-1073741824)) {
 		if (mem[down_ptr - mem_min + 2].int_ < l)
 			goto _L30;
 		p = down_ptr;
@@ -9177,7 +9178,7 @@ void prune_movements(integer l)
 		free_node(p, 3);
 	}
 _L30:
-	while (right_ptr) {
+	while (right_ptr != (-1073741824)) {
 		if (mem[right_ptr - mem_min + 2].int_ < l)
 			goto _L10;
 		p = right_ptr;
@@ -9202,7 +9203,7 @@ void special_out(halfword p)
 	}
 	old_setting = selector;
 	selector = 21;
-	show_token_list(mem[mem[p - mem_min + 1].hh.rh - mem_min].hh.rh, 0, pool_size - pool_ptr);
+	show_token_list(mem[mem[p - mem_min + 1].hh.rh - mem_min].hh.rh, -1073741824, pool_size - pool_ptr);
 	selector = old_setting;
 	if (pool_ptr + 1 > pool_size)
 		overflow(257, pool_size - init_pool_ptr);
@@ -9243,7 +9244,7 @@ void write_out(halfword p)
 	mem[q - mem_min].hh.lh = 637;
 	r = get_avail();
 	mem[q - mem_min].hh.rh = r;
-	mem[r - mem_min].hh.lh = 6717;
+	mem[r - mem_min].hh.lh = 13617;
 	begin_token_list(q, 4);
 	begin_token_list(mem[p - mem_min + 1].hh.rh, 15);
 	q = get_avail();
@@ -9254,7 +9255,7 @@ void write_out(halfword p)
 	cur_cs = write_loc;
 	q = scan_toks(false, true);
 	get_token();
-	if (cur_tok != 6717) {
+	if (cur_tok != 13617) {
 		print_nl(262);
 		print(1296);
 		help_ptr = 2;
@@ -9263,7 +9264,7 @@ void write_out(halfword p)
 		error();
 		do {
 			get_token();
-		} while (cur_tok != 6717);
+		} while (cur_tok != 13617);
 	}
 	cur_list.mode_field = old_mode;
 	end_token_list();
@@ -9354,7 +9355,7 @@ void hlist_out()
 	save_loc = dvi_offset + dvi_ptr;
 	base_line = cur_v;
 	left_edge = cur_h;
-	while (p) {
+	while (p != (-1073741824)) {
 _L21:
 		if (p >= hi_mem_min) {
 			if (cur_h != dvi_h) {
@@ -9410,7 +9411,7 @@ _L21:
 		switch (mem[p - mem_min].hh.U2.b0) {
 
 		case 0: case 1:
-			if (!mem[p - mem_min + 5].hh.rh) {
+			if (mem[p - mem_min + 5].hh.rh == (-1073741824)) {
 				cur_h += mem[p - mem_min + 1].int_;
 			}
 			else {
@@ -9606,7 +9607,7 @@ void vlist_out()
 	left_edge = cur_h;
 	cur_v -= mem[this_box - mem_min + 3].int_;
 	top_edge = cur_v;
-	while (p) {
+	while (p != (-1073741824)) {
 		if (p >= hi_mem_min) {
 			confusion(827);
 		}
@@ -9614,7 +9615,7 @@ void vlist_out()
 			switch (mem[p - mem_min].hh.U2.b0) {
 
 			case 0: case 1:
-				if (!mem[p - mem_min + 5].hh.rh) {
+				if (mem[p - mem_min + 5].hh.rh == (-1073741824)) {
 					cur_v += mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_;
 				}
 				else {
@@ -9789,7 +9790,7 @@ void ship_out(halfword p)
 	char old_setting;
 	pool_pointer N;
 
-	if (eqtb[5297].int_ > 0) {
+	if (eqtb[12197].int_ > 0) {
 		print_nl(338);
 		print_ln();
 		print(828);
@@ -9800,31 +9801,31 @@ void ship_out(halfword p)
 	else if ((term_offset > 0) || (file_offset > 0))
 		print_char(32);
 	print_char(91);
-	while ((!eqtb[j+5318].int_) && (j > 0))
+	while ((!eqtb[j+12218].int_) && (j > 0))
 		--j;
 	for (k = 0; k <= j; ++k) {
-		print_int(eqtb[k+5318].int_);
+		print_int(eqtb[k+12218].int_);
 		if (k < j)
 			print_char(46);
 	}
 	term_out->flush();
 	errno = 0;
-	if (eqtb[5297].int_ > 0) {
+	if (eqtb[12197].int_ > 0) {
 		print_char(93);
 		begin_diagnostic();
 		show_box(p);
 		end_diagnostic(true);
 	}
 	if ((mem[p - mem_min + 3].int_ > 1073741823) || (mem[p - mem_min + 2].int_ > 1073741823)
-			|| (mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_ + eqtb[5849].int_ > 1073741823)
-			|| (mem[p - mem_min + 1].int_ + eqtb[5848].int_ > 1073741823)) {
+			|| (mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_ + eqtb[12749].int_ > 1073741823)
+			|| (mem[p - mem_min + 1].int_ + eqtb[12748].int_ > 1073741823)) {
 		print_nl(262);
 		print(832);
 		help_ptr = 2;
 		help_line[1] = 833;
 		help_line[0] = 834;
 		error();
-		if (eqtb[5297].int_ <= 0) {
+		if (eqtb[12197].int_ <= 0) {
 			begin_diagnostic();
 			print_nl(835);
 			show_box(p);
@@ -9832,13 +9833,13 @@ void ship_out(halfword p)
 		}
 		goto _L30;
 	}
-	if (mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_ + eqtb[5849].int_ > max_v)
-		max_v = mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_ + eqtb[5849].int_;
-	if (mem[p - mem_min + 1].int_ + eqtb[5848].int_ > max_h)
-		max_h = mem[p - mem_min + 1].int_ + eqtb[5848].int_;
+	if (mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_ + eqtb[12749].int_ > max_v)
+		max_v = mem[p - mem_min + 3].int_ + mem[p - mem_min + 2].int_ + eqtb[12749].int_;
+	if (mem[p - mem_min + 1].int_ + eqtb[12748].int_ > max_h)
+		max_h = mem[p - mem_min + 1].int_ + eqtb[12748].int_;
 	dvi_h = 0;
 	dvi_v = 0;
-	cur_h = eqtb[5848].int_;
+	cur_h = eqtb[12748].int_;
 	dvi_f = 0;
 	if (!output_file_name) {
 		if (!job_name)
@@ -9860,18 +9861,18 @@ void ship_out(halfword p)
 		dvi_four(25400000);
 		dvi_four(473628672);
 		prepare_mag();
-		dvi_four(eqtb[5280].int_);
+		dvi_four(eqtb[12180].int_);
 		old_setting = selector;
 		selector = 21;
 		print(826);
-		print_int(eqtb[5286].int_);
+		print_int(eqtb[12186].int_);
 		print_char(46);
-		print_two(eqtb[5285].int_);
+		print_two(eqtb[12185].int_);
 		print_char(46);
-		print_two(eqtb[5284].int_);
+		print_two(eqtb[12184].int_);
 		print_char(58);
-		print_two(eqtb[5283].int_ / 60);
-		print_two(eqtb[5283].int_ % 60);
+		print_two(eqtb[12183].int_ / 60);
+		print_two(eqtb[12183].int_ % 60);
 		selector = old_setting;
 		dvi_buf[dvi_ptr] = pool_ptr - str_start[str_ptr];
 		++dvi_ptr;
@@ -9891,10 +9892,10 @@ void ship_out(halfword p)
 	if (dvi_ptr == dvi_limit)
 		dvi_swap();
 	for (k = 0; k <= 9; ++k)
-		dvi_four(eqtb[k+5318].int_);
+		dvi_four(eqtb[k+12218].int_);
 	dvi_four(last_bop);
 	last_bop = page_loc;
-	cur_v = mem[p - mem_min + 3].int_ + eqtb[5849].int_;
+	cur_v = mem[p - mem_min + 3].int_ + eqtb[12749].int_;
 	temp_ptr = p;
 	if (mem[p - mem_min].hh.U2.b0 == 1)
 		vlist_out();
@@ -9907,7 +9908,7 @@ void ship_out(halfword p)
 	++total_pages;
 	cur_s = -1;
 _L30:
-	if (eqtb[5297].int_ <= 0)
+	if (eqtb[12197].int_ <= 0)
 		print_char(93);
 	dead_cycles = 0;
 	term_out->flush();
@@ -9970,7 +9971,7 @@ halfword hpack(halfword p, scaled w, small_number m)
 	total_shrink[2] = 0;
 	total_stretch[3] = 0;
 	total_shrink[3] = 0;
-	while (p) {
+	while (p != (-1073741824)) {
 _L21:
 		while (p >= hi_mem_min) {
 			f = mem[p - mem_min].hh.U2.b0;
@@ -9985,7 +9986,7 @@ _L21:
 				d = s;
 			p = mem[p - mem_min].hh.rh;
 		}
-		if (!p)
+		if (p == (-1073741824))
 			break;
 		switch (mem[p - mem_min].hh.U2.b0) {
 
@@ -10002,12 +10003,12 @@ _L21:
 			break;
 
 		case 3: case 4: case 5:
-			if (adjust_tail) {
+			if (adjust_tail != (-1073741824)) {
 				while (mem[q - mem_min].hh.rh != p)
 					q = mem[q - mem_min].hh.rh;
 				if (mem[p - mem_min].hh.U2.b0 == 5) {
 					mem[adjust_tail - mem_min].hh.rh = mem[p - mem_min + 1].int_;
-					while (mem[adjust_tail - mem_min].hh.rh)
+					while (mem[adjust_tail - mem_min].hh.rh != (-1073741824))
 						adjust_tail = mem[adjust_tail - mem_min].hh.rh;
 					p = mem[p - mem_min].hh.rh;
 					free_node(mem[q - mem_min].hh.rh, 2);
@@ -10058,8 +10059,8 @@ _L21:
 		}
 		p = mem[p - mem_min].hh.rh;
 	}
-	if (adjust_tail)
-		mem[adjust_tail - mem_min].hh.rh = 0;
+	if (adjust_tail != (-1073741824))
+		mem[adjust_tail - mem_min].hh.rh = -1073741824;
 	mem[r - mem_min + 3].int_ = h;
 	mem[r - mem_min + 2].int_ = d;
 	if (m == 1)
@@ -10093,9 +10094,9 @@ _L21:
 			mem[r - mem_min + 6].gr = 0.0;
 		}
 		if (!o) {
-			if (mem[r - mem_min + 5].hh.rh) {
+			if (mem[r - mem_min + 5].hh.rh != (-1073741824)) {
 				last_badness = badness(x, total_stretch[0]);
-				if (last_badness > eqtb[5289].int_) {
+				if (last_badness > eqtb[12189].int_) {
 					print_ln();
 					if (last_badness > 100)
 						print_nl(843);
@@ -10129,15 +10130,15 @@ _L21:
 			mem[r - mem_min + 5].hh.U2.b0 = 0;
 			mem[r - mem_min + 6].gr = 0.0;
 		}
-		if ((total_shrink[o] < (-x)) && (!o) && mem[r - mem_min + 5].hh.rh) {
+		if ((total_shrink[o] < (-x)) && (!o) && (mem[r - mem_min + 5].hh.rh != (-1073741824))) {
 			last_badness = 1000000;
 			mem[r - mem_min + 6].gr = 1.0;
-			if (((-x) - total_shrink[0] > eqtb[5838].int_) || (eqtb[5289].int_ < 100)) {
-				if ((eqtb[5846].int_ > 0) && ((-x) - total_shrink[0] > eqtb[5838].int_)) {
-					while (mem[q - mem_min].hh.rh)
+			if (((-x) - total_shrink[0] > eqtb[12738].int_) || (eqtb[12189].int_ < 100)) {
+				if ((eqtb[12746].int_ > 0) && ((-x) - total_shrink[0] > eqtb[12738].int_)) {
+					while (mem[q - mem_min].hh.rh != (-1073741824))
 						q = mem[q - mem_min].hh.rh;
 					mem[q - mem_min].hh.rh = new_rule();
-					mem[mem[q - mem_min].hh.rh - mem_min + 1].int_ = eqtb[5846].int_;
+					mem[mem[q - mem_min].hh.rh - mem_min + 1].int_ = eqtb[12746].int_;
 				}
 				print_ln();
 				print_nl(851);
@@ -10147,9 +10148,9 @@ _L21:
 			}
 		}
 		else if (!o) {
-			if (mem[r - mem_min + 5].hh.rh) {
+			if (mem[r - mem_min + 5].hh.rh != (-1073741824)) {
 				last_badness = badness(-x, total_shrink[0]);
-				if (last_badness > eqtb[5289].int_) {
+				if (last_badness > eqtb[12189].int_) {
 					print_ln();
 					print_nl(853);
 					print_int(last_badness);
@@ -10208,7 +10209,7 @@ halfword vpackage(halfword p, scaled h, small_number m, scaled l)
 	total_shrink[2] = 0;
 	total_stretch[3] = 0;
 	total_shrink[3] = 0;
-	while (p) {
+	while (p != (-1073741824)) {
 		if (p >= hi_mem_min) {
 			confusion(854);
 		}
@@ -10296,9 +10297,9 @@ halfword vpackage(halfword p, scaled h, small_number m, scaled l)
 			mem[r - mem_min + 6].gr = 0.0;
 		}
 		if (!o) {
-			if (mem[r - mem_min + 5].hh.rh) {
+			if (mem[r - mem_min + 5].hh.rh != (-1073741824)) {
 				last_badness = badness(x, total_stretch[0]);
-				if (last_badness > eqtb[5290].int_) {
+				if (last_badness > eqtb[12190].int_) {
 					print_ln();
 					if (last_badness > 100)
 						print_nl(843);
@@ -10332,10 +10333,10 @@ halfword vpackage(halfword p, scaled h, small_number m, scaled l)
 			mem[r - mem_min + 5].hh.U2.b0 = 0;
 			mem[r - mem_min + 6].gr = 0.0;
 		}
-		if ((total_shrink[o] < (-x)) && (!o) && mem[r - mem_min + 5].hh.rh) {
+		if ((total_shrink[o] < (-x)) && (!o) && (mem[r - mem_min + 5].hh.rh != (-1073741824))) {
 			last_badness = 1000000;
 			mem[r - mem_min + 6].gr = 1.0;
-			if (((-x) - total_shrink[0] > eqtb[5839].int_) || (eqtb[5290].int_ < 100)) {
+			if (((-x) - total_shrink[0] > eqtb[12739].int_) || (eqtb[12190].int_ < 100)) {
 				print_ln();
 				print_nl(856);
 				print_scaled((-x) - total_shrink[0]);
@@ -10344,9 +10345,9 @@ halfword vpackage(halfword p, scaled h, small_number m, scaled l)
 			}
 		}
 		else if (!o) {
-			if (mem[r - mem_min + 5].hh.rh) {
+			if (mem[r - mem_min + 5].hh.rh != (-1073741824)) {
 				last_badness = badness(-x, total_shrink[0]);
-				if (last_badness > eqtb[5290].int_) {
+				if (last_badness > eqtb[12190].int_) {
 					print_ln();
 					print_nl(858);
 					print_int(last_badness);
@@ -10385,8 +10386,8 @@ void append_to_vlist(halfword b)
 	halfword p;
 
 	if (cur_list.aux_field.int_ > (-65536000)) {
-		d = mem[eqtb[2883].hh.rh - mem_min + 1].int_ - cur_list.aux_field.int_ - mem[b - mem_min + 3].int_;
-		if (d < eqtb[5832].int_) {
+		d = mem[eqtb[9783].hh.rh - mem_min + 1].int_ - cur_list.aux_field.int_ - mem[b - mem_min + 3].int_;
+		if (d < eqtb[12732].int_) {
 			p = new_param_glue(0);
 		}
 		else {
@@ -10430,10 +10431,10 @@ halfword new_choice()
 
 	mem[p - mem_min].hh.U2.b0 = 15;
 	mem[p - mem_min].hh.U2.b1 = 0;
-	mem[p - mem_min + 1].hh.lh = 0;
-	mem[p - mem_min + 1].hh.rh = 0;
-	mem[p - mem_min + 2].hh.lh = 0;
-	mem[p - mem_min + 2].hh.rh = 0;
+	mem[p - mem_min + 1].hh.lh = -1073741824;
+	mem[p - mem_min + 1].hh.rh = -1073741824;
+	mem[p - mem_min + 2].hh.lh = -1073741824;
+	mem[p - mem_min + 2].hh.rh = -1073741824;
 	return p;
 }
 
@@ -10517,7 +10518,7 @@ halfword var_delimiter(halfword d, small_number s, scaled v)
 			z += s + 16;
 			do {
 				z -= 16;
-				g = eqtb[z+3935].hh.rh;
+				g = eqtb[z+10835].hh.rh;
 				if (g) {
 					y = x;
 					if ((y >= font_bc[g]) && (y <= font_ec[g])) {
@@ -10606,9 +10607,9 @@ _L40:
 	}
 	else {
 		b = new_null_box();
-		mem[b - mem_min + 1].int_ = eqtb[5841].int_;
+		mem[b - mem_min + 1].int_ = eqtb[12741].int_;
 	}
-	(mem[b - mem_min + 4].int_ = (half(mem[b - mem_min + 3].int_ - mem[b - mem_min + 2].int_) - (font_info[(param_base[((eqtb[s+3937].hh).rh)] + 22)].int_)));
+	(mem[b - mem_min + 4].int_ = (half(mem[b - mem_min + 3].int_ - mem[b - mem_min + 2].int_) - (font_info[(param_base[((eqtb[s+10837].hh).rh)] + 22)].int_)));
 	return b;
 }
 
@@ -10618,11 +10619,11 @@ halfword rebox(halfword b, scaled w)
 	internal_font_number f;
 	scaled v;
 
-	if ((mem[b - mem_min + 1].int_ != w) && mem[b - mem_min + 5].hh.rh) {
+	if ((mem[b - mem_min + 1].int_ != w) && (mem[b - mem_min + 5].hh.rh != (-1073741824))) {
 		if (mem[b - mem_min].hh.U2.b0 == 1)
 			b = hpack(b, 0, 1);
 		p = mem[b - mem_min + 5].hh.rh;
-		if ((p >= hi_mem_min) && (!mem[p - mem_min].hh.rh)) {
+		if ((p >= hi_mem_min) && (mem[p - mem_min].hh.rh == (-1073741824))) {
 			f = mem[p - mem_min].hh.U2.b0;
 			v = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.U2.b1].qqqq.b0].int_;
 			if (v != mem[b - mem_min + 1].int_)
@@ -10631,7 +10632,7 @@ halfword rebox(halfword b, scaled w)
 		free_node(b, 7);
 		b = new_glue(12);
 		mem[b - mem_min].hh.rh = p;
-		while (mem[p - mem_min].hh.rh)
+		while (mem[p - mem_min].hh.rh != (-1073741824))
 			p = mem[p - mem_min].hh.rh;
 		mem[p - mem_min].hh.rh = new_glue(12);
 		return hpack(b, w, 0);
@@ -10692,9 +10693,9 @@ void flush_math()
 {
 	flush_node_list(mem[cur_list.head_field - mem_min].hh.rh);
 	flush_node_list(cur_list.aux_field.int_);
-	mem[cur_list.head_field - mem_min].hh.rh = 0;
+	mem[cur_list.head_field - mem_min].hh.rh = -1073741824;
 	cur_list.tail_field = cur_list.head_field;
-	cur_list.aux_field.int_ = 0;
+	cur_list.aux_field.int_ = -1073741824;
 }
 
 halfword clean_box(halfword p, small_number s)
@@ -10734,12 +10735,12 @@ halfword clean_box(halfword p, small_number s)
 		cur_size = 0;
 	else
 		cur_size = ((cur_style - 2) / 2) * 16;
-	cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 6].int_, 18);
+	cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 6].int_, 18);
 _L40:
-	if ((q >= hi_mem_min) || (!q)) {
+	if ((q >= hi_mem_min) || (q == (-1073741824))) {
 		x = hpack(q, 0, 1);
 	}
-	else if ((!mem[q - mem_min].hh.rh) && (mem[q - mem_min].hh.U2.b0 <= 1) && (!mem[q - mem_min + 4].int_))
+	else if ((mem[q - mem_min].hh.rh == (-1073741824)) && (mem[q - mem_min].hh.U2.b0 <= 1) && (!mem[q - mem_min + 4].int_))
 		x = q;
 	else
 		x = hpack(q, 0, 1);
@@ -10747,15 +10748,15 @@ _L40:
 	if (q < hi_mem_min)
 		return x;
 	r = mem[q - mem_min].hh.rh;
-	if (!r)
+	if (r == (-1073741824))
 		return x;
-	if (mem[r - mem_min].hh.rh)
+	if (mem[r - mem_min].hh.rh != (-1073741824))
 		return x;
 	if (r >= hi_mem_min)
 		return x;
 	if (mem[r - mem_min].hh.U2.b0 == 11) {
 		free_node(r, 2);
-		mem[q - mem_min].hh.rh = 0;
+		mem[q - mem_min].hh.rh = -1073741824;
 	}
 	return x;
 }
@@ -10763,7 +10764,7 @@ _L40:
 void fetch(halfword a)
 {
 	cur_c = mem[a - mem_min].hh.U2.b1;
-	cur_f = eqtb[mem[a - mem_min].hh.U2.b0 + cur_size + 3935].hh.rh;
+	cur_f = eqtb[mem[a - mem_min].hh.U2.b0 + cur_size + 10835].hh.rh;
 	if (!cur_f) {
 		print_nl(262);
 		print(338);
@@ -10796,8 +10797,8 @@ void fetch(halfword a)
 void make_over(halfword q)
 {
 	(mem[q - mem_min + 1].hh.lh = overbar(clean_box(q + 1, ((cur_style / 2) * 2) + 1),
-										  font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 3,
-										  font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_));
+										  font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_ * 3,
+										  font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_));
 	mem[q - mem_min + 1].hh.rh = 2;
 }
 
@@ -10806,12 +10807,12 @@ void make_under(halfword q)
 	halfword y;
 	scaled delta;
 	halfword x = clean_box(q + 1, cur_style);
-	halfword p = new_kern(font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 3);
+	halfword p = new_kern(font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_ * 3);
 
 	mem[x - mem_min].hh.rh = p;
-	mem[p - mem_min].hh.rh = fraction_rule(font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_);
+	mem[p - mem_min].hh.rh = fraction_rule(font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_);
 	y = vpackage(x, 0, 1, 1073741823);
-	delta = mem[y - mem_min + 3].int_ + mem[y - mem_min + 2].int_ + font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_;
+	delta = mem[y - mem_min + 3].int_ + mem[y - mem_min + 2].int_ + font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_;
 	mem[y - mem_min + 3].int_ = mem[x - mem_min + 3].int_;
 	mem[y - mem_min + 2].int_ = delta - mem[y - mem_min + 3].int_;
 	mem[q - mem_min + 1].hh.lh = y;
@@ -10826,7 +10827,7 @@ void make_vcenter(halfword q)
 	if (mem[v - mem_min].hh.U2.b0 != 1)
 		confusion(539);
 	delta = mem[v - mem_min + 3].int_ + mem[v - mem_min + 2].int_;
-	mem[v - mem_min + 3].int_ = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 22].int_ + half(delta);
+	mem[v - mem_min + 3].int_ = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 22].int_ + half(delta);
 	mem[v - mem_min + 2].int_ = delta - mem[v - mem_min + 3].int_;
 }
 
@@ -10837,15 +10838,15 @@ void make_radical(halfword q)
 	halfword x = clean_box(q + 1, ((cur_style / 2) * 2) + 1);
 
 	if (cur_style < 2) {
-		(clr = (font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ + (abs(
-								font_info[param_base[eqtb[cur_size+3937].hh.rh] + 5].int_) / 4)));
+		(clr = (font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_ + (abs(
+								font_info[param_base[eqtb[cur_size+10837].hh.rh] + 5].int_) / 4)));
 	}
 	else {
-		clr = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_;
+		clr = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_;
 		clr += abs(clr) / 4;
 	}
 	(y = var_delimiter(q + 4, cur_size,
-			 (mem[x - mem_min + 3].int_ + mem[x - mem_min + 2].int_ + clr + (font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_))));
+			 (mem[x - mem_min + 3].int_ + mem[x - mem_min + 2].int_ + clr + (font_info[(param_base[eqtb[cur_size+10838].hh.rh] + 8)].int_))));
 	delta = mem[y - mem_min + 2].int_ - mem[x - mem_min + 3].int_ - mem[x - mem_min + 2].int_ - clr;
 	if (delta > 0)
 		clr += half(delta);
@@ -10954,7 +10955,7 @@ void make_fraction(halfword q)
 	scaled delta, delta1, delta2, shift_up, shift_down, clr;
 
 	if (mem[q - mem_min + 1].int_ == 1073741824)
-		mem[q - mem_min + 1].int_ = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_;
+		mem[q - mem_min + 1].int_ = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_;
 	x = clean_box(q + 2, cur_style - ((cur_style / 6) * 2) + 2);
 	z = clean_box(q + 3, ((cur_style / 2) * 2) - ((cur_style / 6) * 2) + 3);
 	if (mem[x - mem_min + 1].int_ < mem[z - mem_min + 1].int_)
@@ -10962,21 +10963,21 @@ void make_fraction(halfword q)
 	else
 		z = rebox(z, mem[x - mem_min + 1].int_);
 	if (cur_style < 2) {
-		shift_up = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 8].int_;
-		shift_down = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 11].int_;
+		shift_up = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 8].int_;
+		shift_down = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 11].int_;
 	}
 	else {
-		shift_down = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 12].int_;
+		shift_down = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 12].int_;
 		if (mem[q - mem_min + 1].int_)
-			shift_up = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 9].int_;
+			shift_up = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 9].int_;
 		else
-			shift_up = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 10].int_;
+			shift_up = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 10].int_;
 	}
 	if (!mem[q - mem_min + 1].int_) {
 		if (cur_style < 2)
-			clr = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 7;
+			clr = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_ * 7;
 		else
-			clr = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 3;
+			clr = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_ * 3;
 		delta = half(clr - shift_up + mem[x - mem_min + 2].int_ + mem[z - mem_min + 3].int_ - shift_down);
 		if (delta > 0) {
 			shift_up += delta;
@@ -10989,8 +10990,8 @@ void make_fraction(halfword q)
 		else
 			clr = mem[q - mem_min + 1].int_;
 		delta = half(mem[q - mem_min + 1].int_);
-		delta1 = clr - shift_up + mem[x - mem_min + 2].int_ + font_info[param_base[eqtb[cur_size+3937].hh.rh] + 22].int_ + delta;
-		(delta2 = (clr - font_info[param_base[eqtb[cur_size+3937].hh.rh] + 22].int_ + delta + mem[z - mem_min + 3].int_ - shift_down));
+		(delta1 = (clr - shift_up + mem[x - mem_min + 2].int_ + font_info[param_base[eqtb[cur_size+10837].hh.rh] + 22].int_ + delta));
+		(delta2 = (clr - font_info[param_base[eqtb[cur_size+10837].hh.rh] + 22].int_ + delta + mem[z - mem_min + 3].int_ - shift_down));
 		if (delta1 > 0)
 			shift_up += delta1;
 		if (delta2 > 0)
@@ -11008,18 +11009,18 @@ void make_fraction(halfword q)
 	else {
 		y = fraction_rule(mem[q - mem_min + 1].int_);
 		(p = new_kern(
-				 font_info[param_base[eqtb[cur_size+3937].hh.rh] + 22].int_ - delta - mem[z - mem_min + 3].int_ + shift_down));
+				 font_info[param_base[eqtb[cur_size+10837].hh.rh] + 22].int_ - delta - mem[z - mem_min + 3].int_ + shift_down));
 		mem[y - mem_min].hh.rh = p;
 		mem[p - mem_min].hh.rh = z;
-		p = new_kern(shift_up - mem[x - mem_min + 2].int_ - font_info[param_base[eqtb[cur_size+3937].hh.rh] + 22].int_ - delta);
+		p = new_kern(shift_up - mem[x - mem_min + 2].int_ - font_info[param_base[eqtb[cur_size+10837].hh.rh] + 22].int_ - delta);
 		mem[p - mem_min].hh.rh = y;
 	}
 	mem[x - mem_min].hh.rh = p;
 	mem[v - mem_min + 5].hh.rh = x;
 	if (cur_style < 2)
-		delta = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 20].int_;
+		delta = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 20].int_;
 	else
-		delta = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 21].int_;
+		delta = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 21].int_;
 	x = var_delimiter(q + 4, cur_size, delta);
 	mem[x - mem_min].hh.rh = v;
 	z = var_delimiter(q + 5, cur_size, delta);
@@ -11051,7 +11052,7 @@ scaled make_op(halfword q)
 		x = clean_box(q + 1, cur_style);
 		if (mem[q - mem_min + 3].hh.rh && (mem[q - mem_min].hh.U2.b1 != 1))
 			mem[x - mem_min + 1].int_ -= delta;
-		(mem[x - mem_min + 4].int_ = (half(mem[x - mem_min + 3].int_ - mem[x - mem_min + 2].int_) - (font_info[(param_base[((eqtb[cur_size+3937].hh).rh)] + 22)].int_)));
+		(mem[x - mem_min + 4].int_ = (half(mem[x - mem_min + 3].int_ - mem[x - mem_min + 2].int_) - (font_info[(param_base[((eqtb[cur_size+10837].hh).rh)] + 22)].int_)));
 		mem[q - mem_min + 1].hh.rh = 2;
 		mem[q - mem_min + 1].hh.lh = x;
 	}
@@ -11082,30 +11083,30 @@ scaled make_op(halfword q)
 		mem[v - mem_min + 5].hh.rh = y;
 	}
 	else {
-		shift_up = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 11].int_ - mem[x - mem_min + 2].int_;
-		if (shift_up < font_info[param_base[eqtb[cur_size+3938].hh.rh] + 9].int_)
-			shift_up = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 9].int_;
+		shift_up = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 11].int_ - mem[x - mem_min + 2].int_;
+		if (shift_up < font_info[param_base[eqtb[cur_size+10838].hh.rh] + 9].int_)
+			shift_up = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 9].int_;
 		p = new_kern(shift_up);
 		mem[p - mem_min].hh.rh = y;
 		mem[x - mem_min].hh.rh = p;
-		p = new_kern(font_info[param_base[eqtb[cur_size+3938].hh.rh] + 13].int_);
+		p = new_kern(font_info[param_base[eqtb[cur_size+10838].hh.rh] + 13].int_);
 		mem[p - mem_min].hh.rh = x;
 		mem[v - mem_min + 5].hh.rh = p;
-		(mem[v - mem_min + 3].int_ += (font_info[param_base[eqtb[cur_size+3938].hh.rh] + 13].int_ + mem[x - mem_min + 3].int_ + (mem[(x - mem_min + 2)].int_) + shift_up));
+		(mem[v - mem_min + 3].int_ += (font_info[param_base[eqtb[cur_size+10838].hh.rh] + 13].int_ + mem[x - mem_min + 3].int_ + (mem[(x - mem_min + 2)].int_) + shift_up));
 	}
 	if (!mem[q - mem_min + 3].hh.rh) {
 		free_node(z, 7);
 	}
 	else {
-		shift_down = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 12].int_ - mem[z - mem_min + 3].int_;
-		if (shift_down < font_info[param_base[eqtb[cur_size+3938].hh.rh] + 10].int_)
-			shift_down = font_info[param_base[eqtb[cur_size+3938].hh.rh] + 10].int_;
+		shift_down = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 12].int_ - mem[z - mem_min + 3].int_;
+		if (shift_down < font_info[param_base[eqtb[cur_size+10838].hh.rh] + 10].int_)
+			shift_down = font_info[param_base[eqtb[cur_size+10838].hh.rh] + 10].int_;
 		p = new_kern(shift_down);
 		mem[y - mem_min].hh.rh = p;
 		mem[p - mem_min].hh.rh = z;
-		p = new_kern(font_info[param_base[eqtb[cur_size+3938].hh.rh] + 13].int_);
+		p = new_kern(font_info[param_base[eqtb[cur_size+10838].hh.rh] + 13].int_);
 		mem[z - mem_min].hh.rh = p;
-		(mem[v - mem_min + 2].int_ += (font_info[param_base[eqtb[cur_size+3938].hh.rh] + 13].int_ + mem[z - mem_min + 3].int_ + (mem[(z - mem_min + 2)].int_) + shift_down));
+		(mem[v - mem_min + 2].int_ += (font_info[param_base[eqtb[cur_size+10838].hh.rh] + 13].int_ + mem[z - mem_min + 3].int_ + (mem[(z - mem_min + 2)].int_) + shift_down));
 	}
 	mem[q - mem_min + 1].int_ = v;
 	return delta;
@@ -11121,7 +11122,7 @@ _L20:
 		if (!mem[q - mem_min + 2].hh.rh) {
 			if (mem[q - mem_min + 1].hh.rh == 1) {
 				p = mem[q - mem_min].hh.rh;
-				if (p) {
+				if (p != (-1073741824)) {
 					if ((mem[p - mem_min].hh.U2.b0 >= 16) && (mem[p - mem_min].hh.U2.b0 <= 22)) {
 						if (mem[p - mem_min + 1].hh.rh == 1) {
 							if (mem[p - mem_min + 1].hh.U2.b0 == mem[q - mem_min + 1].hh.U2.b0) {
@@ -11217,33 +11218,33 @@ void make_scripts(halfword q, scaled delta)
 			t = 16;
 		else
 			t = 32;
-		shift_up = mem[z - mem_min + 3].int_ - font_info[param_base[eqtb[t+3937].hh.rh] + 18].int_;
-		shift_down = mem[z - mem_min + 2].int_ + font_info[param_base[eqtb[t+3937].hh.rh] + 19].int_;
+		shift_up = mem[z - mem_min + 3].int_ - font_info[param_base[eqtb[t+10837].hh.rh] + 18].int_;
+		shift_down = mem[z - mem_min + 2].int_ + font_info[param_base[eqtb[t+10837].hh.rh] + 19].int_;
 		free_node(z, 7);
 	}
 	if (!mem[q - mem_min + 2].hh.rh) {
 		x = clean_box(q + 3, ((cur_style / 4) * 2) + 5);
-		mem[x - mem_min + 1].int_ += eqtb[5842].int_;
-		if (shift_down < font_info[param_base[eqtb[cur_size+3937].hh.rh] + 16].int_)
-			shift_down = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 16].int_;
-		clr = mem[x - mem_min + 3].int_ - (abs(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 5].int_ * 4) / 5);
+		mem[x - mem_min + 1].int_ += eqtb[12742].int_;
+		if (shift_down < font_info[param_base[eqtb[cur_size+10837].hh.rh] + 16].int_)
+			shift_down = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 16].int_;
+		clr = mem[x - mem_min + 3].int_ - (abs(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 5].int_ * 4) / 5);
 		if (shift_down < clr)
 			shift_down = clr;
 		mem[x - mem_min + 4].int_ = shift_down;
 	}
 	else {
 		x = clean_box(q + 2, ((cur_style / 4) * 2) + (cur_style & 1) + 4);
-		mem[x - mem_min + 1].int_ += eqtb[5842].int_;
+		mem[x - mem_min + 1].int_ += eqtb[12742].int_;
 		if (cur_style & 1) {
-			clr = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 15].int_;
+			clr = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 15].int_;
 		}
 		else if (cur_style < 2)
-			clr = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 13].int_;
+			clr = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 13].int_;
 		else
-			clr = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 14].int_;
+			clr = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 14].int_;
 		if (shift_up < clr)
 			shift_up = clr;
-		clr = mem[x - mem_min + 2].int_ + (abs(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 5].int_) / 4);
+		clr = mem[x - mem_min + 2].int_ + (abs(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 5].int_) / 4);
 		if (shift_up < clr)
 			shift_up = clr;
 		if (!mem[q - mem_min + 3].hh.rh) {
@@ -11251,13 +11252,13 @@ void make_scripts(halfword q, scaled delta)
 		}
 		else {
 			y = clean_box(q + 3, ((cur_style / 4) * 2) + 5);
-			mem[y - mem_min + 1].int_ += eqtb[5842].int_;
-			if (shift_down < font_info[param_base[eqtb[cur_size+3937].hh.rh] + 17].int_)
-				shift_down = font_info[param_base[eqtb[cur_size+3937].hh.rh] + 17].int_;
-			(clr = ((font_info[param_base[eqtb[cur_size+3938].hh.rh] + 8].int_ * 4) - shift_up + mem[x - mem_min + 2].int_ + (mem[(y - mem_min + 3)].int_) - shift_down));
+			mem[y - mem_min + 1].int_ += eqtb[12742].int_;
+			if (shift_down < font_info[param_base[eqtb[cur_size+10837].hh.rh] + 17].int_)
+				shift_down = font_info[param_base[eqtb[cur_size+10837].hh.rh] + 17].int_;
+			(clr = ((font_info[param_base[eqtb[cur_size+10838].hh.rh] + 8].int_ * 4) - shift_up + mem[x - mem_min + 2].int_ + (mem[(y - mem_min + 3)].int_) - shift_down));
 			if (clr > 0) {
 				shift_down += clr;
-				(clr = ((abs(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 5].int_ * 4) / 5) - shift_up + (mem[(x - mem_min + 2)].int_)));
+				(clr = ((abs(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 5].int_ * 4) / 5) - shift_up + (mem[(x - mem_min + 2)].int_)));
 				if (clr > 0) {
 					shift_up += clr;
 					shift_down -= clr;
@@ -11271,12 +11272,12 @@ void make_scripts(halfword q, scaled delta)
 			mem[x - mem_min + 4].int_ = shift_down;
 		}
 	}
-	if (!mem[q - mem_min + 1].int_) {
+	if (mem[q - mem_min + 1].int_ == (-1073741824)) {
 		mem[q - mem_min + 1].int_ = x;
 		return;
 	}
 	p = mem[q - mem_min + 1].int_;
-	while (mem[p - mem_min].hh.rh)
+	while (mem[p - mem_min].hh.rh != (-1073741824))
 		p = mem[p - mem_min].hh.rh;
 	mem[p - mem_min].hh.rh = x;
 }
@@ -11289,12 +11290,12 @@ small_number make_left_right(halfword q, small_number style, scaled max_d, scale
 		cur_size = 0;
 	else
 		cur_size = ((style - 2) / 2) * 16;
-	delta2 = max_d + font_info[param_base[eqtb[cur_size+3937].hh.rh] + 22].int_;
+	delta2 = max_d + font_info[param_base[eqtb[cur_size+10837].hh.rh] + 22].int_;
 	delta1 = max_h + max_d - delta2;
 	if (delta2 > delta1)
 		delta1 = delta2;
-	delta = (delta1 / 500) * eqtb[5281].int_;
-	delta2 = delta1 + delta1 - eqtb[5840].int_;
+	delta = (delta1 / 500) * eqtb[12181].int_;
+	delta2 = delta1 + delta1 - eqtb[12740].int_;
 	if (delta < delta2)
 		delta = delta2;
 	mem[q - mem_min + 1].int_ = var_delimiter(q + 1, cur_size, delta);
@@ -11304,7 +11305,7 @@ small_number make_left_right(halfword q, small_number style, scaled max_d, scale
 void mlist_to_hlist()
 {
 	small_number save_style;
-	halfword r = 0;
+	halfword r = -1073741824;
 	small_number r_type = 17, t;
 	halfword p, x, y, z;
 	integer pen;
@@ -11319,8 +11320,8 @@ void mlist_to_hlist()
 		cur_size = 0;
 	else
 		cur_size = ((cur_style - 2) / 2) * 16;
-	cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 6].int_, 18);
-	while (q) {
+	cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 6].int_, 18);
+	while (q != (-1073741824)) {
 _L21:
 		delta = 0;
 		switch (mem[q - mem_min].hh.U2.b0) {
@@ -11394,7 +11395,7 @@ _L21:
 				cur_size = 0;
 			else
 				cur_size = ((cur_style - 2) / 2) * 16;
-			cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 6].int_, 18);
+			cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 6].int_, 18);
 			goto _L81;
 			break;
 
@@ -11403,22 +11404,22 @@ _L21:
 
 			case 0:
 				p = mem[q - mem_min + 1].hh.lh;
-				mem[q - mem_min + 1].hh.lh = 0;
+				mem[q - mem_min + 1].hh.lh = -1073741824;
 				break;
 
 			case 1:
 				p = mem[q - mem_min + 1].hh.rh;
-				mem[q - mem_min + 1].hh.rh = 0;
+				mem[q - mem_min + 1].hh.rh = -1073741824;
 				break;
 
 			case 2:
 				p = mem[q - mem_min + 2].hh.lh;
-				mem[q - mem_min + 2].hh.lh = 0;
+				mem[q - mem_min + 2].hh.lh = -1073741824;
 				break;
 
 			case 3:
 				p = mem[q - mem_min + 2].hh.rh;
-				mem[q - mem_min + 2].hh.rh = 0;
+				mem[q - mem_min + 2].hh.rh = -1073741824;
 				break;
 			}
 			flush_node_list(mem[q - mem_min + 1].hh.lh);
@@ -11429,10 +11430,10 @@ _L21:
 			mem[q - mem_min].hh.U2.b1 = cur_style;
 			mem[q - mem_min + 1].int_ = 0;
 			mem[q - mem_min + 2].int_ = 0;
-			if (p) {
+			if (p != (-1073741824)) {
 				z = mem[q - mem_min].hh.rh;
 				mem[q - mem_min].hh.rh = p;
-				while (mem[p - mem_min].hh.rh)
+				while (mem[p - mem_min].hh.rh != (-1073741824))
 					p = mem[p - mem_min].hh.rh;
 				mem[p - mem_min].hh.rh = z;
 			}
@@ -11461,10 +11462,10 @@ _L21:
 			}
 			else if (cur_size && (mem[q - mem_min].hh.U2.b1 == 98)) {
 				p = mem[q - mem_min].hh.rh;
-				if (p) {
+				if (p != (-1073741824)) {
 					if ((mem[p - mem_min].hh.U2.b0 == 10) || (mem[p - mem_min].hh.U2.b0 == 11)) {
 						mem[q - mem_min].hh.rh = mem[p - mem_min].hh.rh;
-						mem[p - mem_min].hh.rh = 0;
+						mem[p - mem_min].hh.rh = -1073741824;
 						flush_node_list(p);
 					}
 				}
@@ -11496,12 +11497,12 @@ _L21:
 				}
 			}
 			else {
-				p = 0;
+				p = -1073741824;
 			}
 			break;
 
 		case 0:
-			p = 0;
+			p = -1073741824;
 			break;
 
 		case 2:
@@ -11518,7 +11519,7 @@ _L21:
 				cur_size = 0;
 			else
 				cur_size = ((cur_style - 2) / 2) * 16;
-			cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 6].int_, 18);
+			cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 6].int_, 18);
 			p = hpack(mem[mem_max - mem_min - 3].hh.rh, 0, 1);
 			break;
 
@@ -11546,7 +11547,7 @@ _L81:
 	if (r_type == 18)
 		mem[r - mem_min].hh.U2.b0 = 16;
 	p = mem_max - 3;
-	mem[p - mem_min].hh.rh = 0;
+	mem[p - mem_min].hh.rh = -1073741824;
 	q = mlist;
 	r_type = 0;
 	cur_style = style;
@@ -11554,8 +11555,8 @@ _L81:
 		cur_size = 0;
 	else
 		cur_size = ((cur_style - 2) / 2) * 16;
-	cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 6].int_, 18);
-	while (q) {
+	cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 6].int_, 18);
+	while (q != (-1073741824)) {
 		t = 16;
 		s = 4;
 		pen = 10000;
@@ -11567,12 +11568,12 @@ _L81:
 
 		case 18:
 			t = 18;
-			pen = eqtb[5272].int_;
+			pen = eqtb[12172].int_;
 			break;
 
 		case 19:
 			t = 19;
-			pen = eqtb[5273].int_;
+			pen = eqtb[12173].int_;
 			break;
 
 		case 16: case 29: case 27: case 26:
@@ -11603,7 +11604,7 @@ _L81:
 				cur_size = 0;
 			else
 				cur_size = ((cur_style - 2) / 2) * 16;
-			cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+3937].hh.rh] + 6].int_, 18);
+			cur_mu = x_over_n(font_info[param_base[eqtb[cur_size+10837].hh.rh] + 6].int_, 18);
 			goto _L83;
 			break;
 
@@ -11611,7 +11612,7 @@ _L81:
 			mem[p - mem_min].hh.rh = q;
 			p = q;
 			q = mem[q - mem_min].hh.rh;
-			mem[p - mem_min].hh.rh = 0;
+			mem[p - mem_min].hh.rh = -1073741824;
 			goto _L30;
 			break;
 
@@ -11656,22 +11657,22 @@ _L81:
 				break;
 			}
 			if (x) {
-				y = math_glue(eqtb[x+2882].hh.rh, cur_mu);
+				y = math_glue(eqtb[x+9782].hh.rh, cur_mu);
 				z = new_glue(y);
-				mem[y - mem_min].hh.rh = 0;
+				mem[y - mem_min].hh.rh = -1073741824;
 				mem[p - mem_min].hh.rh = z;
 				p = z;
 				mem[z - mem_min].hh.U2.b1 = x + 1;
 			}
 		}
-		if (mem[q - mem_min + 1].int_) {
+		if (mem[q - mem_min + 1].int_ != (-1073741824)) {
 			mem[p - mem_min].hh.rh = mem[q - mem_min + 1].int_;
 			do {
 				p = mem[p - mem_min].hh.rh;
-			} while (mem[p - mem_min].hh.rh);
+			} while (mem[p - mem_min].hh.rh != (-1073741824));
 		}
 		if (penalties) {
-			if (mem[q - mem_min].hh.rh) {
+			if (mem[q - mem_min].hh.rh != (-1073741824)) {
 				if (pen < 10000) {
 					r_type = mem[mem[q - mem_min].hh.rh - mem_min].hh.U2.b0;
 					if (r_type != 12) {
@@ -11740,14 +11741,14 @@ _L20:
 	}
 	if (cur_cmd == 9)
 		fatal_error(595);
-	if ((cur_cmd != 75) || (cur_chr != 2893))
+	if ((cur_cmd != 75) || (cur_chr != 9793))
 		return;
 	scan_optional_equals();
 	scan_glue(2);
-	if (eqtb[5306].int_ > 0)
-		geq_define(2893, 117, cur_val);
+	if (eqtb[12206].int_ > 0)
+		geq_define(9793, 117, cur_val);
 	else
-		eq_define(2893, 117, cur_val);
+		eq_define(9793, 117, cur_val);
 	goto _L20;
 }
 
@@ -11758,7 +11759,8 @@ void init_align()
 
 	push_alignment();
 	align_state = -1000000;
-	if ((cur_list.mode_field == 203) && ((cur_list.tail_field != cur_list.head_field) || cur_list.aux_field.int_)) {
+	if ((cur_list.mode_field == 203)
+			&& ((cur_list.tail_field != cur_list.head_field) || (cur_list.aux_field.int_ != (-1073741824)))) {
 		print_nl(262);
 		print(680);
 		print_esc(520);
@@ -11778,9 +11780,9 @@ void init_align()
 	else if (cur_list.mode_field > 0)
 		cur_list.mode_field = -cur_list.mode_field;
 	scan_spec(6, false);
-	mem[mem_max - mem_min - 8].hh.rh = 0;
+	mem[mem_max - mem_min - 8].hh.rh = -1073741824;
 	cur_align = mem_max - 8;
-	cur_loop = 0;
+	cur_loop = -1073741824;
 	scanner_status = 4;
 	warning_index = save_cs_ptr;
 	align_state = -1000000;
@@ -11790,13 +11792,13 @@ void init_align()
 		if (cur_cmd == 5)
 			goto _L30;
 		p = mem_max - 4;
-		mem[p - mem_min].hh.rh = 0;
+		mem[p - mem_min].hh.rh = -1073741824;
 		while (true) {
 			get_preamble_token();
 			if (cur_cmd == 6)
 				goto _L31;
 			if ((cur_cmd <= 5) && (cur_cmd >= 4) && (align_state == (-1000000))) {
-				if ((p == (mem_max - 4)) && (!cur_loop) && (cur_cmd == 4)) {
+				if ((p == (mem_max - 4)) && (cur_loop == (-1073741824)) && (cur_cmd == 4)) {
 					cur_loop = cur_align;
 					continue;
 				}
@@ -11827,7 +11829,7 @@ _L31:
 		mem[cur_align - mem_min + 1].int_ = -1073741824;
 		mem[cur_align - mem_min + 3].int_ = mem[mem_max - mem_min - 4].hh.rh;
 		p = mem_max - 4;
-		mem[p - mem_min].hh.rh = 0;
+		mem[p - mem_min].hh.rh = -1073741824;
 		while (true) {
 _L22:
 			get_preamble_token();
@@ -11850,14 +11852,14 @@ _L22:
 _L32:
 		mem[p - mem_min].hh.rh = get_avail();
 		p = mem[p - mem_min].hh.rh;
-		mem[p - mem_min].hh.lh = 6714;
+		mem[p - mem_min].hh.lh = 13614;
 		mem[cur_align - mem_min + 2].int_ = mem[mem_max - mem_min - 4].hh.rh;
 	}
 _L30:
 	scanner_status = 0;
 	new_save_level(6);
-	if (eqtb[3420].hh.rh)
-		begin_token_list(eqtb[3420].hh.rh, 13);
+	if (eqtb[10320].hh.rh != (-1073741824))
+		begin_token_list(eqtb[10320].hh.rh, 13);
 	align_peek();
 }
 
@@ -11910,16 +11912,16 @@ bool fin_col()
 	glue_ord o;
 	halfword n;
 
-	if (!cur_align)
+	if (cur_align == (-1073741824))
 		confusion(908);
 	q = mem[cur_align - mem_min].hh.rh;
-	if (!q)
+	if (q == (-1073741824))
 		confusion(908);
 	if (align_state < 500000)
 		fatal_error(595);
 	p = mem[q - mem_min].hh.rh;
-	if ((!p) && (mem[cur_align - mem_min + 5].hh.lh < 257)) {
-		if (cur_loop) {
+	if ((p == (-1073741824)) && (mem[cur_align - mem_min + 5].hh.lh < 257)) {
+		if (cur_loop != (-1073741824)) {
 			mem[q - mem_min].hh.rh = new_null_box();
 			p = mem[q - mem_min].hh.rh;
 			mem[p - mem_min].hh.lh = mem_max - 9;
@@ -11927,23 +11929,23 @@ bool fin_col()
 			cur_loop = mem[cur_loop - mem_min].hh.rh;
 			q = mem_max - 4;
 			r = mem[cur_loop - mem_min + 3].int_;
-			while (r) {
+			while (r != (-1073741824)) {
 				mem[q - mem_min].hh.rh = get_avail();
 				q = mem[q - mem_min].hh.rh;
 				mem[q - mem_min].hh.lh = mem[r - mem_min].hh.lh;
 				r = mem[r - mem_min].hh.rh;
 			}
-			mem[q - mem_min].hh.rh = 0;
+			mem[q - mem_min].hh.rh = -1073741824;
 			mem[p - mem_min + 3].int_ = mem[mem_max - mem_min - 4].hh.rh;
 			q = mem_max - 4;
 			r = mem[cur_loop - mem_min + 2].int_;
-			while (r) {
+			while (r != (-1073741824)) {
 				mem[q - mem_min].hh.rh = get_avail();
 				q = mem[q - mem_min].hh.rh;
 				mem[q - mem_min].hh.lh = mem[r - mem_min].hh.lh;
 				r = mem[r - mem_min].hh.rh;
 			}
-			mem[q - mem_min].hh.rh = 0;
+			mem[q - mem_min].hh.rh = -1073741824;
 			mem[p - mem_min + 2].int_ = mem[mem_max - mem_min - 4].hh.rh;
 			cur_loop = mem[cur_loop - mem_min].hh.rh;
 			mem[p - mem_min].hh.rh = new_glue(mem[cur_loop - mem_min + 1].hh.lh);
@@ -11968,7 +11970,7 @@ bool fin_col()
 			u = hpack(mem[cur_list.head_field - mem_min].hh.rh, 0, 1);
 			w = mem[u - mem_min + 1].int_;
 			cur_tail = adjust_tail;
-			adjust_tail = 0;
+			adjust_tail = -1073741824;
 		}
 		else {
 			u = vpackage(mem[cur_list.head_field - mem_min].hh.rh, 0, 1, 0);
@@ -11981,7 +11983,7 @@ bool fin_col()
 				++n;
 				q = mem[mem[q - mem_min].hh.rh - mem_min].hh.rh;
 			} while (q != cur_align);
-			if (n > 255)
+			if (n > 65535)
 				confusion(913);
 			q = cur_span;
 			while (mem[mem[q - mem_min].hh.lh - mem_min].hh.rh < n)
@@ -12069,8 +12071,8 @@ void fin_row()
 	}
 	mem[p - mem_min].hh.U2.b0 = 13;
 	mem[p - mem_min + 6].int_ = 0;
-	if (eqtb[3420].hh.rh)
-		begin_token_list(eqtb[3420].hh.rh, 13);
+	if (eqtb[10320].hh.rh != (-1073741824))
+		begin_token_list(eqtb[10320].hh.rh, 13);
 	align_peek();
 }
 
@@ -12087,7 +12089,7 @@ void fin_align()
 		confusion(915);
 	unsave();
 	if (nest[nest_ptr-1].mode_field == 203)
-		o = eqtb[5845].int_;
+		o = eqtb[12745].int_;
 	else
 		o = 0;
 	q = mem[mem[mem_max - mem_min - 8].hh.rh - mem_min].hh.rh;
@@ -12141,14 +12143,14 @@ void fin_align()
 		mem[q - mem_min + 6].int_ = 0;
 		mem[q - mem_min + 4].int_ = 0;
 		q = p;
-	} while (q);
+	} while (q != (-1073741824));
 	save_ptr -= 2;
 	pack_begin_line = -cur_list.ml_field;
 	if (cur_list.mode_field == (-1)) {
-		rule_save = eqtb[5846].int_;
-		eqtb[5846].int_ = 0;
+		rule_save = eqtb[12746].int_;
+		eqtb[12746].int_ = 0;
 		p = hpack(mem[mem_max - mem_min - 8].hh.rh, save_stack[save_ptr+1].int_, save_stack[save_ptr].int_);
-		eqtb[5846].int_ = rule_save;
+		eqtb[12746].int_ = rule_save;
 	}
 	else {
 		q = mem[mem[mem_max - mem_min - 8].hh.rh - mem_min].hh.rh;
@@ -12156,19 +12158,19 @@ void fin_align()
 			mem[q - mem_min + 3].int_ = mem[q - mem_min + 1].int_;
 			mem[q - mem_min + 1].int_ = 0;
 			q = mem[mem[q - mem_min].hh.rh - mem_min].hh.rh;
-		} while (q);
+		} while (q != (-1073741824));
 		p = vpackage(mem[mem_max - mem_min - 8].hh.rh, save_stack[save_ptr+1].int_, save_stack[save_ptr].int_, 1073741823);
 		q = mem[mem[mem_max - mem_min - 8].hh.rh - mem_min].hh.rh;
 		do {
 			mem[q - mem_min + 1].int_ = mem[q - mem_min + 3].int_;
 			mem[q - mem_min + 3].int_ = 0;
 			q = mem[mem[q - mem_min].hh.rh - mem_min].hh.rh;
-		} while (q);
+		} while (q != (-1073741824));
 	}
 	pack_begin_line = 0;
 	q = mem[cur_list.head_field - mem_min].hh.rh;
 	s = cur_list.head_field;
-	while (q) {
+	while (q != (-1073741824)) {
 		if (q < hi_mem_min) {
 			if (mem[q - mem_min].hh.U2.b0 == 13) {
 				if (cur_list.mode_field == (-1)) {
@@ -12285,7 +12287,7 @@ void fin_align()
 					}
 					r = mem[mem[r - mem_min].hh.rh - mem_min].hh.rh;
 					s = mem[mem[s - mem_min].hh.rh - mem_min].hh.rh;
-				} while (r);
+				} while (r != (-1073741824));
 			}
 			else if (mem[q - mem_min].hh.U2.b0 == 2) {
 				if (mem[q - mem_min + 1].int_ == (-1073741824))
@@ -12296,7 +12298,7 @@ void fin_align()
 					mem[q - mem_min + 2].int_ = mem[p - mem_min + 2].int_;
 				if (o) {
 					r = mem[q - mem_min].hh.rh;
-					mem[q - mem_min].hh.rh = 0;
+					mem[q - mem_min].hh.rh = -1073741824;
 					q = hpack(q, 0, 1);
 					mem[q - mem_min + 4].int_ = o;
 					mem[q - mem_min].hh.rh = r;
@@ -12335,14 +12337,14 @@ void fin_align()
 			}
 		}
 		pop_nest();
-		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[5274].int_);
+		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[12174].int_);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		mem[cur_list.tail_field - mem_min].hh.rh = new_param_glue(3);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		mem[cur_list.tail_field - mem_min].hh.rh = p;
-		if (p)
+		if (p != (-1073741824))
 			cur_list.tail_field = q;
-		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[5275].int_);
+		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[12175].int_);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		mem[cur_list.tail_field - mem_min].hh.rh = new_param_glue(4);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
@@ -12352,7 +12354,7 @@ void fin_align()
 	}
 	cur_list.aux_field = aux_save;
 	mem[cur_list.tail_field - mem_min].hh.rh = p;
-	if (p)
+	if (p != (-1073741824))
 		cur_list.tail_field = q;
 	if (cur_list.mode_field == 1)
 		build_page();
@@ -12456,7 +12458,7 @@ _L22:
 					break_width[6] = background[6];
 					s = cur_p;
 					if (break_type > 0) {
-						if (cur_p) {
+						if (cur_p != (-1073741824)) {
 							t = mem[cur_p - mem_min].hh.U2.b1;
 							v = cur_p;
 							s = mem[cur_p - mem_min + 1].hh.rh;
@@ -12484,7 +12486,7 @@ _L22:
 									break;
 								}
 							}
-							while (s) {
+							while (s != (-1073741824)) {
 								if (s >= hi_mem_min) {
 									f = mem[s - mem_min].hh.U2.b0;
 									(break_width[1] += (font_info[(width_base[f] + ((font_info[(char_base[f] + ((mem[s - mem_min].hh).U2.b1))].qqqq).b0))].int_));
@@ -12509,11 +12511,11 @@ _L22:
 								s = mem[s - mem_min].hh.rh;
 							}
 							break_width[1] += disc_width;
-							if (!mem[cur_p - mem_min + 1].hh.rh)
+							if (mem[cur_p - mem_min + 1].hh.rh == (-1073741824))
 								s = mem[v - mem_min].hh.rh;
 						}
 					}
-					while (s) {
+					while (s != (-1073741824)) {
 						if (s >= hi_mem_min)
 							goto _L30;
 						switch (mem[s - mem_min].hh.U2.b0) {
@@ -12578,10 +12580,10 @@ _L30: ;
 					prev_prev_r = prev_r;
 					prev_r = q;
 				}
-				if (abs(eqtb[5279].int_) >= (1073741823 - minimum_demerits))
+				if (abs(eqtb[12179].int_) >= (1073741823 - minimum_demerits))
 					minimum_demerits = 1073741822;
 				else
-					minimum_demerits += abs(eqtb[5279].int_);
+					minimum_demerits += abs(eqtb[12179].int_);
 				for (fit_class = 0; fit_class <= 3; ++fit_class) {
 					if (minimal_demerits[fit_class] <= minimum_demerits) {
 						q = get_node(2);
@@ -12622,17 +12624,17 @@ _L30: ;
 				goto _L10;
 			if (l > easy_line) {
 				line_width = second_width;
-				old_l = 65534;
+				old_l = 1073741823;
 			}
 			else {
 				old_l = l;
 				if (l > last_special_line) {
 					line_width = second_width;
 				}
-				else if (!eqtb[3412].hh.rh)
+				else if (eqtb[10312].hh.rh == (-1073741824))
 					line_width = first_width;
 				else
-					line_width = mem[eqtb[3412].hh.rh + (l * 2) - mem_min].int_;
+					line_width = mem[eqtb[10312].hh.rh + (l * 2) - mem_min].int_;
 			}
 		}
 		artificial_demerits = false;
@@ -12692,7 +12694,7 @@ _L31: ;
 			d = 0;
 		}
 		else {
-			d = eqtb[5265].int_ + b;
+			d = eqtb[12165].int_ + b;
 			if (abs(d) >= 10000)
 				d = 100000000;
 			else
@@ -12705,13 +12707,13 @@ _L31: ;
 					d -= pi * pi;
 			}
 			if ((break_type == 1) && (mem[r - mem_min].hh.U2.b0 == 1)) {
-				if (cur_p)
-					d += eqtb[5277].int_;
+				if (cur_p != (-1073741824))
+					d += eqtb[12177].int_;
 				else
-					d += eqtb[5278].int_;
+					d += eqtb[12178].int_;
 			}
 			if (abs(fit_class - mem[r - mem_min].hh.U2.b1) > 1)
-				d += eqtb[5279].int_;
+				d += eqtb[12179].int_;
 		}
 		d += mem[r - mem_min + 2].int_;
 		if (d <= minimal_demerits[fit_class]) {
@@ -12791,24 +12793,24 @@ void post_line_break(integer final_widow_penalty)
 	halfword cur_line;
 	halfword q = mem[best_bet - mem_min + 1].hh.rh;
 
-	cur_p = 0;
+	cur_p = -1073741824;
 	do {
 		r = q;
 		q = mem[q - mem_min + 1].hh.lh;
 		mem[r - mem_min + 1].hh.lh = cur_p;
 		cur_p = r;
-	} while (q);
+	} while (q != (-1073741824));
 	cur_line = cur_list.pg_field + 1;
 	do {
 		q = mem[cur_p - mem_min + 1].hh.rh;
 		disc_break = false;
 		post_disc_break = false;
-		if (q) {
+		if (q != (-1073741824)) {
 			if (mem[q - mem_min].hh.U2.b0 == 10) {
 				delete_glue_ref(mem[q - mem_min + 1].hh.lh);
-				mem[q - mem_min + 1].hh.lh = eqtb[2890].hh.rh;
+				mem[q - mem_min + 1].hh.lh = eqtb[9790].hh.rh;
 				mem[q - mem_min].hh.U2.b1 = 9;
-				++mem[eqtb[2890].hh.rh - mem_min].hh.rh;
+				++mem[eqtb[9790].hh.rh - mem_min].hh.rh;
 				goto _L30;
 			}
 			if (mem[q - mem_min].hh.U2.b0 == 7) {
@@ -12824,25 +12826,25 @@ void post_line_break(integer final_widow_penalty)
 					}
 					s = mem[r - mem_min].hh.rh;
 					r = mem[s - mem_min].hh.rh;
-					mem[s - mem_min].hh.rh = 0;
+					mem[s - mem_min].hh.rh = -1073741824;
 					flush_node_list(mem[q - mem_min].hh.rh);
 					mem[q - mem_min].hh.U2.b1 = 0;
 				}
-				if (mem[q - mem_min + 1].hh.rh) {
+				if (mem[q - mem_min + 1].hh.rh != (-1073741824)) {
 					s = mem[q - mem_min + 1].hh.rh;
-					while (mem[s - mem_min].hh.rh)
+					while (mem[s - mem_min].hh.rh != (-1073741824))
 						s = mem[s - mem_min].hh.rh;
 					mem[s - mem_min].hh.rh = r;
 					r = mem[q - mem_min + 1].hh.rh;
-					mem[q - mem_min + 1].hh.rh = 0;
+					mem[q - mem_min + 1].hh.rh = -1073741824;
 					post_disc_break = true;
 				}
-				if (mem[q - mem_min + 1].hh.lh) {
+				if (mem[q - mem_min + 1].hh.lh != (-1073741824)) {
 					s = mem[q - mem_min + 1].hh.lh;
 					mem[q - mem_min].hh.rh = s;
-					while (mem[s - mem_min].hh.rh)
+					while (mem[s - mem_min].hh.rh != (-1073741824))
 						s = mem[s - mem_min].hh.rh;
-					mem[q - mem_min + 1].hh.lh = 0;
+					mem[q - mem_min + 1].hh.lh = -1073741824;
 					q = s;
 				}
 				mem[q - mem_min].hh.rh = r;
@@ -12853,7 +12855,7 @@ void post_line_break(integer final_widow_penalty)
 		}
 		else {
 			q = mem_max - 3;
-			while (mem[q - mem_min].hh.rh)
+			while (mem[q - mem_min].hh.rh != (-1073741824))
 				q = mem[q - mem_min].hh.rh;
 		}
 		r = new_param_glue(8);
@@ -12862,10 +12864,10 @@ void post_line_break(integer final_widow_penalty)
 		q = r;
 _L30:
 		r = mem[q - mem_min].hh.rh;
-		mem[q - mem_min].hh.rh = 0;
+		mem[q - mem_min].hh.rh = -1073741824;
 		q = mem[mem_max - mem_min - 3].hh.rh;
 		mem[mem_max - mem_min - 3].hh.rh = r;
-		if (eqtb[2889].hh.rh) {
+		if (eqtb[9789].hh.rh) {
 			r = new_param_glue(7);
 			mem[r - mem_min].hh.rh = q;
 			q = r;
@@ -12874,13 +12876,13 @@ _L30:
 			cur_width = second_width;
 			cur_indent = second_indent;
 		}
-		else if (!eqtb[3412].hh.rh) {
+		else if (eqtb[10312].hh.rh == (-1073741824)) {
 			cur_width = first_width;
 			cur_indent = first_indent;
 		}
 		else {
-			cur_width = mem[eqtb[3412].hh.rh + (cur_line * 2) - mem_min].int_;
-			cur_indent = mem[eqtb[3412].hh.rh + (cur_line * 2) - mem_min - 1].int_;
+			cur_width = mem[eqtb[10312].hh.rh + (cur_line * 2) - mem_min].int_;
+			cur_indent = mem[eqtb[10312].hh.rh + (cur_line * 2) - mem_min - 1].int_;
 		}
 		adjust_tail = mem_max - 5;
 		just_box = hpack(q, cur_width, 0);
@@ -12890,15 +12892,15 @@ _L30:
 			mem[cur_list.tail_field - mem_min].hh.rh = mem[mem_max - mem_min - 5].hh.rh;
 			cur_list.tail_field = adjust_tail;
 		}
-		adjust_tail = 0;
+		adjust_tail = -1073741824;
 		if (cur_line + 1 != best_line) {
-			pen = eqtb[5276].int_;
+			pen = eqtb[12176].int_;
 			if (cur_line == (cur_list.pg_field + 1))
-				pen += eqtb[5268].int_;
+				pen += eqtb[12168].int_;
 			if (cur_line + 2 == best_line)
 				pen += final_widow_penalty;
 			if (disc_break)
-				pen += eqtb[5271].int_;
+				pen += eqtb[12171].int_;
 			if (pen) {
 				r = new_penalty(pen);
 				mem[cur_list.tail_field - mem_min].hh.rh = r;
@@ -12907,7 +12909,7 @@ _L30:
 		}
 		++cur_line;
 		cur_p = mem[cur_p - mem_min + 1].hh.lh;
-		if (cur_p) {
+		if (cur_p != (-1073741824)) {
 			if (!post_disc_break) {
 				r = mem_max - 3;
 				while (true) {
@@ -12926,14 +12928,14 @@ _L30:
 				}
 _L31:
 				if (r != (mem_max - 3)) {
-					mem[r - mem_min].hh.rh = 0;
+					mem[r - mem_min].hh.rh = -1073741824;
 					flush_node_list(mem[mem_max - mem_min - 3].hh.rh);
 					mem[mem_max - mem_min - 3].hh.rh = q;
 				}
 			}
 		}
-	} while (cur_p);
-	if ((cur_line != best_line) || mem[mem_max - mem_min - 3].hh.rh)
+	} while (cur_p != (-1073741824));
+	if ((cur_line != best_line) || (mem[mem_max - mem_min - 3].hh.rh != (-1073741824)))
 		confusion(938);
 	cur_list.pg_field = best_line - 1;
 }
@@ -12947,7 +12949,7 @@ small_number reconstitute(small_number j, small_number n, halfword bchar, halfwo
 	font_index k;
 
 	hyphen_passed = 0;
-	mem[mem_max - mem_min - 4].hh.rh = 0;
+	mem[mem_max - mem_min - 4].hh.rh = -1073741824;
 	cur_l = hu[j];
 	cur_q = t;
 	if (!j) {
@@ -12955,7 +12957,7 @@ small_number reconstitute(small_number j, small_number n, halfword bchar, halfwo
 		p = init_list;
 		if (ligature_present)
 			lft_hit = init_lft;
-		while (p > 0) {
+		while (p > (-1073741824)) {
 			mem[t - mem_min].hh.rh = get_avail();
 			t = mem[t - mem_min].hh.rh;
 			mem[t - mem_min].hh.U2.b0 = hf;
@@ -12969,7 +12971,7 @@ small_number reconstitute(small_number j, small_number n, halfword bchar, halfwo
 		mem[t - mem_min].hh.U2.b0 = hf;
 		mem[t - mem_min].hh.U2.b1 = cur_l;
 	}
-	lig_stack = 0;
+	lig_stack = -1073741824;
 	if (j < n)
 		cur_r = hu[j+1];
 	else
@@ -13020,7 +13022,7 @@ _L22:
 						if (cur_l == 256)
 							lft_hit = true;
 						if (j == n) {
-							if (!lig_stack)
+							if (lig_stack == (-1073741824))
 								rt_hit = true;
 						}
 						if (interrupt)
@@ -13034,7 +13036,7 @@ _L22:
 
 						case 2: case 6:
 							cur_r = q.b3;
-							if (lig_stack > 0) {
+							if (lig_stack > (-1073741824)) {
 								mem[lig_stack - mem_min].hh.U2.b1 = cur_r;
 							}
 							else {
@@ -13077,8 +13079,8 @@ _L22:
 						default:
 							cur_l = q.b3;
 							ligature_present = true;
-							if (lig_stack > 0) {
-								if (mem[lig_stack - mem_min + 1].hh.rh > 0) {
+							if (lig_stack > (-1073741824)) {
+								if (mem[lig_stack - mem_min + 1].hh.rh > (-1073741824)) {
 									mem[t - mem_min].hh.rh = mem[lig_stack - mem_min + 1].hh.rh;
 									t = mem[t - mem_min].hh.rh;
 									++j;
@@ -13086,7 +13088,7 @@ _L22:
 								p = lig_stack;
 								lig_stack = mem[p - mem_min].hh.rh;
 								free_node(p, 2);
-								if (!lig_stack) {
+								if (lig_stack == (-1073741824)) {
 									if (j < n)
 										cur_r = hu[j+1];
 									else
@@ -13151,7 +13153,7 @@ _L30:
 			lft_hit = false;
 		}
 		if (rt_hit) {
-			if (!lig_stack) {
+			if (lig_stack == (-1073741824)) {
 				++mem[p - mem_min].hh.U2.b1;
 				rt_hit = false;
 			}
@@ -13165,12 +13167,12 @@ _L30:
 		t = mem[t - mem_min].hh.rh;
 		w = 0;
 	}
-	if (lig_stack <= 0)
+	if (lig_stack <= (-1073741824))
 		return j;
 	cur_q = t;
 	cur_l = mem[lig_stack - mem_min].hh.U2.b1;
 	ligature_present = true;
-	if (mem[lig_stack - mem_min + 1].hh.rh > 0) {
+	if (mem[lig_stack - mem_min + 1].hh.rh > (-1073741824)) {
 		mem[t - mem_min].hh.rh = mem[lig_stack - mem_min + 1].hh.rh;
 		t = mem[t - mem_min].hh.rh;
 		++j;
@@ -13178,7 +13180,7 @@ _L30:
 	p = lig_stack;
 	lig_stack = mem[p - mem_min].hh.rh;
 	free_node(p, 2);
-	if (!lig_stack) {
+	if (lig_stack == (-1073741824)) {
 		if (j < n)
 			cur_r = hu[j+1];
 		else
@@ -13233,7 +13235,7 @@ void hyphenate()
 				++u;
 			} while (j <= hn);
 			s = hyph_list[h];
-			while (s) {
+			while (s != (-1073741824)) {
 				hyf[mem[s - mem_min].hh.lh] = 1;
 				s = mem[s - mem_min].hh.rh;
 			}
@@ -13283,9 +13285,9 @@ _L40:
 	goto _L10;
 _L41:
 	q = mem[hb - mem_min].hh.rh;
-	mem[hb - mem_min].hh.rh = 0;
+	mem[hb - mem_min].hh.rh = -1073741824;
 	r = mem[ha - mem_min].hh.rh;
-	mem[ha - mem_min].hh.rh = 0;
+	mem[ha - mem_min].hh.rh = -1073741824;
 	bchar = hyf_bchar;
 	if (ha >= hi_mem_min) {
 		if (mem[ha - mem_min].hh.U2.b0 != hf)
@@ -13301,7 +13303,7 @@ _L41:
 		init_lig = true;
 		init_lft = (mem[ha - mem_min].hh.U2.b1 > 1);
 		hu[0] = mem[ha - mem_min + 1].hh.U2.b1;
-		if (!init_list) {
+		if (init_list == (-1073741824)) {
 			if (init_lft) {
 				hu[0] = 256;
 				init_lig = false;
@@ -13318,7 +13320,7 @@ _L41:
 		}
 		j = 1;
 		s = ha;
-		init_list = 0;
+		init_list = -1073741824;
 		goto _L50;
 	}
 	s = cur_p;
@@ -13331,7 +13333,7 @@ _L42:
 	j = 0;
 	hu[0] = 256;
 	init_lig = false;
-	init_list = 0;
+	init_list = -1073741824;
 _L50:
 	flush_node_list(r);
 	do {
@@ -13339,12 +13341,12 @@ _L50:
 		j = reconstitute(j, hn, bchar, hyf_char) + 1;
 		if (!hyphen_passed) {
 			mem[s - mem_min].hh.rh = mem[mem_max - mem_min - 4].hh.rh;
-			while (mem[s - mem_min].hh.rh > 0)
+			while (mem[s - mem_min].hh.rh > (-1073741824))
 				s = mem[s - mem_min].hh.rh;
 			if (hyf[j-1] & 1) {
 				l = j;
 				hyphen_passed = j - 1;
-				mem[mem_max - mem_min - 4].hh.rh = 0;
+				mem[mem_max - mem_min - 4].hh.rh = -1073741824;
 			}
 		}
 		if (hyphen_passed > 0) {
@@ -13354,16 +13356,16 @@ _L50:
 				mem[r - mem_min].hh.U2.b0 = 7;
 				major_tail = r;
 				r_count = 0;
-				while (mem[major_tail - mem_min].hh.rh > 0) {
+				while (mem[major_tail - mem_min].hh.rh > (-1073741824)) {
 					major_tail = mem[major_tail - mem_min].hh.rh;
 					++r_count;
 				}
 				i = hyphen_passed;
 				hyf[i] = 0;
-				minor_tail = 0;
-				mem[r - mem_min + 1].hh.lh = 0;
+				minor_tail = -1073741824;
+				mem[r - mem_min + 1].hh.lh = -1073741824;
 				hyf_node = new_character(hf, hyf_char);
-				if (hyf_node) {
+				if (hyf_node != (-1073741824)) {
 					++i;
 					c = hu[i];
 					hu[i] = hyf_char;
@@ -13372,23 +13374,23 @@ _L50:
 				}
 				while (l <= i) {
 					l = reconstitute(l, i, font_bchar[hf], 256) + 1;
-					if (mem[mem_max - mem_min - 4].hh.rh <= 0)
+					if (mem[mem_max - mem_min - 4].hh.rh <= (-1073741824))
 						continue;
-					if (!minor_tail)
+					if (minor_tail == (-1073741824))
 						mem[r - mem_min + 1].hh.lh = mem[mem_max - mem_min - 4].hh.rh;
 					else
 						mem[minor_tail - mem_min].hh.rh = mem[mem_max - mem_min - 4].hh.rh;
 					minor_tail = mem[mem_max - mem_min - 4].hh.rh;
-					while (mem[minor_tail - mem_min].hh.rh > 0)
+					while (mem[minor_tail - mem_min].hh.rh > (-1073741824))
 						minor_tail = mem[minor_tail - mem_min].hh.rh;
 				}
-				if (hyf_node) {
+				if (hyf_node != (-1073741824)) {
 					hu[i] = c;
 					l = i;
 					--i;
 				}
-				minor_tail = 0;
-				mem[r - mem_min + 1].hh.rh = 0;
+				minor_tail = -1073741824;
+				mem[r - mem_min + 1].hh.rh = -1073741824;
 				c_loc = 0;
 				if (bchar_label[hf]) {
 					--l;
@@ -13403,20 +13405,20 @@ _L50:
 							hu[c_loc] = c;
 							c_loc = 0;
 						}
-						if (mem[mem_max - mem_min - 4].hh.rh > 0) {
-							if (!minor_tail)
+						if (mem[mem_max - mem_min - 4].hh.rh > (-1073741824)) {
+							if (minor_tail == (-1073741824))
 								mem[r - mem_min + 1].hh.rh = mem[mem_max - mem_min - 4].hh.rh;
 							else
 								mem[minor_tail - mem_min].hh.rh = mem[mem_max - mem_min - 4].hh.rh;
 							minor_tail = mem[mem_max - mem_min - 4].hh.rh;
-							while (mem[minor_tail - mem_min].hh.rh > 0)
+							while (mem[minor_tail - mem_min].hh.rh > (-1073741824))
 								minor_tail = mem[minor_tail - mem_min].hh.rh;
 						}
 					} while (l < j);
 					while (l > j) {
 						j = reconstitute(j, hn, bchar, 256) + 1;
 						mem[major_tail - mem_min].hh.rh = mem[mem_max - mem_min - 4].hh.rh;
-						while (mem[major_tail - mem_min].hh.rh > 0) {
+						while (mem[major_tail - mem_min].hh.rh > (-1073741824)) {
 							major_tail = mem[major_tail - mem_min].hh.rh;
 							++r_count;
 						}
@@ -13424,7 +13426,7 @@ _L50:
 				}
 				if (r_count > 127) {
 					mem[s - mem_min].hh.rh = mem[r - mem_min].hh.rh;
-					mem[r - mem_min].hh.rh = 0;
+					mem[r - mem_min].hh.rh = -1073741824;
 					flush_node_list(r);
 				}
 				else {
@@ -13433,7 +13435,7 @@ _L50:
 				}
 				s = major_tail;
 				hyphen_passed = j - 1;
-				mem[mem_max - mem_min - 4].hh.rh = 0;
+				mem[mem_max - mem_min - 4].hh.rh = -1073741824;
 			} while (hyf[j-1] & 1);
 		}
 	} while (j <= hn);
@@ -13454,8 +13456,8 @@ quarterword new_trie_op(small_number d, small_number n, quarterword v)
 			if (trie_op_ptr == trie_op_size)
 				overflow(948, trie_op_size);
 			u = trie_used[cur_lang];
-			if (u == 255)
-				overflow(949, 255);
+			if (u == 65535)
+				overflow(949, 65535);
 			++trie_op_ptr;
 			++u;
 			trie_used[cur_lang] = u;
@@ -13616,13 +13618,13 @@ void new_patterns()
 	ASCII_code c;
 
 	if (trie_not_ready) {
-		if (eqtb[5313].int_ <= 0) {
+		if (eqtb[12213].int_ <= 0) {
 			cur_lang = 0;
 		}
-		else if (eqtb[5313].int_ > 255)
+		else if (eqtb[12213].int_ > 255)
 			cur_lang = 0;
 		else
-			cur_lang = eqtb[5313].int_;
+			cur_lang = eqtb[12213].int_;
 		scan_left_brace();
 		k = 0;
 		hyf[0] = 0;
@@ -13637,7 +13639,7 @@ void new_patterns()
 						cur_chr = 0;
 					}
 					else {
-						cur_chr = eqtb[cur_chr+4239].hh.rh;
+						cur_chr = eqtb[cur_chr+11139].hh.rh;
 						if (!cur_chr) {
 							print_nl(262);
 							print(956);
@@ -13835,12 +13837,12 @@ void line_break(integer final_widow_penalty)
 	init_r_hyf = (cur_list.pg_field / 65536) & 63;
 	pop_nest();
 	no_shrink_error_yet = true;
-	if (mem[eqtb[2889].hh.rh - mem_min].hh.U2.b1 && mem[eqtb[2889].hh.rh - mem_min + 3].int_)
-		eqtb[2889].hh.rh = finite_shrink(eqtb[2889].hh.rh);
-	if (mem[eqtb[2890].hh.rh - mem_min].hh.U2.b1 && mem[eqtb[2890].hh.rh - mem_min + 3].int_)
-		eqtb[2890].hh.rh = finite_shrink(eqtb[2890].hh.rh);
-	q = eqtb[2889].hh.rh;
-	r = eqtb[2890].hh.rh;
+	if (mem[eqtb[9789].hh.rh - mem_min].hh.U2.b1 && mem[eqtb[9789].hh.rh - mem_min + 3].int_)
+		eqtb[9789].hh.rh = finite_shrink(eqtb[9789].hh.rh);
+	if (mem[eqtb[9790].hh.rh - mem_min].hh.U2.b1 && mem[eqtb[9790].hh.rh - mem_min + 3].int_)
+		eqtb[9790].hh.rh = finite_shrink(eqtb[9790].hh.rh);
+	q = eqtb[9789].hh.rh;
+	r = eqtb[9790].hh.rh;
 	background[1] = mem[q - mem_min + 1].int_ + mem[r - mem_min + 1].int_;
 	background[2] = 0;
 	background[3] = 0;
@@ -13854,52 +13856,52 @@ void line_break(integer final_widow_penalty)
 	minimal_demerits[2] = 1073741823;
 	minimal_demerits[1] = 1073741823;
 	minimal_demerits[0] = 1073741823;
-	if (!eqtb[3412].hh.rh) {
-		if (!eqtb[5847].int_) {
+	if (eqtb[10312].hh.rh == (-1073741824)) {
+		if (!eqtb[12747].int_) {
 			last_special_line = 0;
-			second_width = eqtb[5833].int_;
+			second_width = eqtb[12733].int_;
 			second_indent = 0;
 		}
 		else {
-			last_special_line = abs(eqtb[5304].int_);
-			if (eqtb[5304].int_ < 0) {
-				first_width = eqtb[5833].int_ - abs(eqtb[5847].int_);
-				if (eqtb[5847].int_ >= 0)
-					first_indent = eqtb[5847].int_;
+			last_special_line = abs(eqtb[12204].int_);
+			if (eqtb[12204].int_ < 0) {
+				first_width = eqtb[12733].int_ - abs(eqtb[12747].int_);
+				if (eqtb[12747].int_ >= 0)
+					first_indent = eqtb[12747].int_;
 				else
 					first_indent = 0;
-				second_width = eqtb[5833].int_;
+				second_width = eqtb[12733].int_;
 				second_indent = 0;
 			}
 			else {
-				first_width = eqtb[5833].int_;
+				first_width = eqtb[12733].int_;
 				first_indent = 0;
-				second_width = eqtb[5833].int_ - abs(eqtb[5847].int_);
-				if (eqtb[5847].int_ >= 0)
-					second_indent = eqtb[5847].int_;
+				second_width = eqtb[12733].int_ - abs(eqtb[12747].int_);
+				if (eqtb[12747].int_ >= 0)
+					second_indent = eqtb[12747].int_;
 				else
 					second_indent = 0;
 			}
 		}
 	}
 	else {
-		last_special_line = mem[eqtb[3412].hh.rh - mem_min].hh.lh - 1;
-		second_width = mem[eqtb[3412].hh.rh + ((last_special_line + 1) * 2) - mem_min].int_;
-		second_indent = mem[eqtb[3412].hh.rh + (last_special_line * 2) - mem_min + 1].int_;
+		last_special_line = mem[eqtb[10312].hh.rh - mem_min].hh.lh - 1;
+		second_width = mem[eqtb[10312].hh.rh + ((last_special_line + 1) * 2) - mem_min].int_;
+		second_indent = mem[eqtb[10312].hh.rh + (last_special_line * 2) - mem_min + 1].int_;
 	}
-	if (!eqtb[5282].int_)
+	if (!eqtb[12182].int_)
 		easy_line = last_special_line;
 	else
-		easy_line = 65535;
-	threshold = eqtb[5263].int_;
+		easy_line = 1073741824;
+	threshold = eqtb[12163].int_;
 	if (threshold >= 0) {
 		second_pass = false;
 		final_pass = false;
 	}
 	else {
-		threshold = eqtb[5264].int_;
+		threshold = eqtb[12164].int_;
 		second_pass = true;
-		final_pass = (eqtb[5850].int_ <= 0);
+		final_pass = (eqtb[12750].int_ <= 0);
 	}
 	while (true) {
 		if (threshold > 10000)
@@ -13915,7 +13917,7 @@ void line_break(integer final_widow_penalty)
 		mem[q - mem_min].hh.U2.b0 = 0;
 		mem[q - mem_min].hh.U2.b1 = 2;
 		mem[q - mem_min].hh.rh = mem_max - 7;
-		mem[q - mem_min + 1].hh.rh = 0;
+		mem[q - mem_min + 1].hh.rh = -1073741824;
 		mem[q - mem_min + 1].hh.lh = cur_list.pg_field + 1;
 		mem[q - mem_min + 2].int_ = 0;
 		mem[mem_max - mem_min - 7].hh.rh = q;
@@ -13925,14 +13927,14 @@ void line_break(integer final_widow_penalty)
 		active_width[4] = background[4];
 		active_width[5] = background[5];
 		active_width[6] = background[6];
-		passive = 0;
+		passive = -1073741824;
 		printed_node = mem_max - 3;
 		pass_number = 0;
 		font_in_short_display = 0;
 		cur_p = mem[mem_max - mem_min - 3].hh.rh;
 		auto_breaking = true;
 		prev_p = cur_p;
-		while (cur_p && (mem[mem_max - mem_min - 7].hh.rh != (mem_max - 7))) {
+		while ((cur_p != (-1073741824)) && (mem[mem_max - mem_min - 7].hh.rh != (mem_max - 7))) {
 			if (cur_p >= hi_mem_min) {
 				prev_p = cur_p;
 				do {
@@ -13976,14 +13978,14 @@ void line_break(integer final_widow_penalty)
 				if (second_pass && auto_breaking) {
 					prev_s = cur_p;
 					s = mem[prev_s - mem_min].hh.rh;
-					if (s) {
+					if (s != (-1073741824)) {
 						while (true) {
 							if (s >= hi_mem_min) {
 								c = mem[s - mem_min].hh.U2.b1;
 								hf = mem[s - mem_min].hh.U2.b0;
 							}
 							else if (mem[s - mem_min].hh.U2.b0 == 6) {
-								if (!mem[s - mem_min + 1].hh.rh)
+								if (mem[s - mem_min + 1].hh.rh == (-1073741824))
 									goto _L22;
 								q = mem[s - mem_min + 1].hh.rh;
 								c = mem[q - mem_min].hh.U2.b1;
@@ -14003,8 +14005,8 @@ void line_break(integer final_widow_penalty)
 							else {
 								goto _L31;
 							}
-							if (eqtb[c+4239].hh.rh) {
-								if ((eqtb[c+4239].hh.rh == c) || (eqtb[5301].int_ > 0))
+							if (eqtb[c+11139].hh.rh) {
+								if ((eqtb[c+11139].hh.rh == c) || (eqtb[12201].int_ > 0))
 									goto _L32;
 								else
 									goto _L31;
@@ -14029,14 +14031,14 @@ _L32:
 									goto _L33;
 								hyf_bchar = mem[s - mem_min].hh.U2.b1;
 								c = hyf_bchar;
-								if (!eqtb[c+4239].hh.rh)
+								if (!eqtb[c+11139].hh.rh)
 									goto _L33;
 								if (hn == 63)
 									goto _L33;
 								hb = s;
 								++hn;
 								hu[hn] = c;
-								hc[hn] = eqtb[c+4239].hh.rh;
+								hc[hn] = eqtb[c+11139].hh.rh;
 								hyf_bchar = 256;
 							}
 							else if (mem[s - mem_min].hh.U2.b0 == 6) {
@@ -14044,17 +14046,17 @@ _L32:
 									goto _L33;
 								j = hn;
 								q = mem[s - mem_min + 1].hh.rh;
-								if (q > 0)
+								if (q > (-1073741824))
 									hyf_bchar = mem[q - mem_min].hh.U2.b1;
-								while (q > 0) {
+								while (q > (-1073741824)) {
 									c = mem[q - mem_min].hh.U2.b1;
-									if (!eqtb[c+4239].hh.rh)
+									if (!eqtb[c+11139].hh.rh)
 										goto _L33;
 									if (j == 63)
 										goto _L33;
 									++j;
 									hu[j] = c;
-									hc[j] = eqtb[c+4239].hh.rh;
+									hc[j] = eqtb[c+11139].hh.rh;
 									q = mem[q - mem_min].hh.rh;
 								}
 								hb = s;
@@ -14128,8 +14130,8 @@ _L31: ;
 			case 7:
 				s = mem[cur_p - mem_min + 1].hh.lh;
 				disc_width = 0;
-				if (!s) {
-					try_break(eqtb[5267].int_, 1);
+				if (s == (-1073741824)) {
+					try_break(eqtb[12167].int_, 1);
 				}
 				else {
 					do {
@@ -14155,9 +14157,9 @@ _L31: ;
 							}
 						}
 						s = mem[s - mem_min].hh.rh;
-					} while (s);
+					} while (s != (-1073741824));
 					active_width[1] += disc_width;
-					try_break(eqtb[5266].int_, 1);
+					try_break(eqtb[12166].int_, 1);
 					active_width[1] -= disc_width;
 				}
 				r = mem[cur_p - mem_min].hh.U2.b1;
@@ -14217,7 +14219,7 @@ _L31: ;
 			cur_p = mem[cur_p - mem_min].hh.rh;
 _L35: ;
 		}
-		if (!cur_p) {
+		if (cur_p == (-1073741824)) {
 			try_break(-10000, 1);
 			if (mem[mem_max - mem_min - 7].hh.rh != (mem_max - 7)) {
 				r = mem[mem_max - mem_min - 7].hh.rh;
@@ -14232,15 +14234,15 @@ _L35: ;
 					r = mem[r - mem_min].hh.rh;
 				} while (r != (mem_max - 7));
 				best_line = mem[best_bet - mem_min + 1].hh.lh;
-				if (!eqtb[5282].int_)
+				if (!eqtb[12182].int_)
 					goto _L30;
 				r = mem[mem_max - mem_min - 7].hh.rh;
 				actual_looseness = 0;
 				do {
 					if (mem[r - mem_min].hh.U2.b0 != 2) {
 						line_diff = mem[r - mem_min + 1].hh.lh - best_line;
-						if (((line_diff < actual_looseness) && (eqtb[5282].int_ <= line_diff))
-								|| ((line_diff > actual_looseness) && (eqtb[5282].int_ >= line_diff))) {
+						if (((line_diff < actual_looseness) && (eqtb[12182].int_ <= line_diff))
+								|| ((line_diff > actual_looseness) && (eqtb[12182].int_ >= line_diff))) {
 							best_bet = r;
 							actual_looseness = line_diff;
 							fewest_demerits = mem[r - mem_min + 2].int_;
@@ -14253,7 +14255,7 @@ _L35: ;
 					r = mem[r - mem_min].hh.rh;
 				} while (r != (mem_max - 7));
 				best_line = mem[best_bet - mem_min + 1].hh.lh;
-				if ((actual_looseness == eqtb[5282].int_) || final_pass)
+				if ((actual_looseness == eqtb[12182].int_) || final_pass)
 					goto _L30;
 			}
 		}
@@ -14267,18 +14269,18 @@ _L35: ;
 			q = cur_p;
 		}
 		q = passive;
-		while (q) {
+		while (q != (-1073741824)) {
 			cur_p = mem[q - mem_min].hh.rh;
 			free_node(q, 2);
 			q = cur_p;
 		}
 		if (!second_pass) {
-			threshold = eqtb[5264].int_;
+			threshold = eqtb[12164].int_;
 			second_pass = true;
-			final_pass = (eqtb[5850].int_ <= 0);
+			final_pass = (eqtb[12750].int_ <= 0);
 		}
 		else {
-			background[2] += eqtb[5850].int_;
+			background[2] += eqtb[12750].int_;
 			final_pass = true;
 		}
 	}
@@ -14294,7 +14296,7 @@ _L30:
 		q = cur_p;
 	}
 	q = passive;
-	while (q) {
+	while (q != (-1073741824)) {
 		cur_p = mem[q - mem_min].hh.rh;
 		free_node(q, 2);
 		q = cur_p;
@@ -14307,18 +14309,18 @@ void new_hyph_exceptions()
 	char n = 0, j;
 	hyph_pointer h;
 	str_number k;
-	halfword p = 0, q;
+	halfword p = -1073741824, q;
 	str_number s, t;
 	pool_pointer u, v;
 
 	scan_left_brace();
-	if (eqtb[5313].int_ <= 0) {
+	if (eqtb[12213].int_ <= 0) {
 		cur_lang = 0;
 	}
-	else if (eqtb[5313].int_ > 255)
+	else if (eqtb[12213].int_ > 255)
 		cur_lang = 0;
 	else
-		cur_lang = eqtb[5313].int_;
+		cur_lang = eqtb[12213].int_;
 	while (true) {
 		get_x_token();
 _L21:
@@ -14333,7 +14335,7 @@ _L21:
 					p = q;
 				}
 			}
-			else if (!eqtb[cur_chr+4239].hh.rh) {
+			else if (!eqtb[cur_chr+11139].hh.rh) {
 				print_nl(262);
 				print(944);
 				help_ptr = 2;
@@ -14343,7 +14345,7 @@ _L21:
 			}
 			else if (n < 63) {
 				++n;
-				hc[n] = eqtb[cur_chr+4239].hh.rh;
+				hc[n] = eqtb[cur_chr+11139].hh.rh;
 			}
 			break;
 
@@ -14405,7 +14407,7 @@ _L45:
 			if (cur_cmd == 2)
 				goto _L10;
 			n = 0;
-			p = 0;
+			p = -1073741824;
 			break;
 
 		default:
@@ -14428,7 +14430,7 @@ halfword prune_page_top(halfword p)
 	halfword prev_p = mem_max - 3, q;
 
 	mem[mem_max - mem_min - 3].hh.rh = p;
-	while (p) {
+	while (p != (-1073741824)) {
 		switch (mem[p - mem_min].hh.U2.b0) {
 
 		case 0: case 1: case 2:
@@ -14439,7 +14441,7 @@ halfword prune_page_top(halfword p)
 				mem[temp_ptr - mem_min + 1].int_ -= mem[p - mem_min + 3].int_;
 			else
 				mem[temp_ptr - mem_min + 1].int_ = 0;
-			p = 0;
+			p = -1073741824;
 			break;
 
 		case 8: case 4: case 3:
@@ -14450,7 +14452,7 @@ halfword prune_page_top(halfword p)
 		case 10: case 11: case 12:
 			q = p;
 			p = mem[q - mem_min].hh.rh;
-			mem[q - mem_min].hh.rh = 0;
+			mem[q - mem_min].hh.rh = -1073741824;
 			mem[prev_p - mem_min].hh.rh = p;
 			flush_node_list(q);
 			break;
@@ -14477,7 +14479,7 @@ halfword vert_break(halfword p, scaled h, scaled d)
 	active_width[5] = 0;
 	active_width[6] = 0;
 	while (true) {
-		if (!p) {
+		if (p == (-1073741824)) {
 			pi = -10000;
 		}
 		else {
@@ -14500,7 +14502,7 @@ halfword vert_break(halfword p, scaled h, scaled d)
 				break;
 
 			case 11:
-				if (!mem[p - mem_min].hh.rh)
+				if (mem[p - mem_min].hh.rh == (-1073741824))
 					t = 12;
 				else
 					t = mem[mem[p - mem_min].hh.rh - mem_min].hh.U2.b0;
@@ -14593,16 +14595,16 @@ _L30:
 halfword vsplit(eight_bits n, scaled h)
 {
 	halfword result, p, q;
-	halfword v = eqtb[n+3678].hh.rh;
+	halfword v = eqtb[n+10578].hh.rh;
 
-	if (cur_mark[3]) {
+	if (cur_mark[3] != (-1073741824)) {
 		delete_token_ref(cur_mark[3]);
-		cur_mark[3] = 0;
+		cur_mark[3] = -1073741824;
 		delete_token_ref(cur_mark[4]);
-		cur_mark[4] = 0;
+		cur_mark[4] = -1073741824;
 	}
-	if (!v) {
-		result = 0;
+	if (v == (-1073741824)) {
+		result = -1073741824;
 		goto _L10;
 	}
 	if (mem[v - mem_min].hh.U2.b0 != 1) {
@@ -14615,18 +14617,18 @@ halfword vsplit(eight_bits n, scaled h)
 		help_line[1] = 967;
 		help_line[0] = 968;
 		error();
-		result = 0;
+		result = -1073741824;
 		goto _L10;
 	}
-	q = vert_break(mem[v - mem_min + 5].hh.rh, h, eqtb[5836].int_);
+	q = vert_break(mem[v - mem_min + 5].hh.rh, h, eqtb[12736].int_);
 	p = mem[v - mem_min + 5].hh.rh;
 	if (p == q) {
-		mem[v - mem_min + 5].hh.rh = 0;
+		mem[v - mem_min + 5].hh.rh = -1073741824;
 	}
 	else {
 		while (true) {
 			if (mem[p - mem_min].hh.U2.b0 == 4) {
-				if (!cur_mark[3]) {
+				if (cur_mark[3] == (-1073741824)) {
 					cur_mark[3] = mem[p - mem_min + 1].int_;
 					cur_mark[4] = cur_mark[3];
 					mem[cur_mark[3] - mem_min].hh.lh += 2;
@@ -14638,7 +14640,7 @@ halfword vsplit(eight_bits n, scaled h)
 				}
 			}
 			if (mem[p - mem_min].hh.rh == q) {
-				mem[p - mem_min].hh.rh = 0;
+				mem[p - mem_min].hh.rh = -1073741824;
 				goto _L30;
 			}
 			p = mem[p - mem_min].hh.rh;
@@ -14648,11 +14650,11 @@ _L30:
 	q = prune_page_top(q);
 	p = mem[v - mem_min + 5].hh.rh;
 	free_node(v, 7);
-	if (!q)
-		eqtb[n+3678].hh.rh = 0;
+	if (q == (-1073741824))
+		eqtb[n+10578].hh.rh = -1073741824;
 	else
-		eqtb[n+3678].hh.rh = vpackage(q, 0, 1, 1073741823);
-	result = vpackage(p, h, 0, eqtb[5836].int_);
+		eqtb[n+10578].hh.rh = vpackage(q, 0, 1, 1073741823);
+	result = vpackage(p, h, 0, eqtb[12736].int_);
 _L10:
 	return result;
 }
@@ -14689,8 +14691,8 @@ void print_totals()
 void freeze_page_specs(small_number s)
 {
 	page_contents = s;
-	page_so_far[0] = eqtb[5834].int_;
-	page_max_depth = eqtb[5835].int_;
+	page_so_far[0] = eqtb[12734].int_;
+	page_max_depth = eqtb[12735].int_;
 	page_so_far[7] = 0;
 	page_so_far[1] = 0;
 	page_so_far[2] = 0;
@@ -14706,17 +14708,17 @@ void box_error(eight_bits n)
 	error();
 	begin_diagnostic();
 	print_nl(835);
-	show_box(eqtb[n+3678].hh.rh);
+	show_box(eqtb[n+10578].hh.rh);
 	end_diagnostic(true);
-	flush_node_list(eqtb[n+3678].hh.rh);
-	eqtb[n+3678].hh.rh = 0;
+	flush_node_list(eqtb[n+10578].hh.rh);
+	eqtb[n+10578].hh.rh = -1073741824;
 }
 
 void ensure_vbox(eight_bits n)
 {
-	halfword p = eqtb[n+3678].hh.rh;
+	halfword p = eqtb[n+10578].hh.rh;
 
-	if (!p)
+	if (p == (-1073741824))
 		return;
 	if (mem[p - mem_min].hh.U2.b0)
 		return;
@@ -14739,23 +14741,23 @@ void fire_up(halfword c)
 	halfword save_split_top_skip;
 
 	if (mem[best_page_break - mem_min].hh.U2.b0 == 12) {
-		geq_word_define(5302, mem[best_page_break - mem_min + 1].int_);
+		geq_word_define(12202, mem[best_page_break - mem_min + 1].int_);
 		mem[best_page_break - mem_min + 1].int_ = 10000;
 	}
 	else {
-		geq_word_define(5302, 10000);
+		geq_word_define(12202, 10000);
 	}
-	if (cur_mark[2]) {
-		if (cur_mark[0])
+	if (cur_mark[2] != (-1073741824)) {
+		if (cur_mark[0] != (-1073741824))
 			delete_token_ref(cur_mark[0]);
 		cur_mark[0] = cur_mark[2];
 		++mem[cur_mark[0] - mem_min].hh.lh;
 		delete_token_ref(cur_mark[1]);
-		cur_mark[1] = 0;
+		cur_mark[1] = -1073741824;
 	}
 	if (c == best_page_break)
-		best_page_break = 0;
-	if (eqtb[3933].hh.rh) {
+		best_page_break = -1073741824;
+	if (eqtb[10833].hh.rh != (-1073741824)) {
 		print_nl(262);
 		print(338);
 		print_esc(409);
@@ -14766,32 +14768,32 @@ void fire_up(halfword c)
 		box_error(255);
 	}
 	insert_penalties = 0;
-	save_split_top_skip = eqtb[2892].hh.rh;
-	if (eqtb[5316].int_ <= 0) {
+	save_split_top_skip = eqtb[9792].hh.rh;
+	if (eqtb[12216].int_ <= 0) {
 		r = mem[mem_max - mem_min].hh.rh;
 		while (r != mem_max) {
-			if (mem[r - mem_min + 2].hh.lh) {
+			if (mem[r - mem_min + 2].hh.lh != (-1073741824)) {
 				n = mem[r - mem_min].hh.U2.b1;
 				ensure_vbox(n);
-				if (!eqtb[n+3678].hh.rh)
-					eqtb[n+3678].hh.rh = new_null_box();
-				p = eqtb[n+3678].hh.rh + 5;
-				while (mem[p - mem_min].hh.rh)
+				if (eqtb[n+10578].hh.rh == (-1073741824))
+					eqtb[n+10578].hh.rh = new_null_box();
+				p = eqtb[n+10578].hh.rh + 5;
+				while (mem[p - mem_min].hh.rh != (-1073741824))
 					p = mem[p - mem_min].hh.rh;
 				mem[r - mem_min + 2].hh.rh = p;
 			}
 			r = mem[r - mem_min].hh.rh;
 		}
 	}
-	mem[q - mem_min].hh.rh = 0;
+	mem[q - mem_min].hh.rh = -1073741824;
 	p = mem[prev_p - mem_min].hh.rh;
 	while (p != best_page_break) {
 		if (mem[p - mem_min].hh.U2.b0 == 3) {
-			if (eqtb[5316].int_ <= 0) {
+			if (eqtb[12216].int_ <= 0) {
 				r = mem[mem_max - mem_min].hh.rh;
 				while (mem[r - mem_min].hh.U2.b1 != mem[p - mem_min].hh.U2.b1)
 					r = mem[r - mem_min].hh.rh;
-				if (!mem[r - mem_min + 2].hh.lh) {
+				if (mem[r - mem_min + 2].hh.lh == (-1073741824)) {
 					wait = true;
 				}
 				else {
@@ -14800,13 +14802,13 @@ void fire_up(halfword c)
 					mem[s - mem_min].hh.rh = mem[p - mem_min + 4].hh.lh;
 					if (mem[r - mem_min + 2].hh.lh == p) {
 						if (mem[r - mem_min].hh.U2.b0 == 1) {
-							if ((mem[r - mem_min + 1].hh.lh == p) && mem[r - mem_min + 1].hh.rh) {
+							if ((mem[r - mem_min + 1].hh.lh == p) && (mem[r - mem_min + 1].hh.rh != (-1073741824))) {
 								while (mem[s - mem_min].hh.rh != mem[r - mem_min + 1].hh.rh)
 									s = mem[s - mem_min].hh.rh;
-								mem[s - mem_min].hh.rh = 0;
-								eqtb[2892].hh.rh = mem[p - mem_min + 4].hh.rh;
+								mem[s - mem_min].hh.rh = -1073741824;
+								eqtb[9792].hh.rh = mem[p - mem_min + 4].hh.rh;
 								mem[p - mem_min + 4].hh.lh = prune_page_top(mem[r - mem_min + 1].hh.rh);
-								if (mem[p - mem_min + 4].hh.lh) {
+								if (mem[p - mem_min + 4].hh.lh != (-1073741824)) {
 									temp_ptr = vpackage(mem[p - mem_min + 4].hh.lh, 0, 1, 1073741823);
 									(mem[p - mem_min + 3].int_ = (mem[temp_ptr - mem_min + 3].int_ + (mem[temp_ptr - mem_min + 2].int_)));
 									free_node(temp_ptr, 7);
@@ -14814,20 +14816,20 @@ void fire_up(halfword c)
 								}
 							}
 						}
-						mem[r - mem_min + 2].hh.lh = 0;
+						mem[r - mem_min + 2].hh.lh = -1073741824;
 						n = mem[r - mem_min].hh.U2.b1;
-						temp_ptr = mem[eqtb[n+3678].hh.rh - mem_min + 5].hh.rh;
-						free_node(eqtb[n+3678].hh.rh, 7);
-						eqtb[n+3678].hh.rh = vpackage(temp_ptr, 0, 1, 1073741823);
+						temp_ptr = mem[eqtb[n+10578].hh.rh - mem_min + 5].hh.rh;
+						free_node(eqtb[n+10578].hh.rh, 7);
+						eqtb[n+10578].hh.rh = vpackage(temp_ptr, 0, 1, 1073741823);
 					}
 					else {
-						while (mem[s - mem_min].hh.rh)
+						while (mem[s - mem_min].hh.rh != (-1073741824))
 							s = mem[s - mem_min].hh.rh;
 						mem[r - mem_min + 2].hh.rh = s;
 					}
 				}
 				mem[prev_p - mem_min].hh.rh = mem[p - mem_min].hh.rh;
-				mem[p - mem_min].hh.rh = 0;
+				mem[p - mem_min].hh.rh = -1073741824;
 				if (wait) {
 					mem[q - mem_min].hh.rh = p;
 					q = p;
@@ -14841,11 +14843,11 @@ void fire_up(halfword c)
 			}
 		}
 		else if (mem[p - mem_min].hh.U2.b0 == 4) {
-			if (!cur_mark[1]) {
+			if (cur_mark[1] == (-1073741824)) {
 				cur_mark[1] = mem[p - mem_min + 1].int_;
 				++mem[cur_mark[1] - mem_min].hh.lh;
 			}
-			if (cur_mark[2])
+			if (cur_mark[2] != (-1073741824))
 				delete_token_ref(cur_mark[2]);
 			cur_mark[2] = mem[p - mem_min + 1].int_;
 			++mem[cur_mark[2] - mem_min].hh.lh;
@@ -14853,9 +14855,9 @@ void fire_up(halfword c)
 		prev_p = p;
 		p = mem[prev_p - mem_min].hh.rh;
 	}
-	eqtb[2892].hh.rh = save_split_top_skip;
-	if (p) {
-		if (!mem[mem_max - mem_min - 1].hh.rh) {
+	eqtb[9792].hh.rh = save_split_top_skip;
+	if (p != (-1073741824)) {
+		if (mem[mem_max - mem_min - 1].hh.rh == (-1073741824)) {
 			if (!nest_ptr)
 				cur_list.tail_field = page_tail;
 			else
@@ -14863,21 +14865,21 @@ void fire_up(halfword c)
 		}
 		mem[page_tail - mem_min].hh.rh = mem[mem_max - mem_min - 1].hh.rh;
 		mem[mem_max - mem_min - 1].hh.rh = p;
-		mem[prev_p - mem_min].hh.rh = 0;
+		mem[prev_p - mem_min].hh.rh = -1073741824;
 	}
-	save_vbadness = eqtb[5290].int_;
-	eqtb[5290].int_ = 10000;
-	save_vfuzz = eqtb[5839].int_;
-	eqtb[5839].int_ = 1073741823;
-	eqtb[3933].hh.rh = vpackage(mem[mem_max - mem_min - 2].hh.rh, best_size, 0, page_max_depth);
-	eqtb[5290].int_ = save_vbadness;
-	eqtb[5839].int_ = save_vfuzz;
-	if (last_glue != 65535)
+	save_vbadness = eqtb[12190].int_;
+	eqtb[12190].int_ = 10000;
+	save_vfuzz = eqtb[12739].int_;
+	eqtb[12739].int_ = 1073741823;
+	eqtb[10833].hh.rh = vpackage(mem[mem_max - mem_min - 2].hh.rh, best_size, 0, page_max_depth);
+	eqtb[12190].int_ = save_vbadness;
+	eqtb[12739].int_ = save_vfuzz;
+	if (last_glue != 1073741824)
 		delete_glue_ref(last_glue);
 	page_contents = 0;
 	page_tail = mem_max - 2;
-	mem[mem_max - mem_min - 2].hh.rh = 0;
-	last_glue = 65535;
+	mem[mem_max - mem_min - 2].hh.rh = -1073741824;
+	last_glue = 1073741824;
 	last_penalty = 0;
 	last_kern = 0;
 	page_so_far[7] = 0;
@@ -14893,19 +14895,19 @@ void fire_up(halfword c)
 		r = q;
 	}
 	mem[mem_max - mem_min].hh.rh = mem_max;
-	if (cur_mark[0] && (!cur_mark[1])) {
+	if ((cur_mark[0] != (-1073741824)) && (cur_mark[1] == (-1073741824))) {
 		cur_mark[1] = cur_mark[0];
 		++mem[cur_mark[0] - mem_min].hh.lh;
 	}
-	if (eqtb[3413].hh.rh) {
-		if (dead_cycles < eqtb[5303].int_) {
+	if (eqtb[10313].hh.rh != (-1073741824)) {
+		if (dead_cycles < eqtb[12203].int_) {
 			output_active = true;
 			++dead_cycles;
 			push_nest();
 			cur_list.mode_field = -1;
 			cur_list.aux_field.int_ = -65536000;
 			cur_list.ml_field = -line;
-			begin_token_list(eqtb[3413].hh.rh, 6);
+			begin_token_list(eqtb[10313].hh.rh, 6);
 			new_save_level(8);
 			normal_paragraph();
 			scan_left_brace();
@@ -14921,8 +14923,8 @@ void fire_up(halfword c)
 		help_line[0] = 1008;
 		error();
 	}
-	if (mem[mem_max - mem_min - 2].hh.rh) {
-		if (!mem[mem_max - mem_min - 1].hh.rh) {
+	if (mem[mem_max - mem_min - 2].hh.rh != (-1073741824)) {
+		if (mem[mem_max - mem_min - 1].hh.rh == (-1073741824)) {
 			if (!nest_ptr)
 				cur_list.tail_field = page_tail;
 			else
@@ -14932,11 +14934,11 @@ void fire_up(halfword c)
 			mem[page_tail - mem_min].hh.rh = mem[mem_max - mem_min - 1].hh.rh;
 		}
 		mem[mem_max - mem_min - 1].hh.rh = mem[mem_max - mem_min - 2].hh.rh;
-		mem[mem_max - mem_min - 2].hh.rh = 0;
+		mem[mem_max - mem_min - 2].hh.rh = -1073741824;
 		page_tail = mem_max - 2;
 	}
-	ship_out(eqtb[3933].hh.rh);
-	eqtb[3933].hh.rh = 0;
+	ship_out(eqtb[10833].hh.rh);
+	eqtb[10833].hh.rh = -1073741824;
 _L10: ;
 }
 
@@ -14947,12 +14949,12 @@ void build_page()
 	uint8_t n;
 	scaled delta, h, w;
 
-	if ((!mem[mem_max - mem_min - 1].hh.rh) || output_active)
+	if ((mem[mem_max - mem_min - 1].hh.rh == (-1073741824)) || output_active)
 		goto _L10;
 	do {
 _L22:
 		p = mem[mem_max - mem_min - 1].hh.rh;
-		if (last_glue != 65535)
+		if (last_glue != 1073741824)
 			delete_glue_ref(last_glue);
 		last_penalty = 0;
 		last_kern = 0;
@@ -14961,7 +14963,7 @@ _L22:
 			++mem[last_glue - mem_min].hh.rh;
 		}
 		else {
-			last_glue = 65535;
+			last_glue = 1073741824;
 			if (mem[p - mem_min].hh.U2.b0 == 12) {
 				last_penalty = mem[p - mem_min + 1].int_;
 			}
@@ -15007,7 +15009,7 @@ _L22:
 		case 11:
 			if (page_contents < 2)
 				goto _L31;
-			if (!mem[p - mem_min].hh.rh)
+			if (mem[p - mem_min].hh.rh == (-1073741824))
 				goto _L10;
 			if (mem[mem[p - mem_min].hh.rh - mem_min].hh.U2.b0 != 10)
 				goto _L90;
@@ -15039,16 +15041,16 @@ _L22:
 				mem[r - mem_min].hh.U2.b1 = n;
 				mem[r - mem_min].hh.U2.b0 = 0;
 				ensure_vbox(n);
-				if (!eqtb[n+3678].hh.rh)
+				if (eqtb[n+10578].hh.rh == (-1073741824))
 					mem[r - mem_min + 3].int_ = 0;
 				else
-					(mem[r - mem_min + 3].int_ = (mem[eqtb[n+3678].hh.rh - mem_min + 3].int_ + (mem[(eqtb[n+3678].hh.rh - mem_min + 2)].int_)));
-				mem[r - mem_min + 2].hh.lh = 0;
-				q = eqtb[n+2900].hh.rh;
-				if (eqtb[n+5318].int_ == 1000)
+					(mem[r - mem_min + 3].int_ = (mem[eqtb[n+10578].hh.rh - mem_min + 3].int_ + (mem[(eqtb[n+10578].hh.rh - mem_min + 2)].int_)));
+				mem[r - mem_min + 2].hh.lh = -1073741824;
+				q = eqtb[n+9800].hh.rh;
+				if (eqtb[n+12218].int_ == 1000)
 					h = mem[r - mem_min + 3].int_;
 				else
-					h = x_over_n(mem[r - mem_min + 3].int_, 1000) * eqtb[n+5318].int_;
+					h = x_over_n(mem[r - mem_min + 3].int_, 1000) * eqtb[n+12218].int_;
 				page_so_far[0] += (-h) - mem[q - mem_min + 1].int_;
 				page_so_far[mem[q - mem_min].hh.U2.b0 + 2] += mem[q - mem_min + 2].int_;
 				page_so_far[6] += mem[q - mem_min + 3].int_;
@@ -15070,34 +15072,34 @@ _L22:
 			else {
 				mem[r - mem_min + 2].hh.rh = p;
 				delta = page_so_far[0] - page_so_far[1] - page_so_far[7] + page_so_far[6];
-				if (eqtb[n+5318].int_ == 1000)
+				if (eqtb[n+12218].int_ == 1000)
 					h = mem[p - mem_min + 3].int_;
 				else
-					h = x_over_n(mem[p - mem_min + 3].int_, 1000) * eqtb[n+5318].int_;
-				if (((h <= 0) || (h <= delta)) && (mem[p - mem_min + 3].int_ + mem[r - mem_min + 3].int_ <= eqtb[n+5851].int_)) {
+					h = x_over_n(mem[p - mem_min + 3].int_, 1000) * eqtb[n+12218].int_;
+				if (((h <= 0) || (h <= delta)) && (mem[p - mem_min + 3].int_ + mem[r - mem_min + 3].int_ <= eqtb[n+12751].int_)) {
 					page_so_far[0] -= h;
 					mem[r - mem_min + 3].int_ += mem[p - mem_min + 3].int_;
 				}
 				else {
-					if (eqtb[n+5318].int_ <= 0) {
+					if (eqtb[n+12218].int_ <= 0) {
 						w = 1073741823;
 					}
 					else {
 						w = page_so_far[0] - page_so_far[1] - page_so_far[7];
-						if (eqtb[n+5318].int_ != 1000)
-							w = x_over_n(w, eqtb[n+5318].int_) * 1000;
+						if (eqtb[n+12218].int_ != 1000)
+							w = x_over_n(w, eqtb[n+12218].int_) * 1000;
 					}
-					if (w > (eqtb[n+5851].int_ - mem[r - mem_min + 3].int_))
-						w = eqtb[n+5851].int_ - mem[r - mem_min + 3].int_;
+					if (w > (eqtb[n+12751].int_ - mem[r - mem_min + 3].int_))
+						w = eqtb[n+12751].int_ - mem[r - mem_min + 3].int_;
 					q = vert_break(mem[p - mem_min + 4].hh.lh, w, mem[p - mem_min + 2].int_);
 					mem[r - mem_min + 3].int_ += best_height_plus_depth;
-					if (eqtb[n+5318].int_ != 1000)
-						best_height_plus_depth = x_over_n(best_height_plus_depth, 1000) * eqtb[n+5318].int_;
+					if (eqtb[n+12218].int_ != 1000)
+						best_height_plus_depth = x_over_n(best_height_plus_depth, 1000) * eqtb[n+12218].int_;
 					page_so_far[0] -= best_height_plus_depth;
 					mem[r - mem_min].hh.U2.b0 = 1;
 					mem[r - mem_min + 1].hh.rh = q;
 					mem[r - mem_min + 1].hh.lh = p;
-					if (!q) {
+					if (q == (-1073741824)) {
 						insert_penalties -= 10000;
 					}
 					else if (mem[q - mem_min].hh.U2.b0 == 12)
@@ -15189,14 +15191,14 @@ _L80:
 		mem[page_tail - mem_min].hh.rh = p;
 		page_tail = p;
 		mem[mem_max - mem_min - 1].hh.rh = mem[p - mem_min].hh.rh;
-		mem[p - mem_min].hh.rh = 0;
+		mem[p - mem_min].hh.rh = -1073741824;
 		goto _L30;
 _L31:
 		mem[mem_max - mem_min - 1].hh.rh = mem[p - mem_min].hh.rh;
-		mem[p - mem_min].hh.rh = 0;
+		mem[p - mem_min].hh.rh = -1073741824;
 		flush_node_list(p);
 _L30: ;
-	} while (mem[mem_max - mem_min - 1].hh.rh);
+	} while (mem[mem_max - mem_min - 1].hh.rh != (-1073741824));
 	if (!nest_ptr)
 		cur_list.tail_field = mem_max - 1;
 	else
@@ -15208,31 +15210,31 @@ void app_space()
 {
 	halfword q;
 
-	if ((cur_list.aux_field.hh.lh >= 2000) && eqtb[2895].hh.rh) {
+	if ((cur_list.aux_field.hh.lh >= 2000) && eqtb[9795].hh.rh) {
 		q = new_param_glue(13);
 	}
 	else {
-		if (eqtb[2894].hh.rh) {
-			main_p = eqtb[2894].hh.rh;
+		if (eqtb[9794].hh.rh) {
+			main_p = eqtb[9794].hh.rh;
 		}
 		else {
-			main_p = font_glue[eqtb[3934].hh.rh];
-			if (!main_p) {
+			main_p = font_glue[eqtb[10834].hh.rh];
+			if (main_p == (-1073741824)) {
 				main_p = new_spec(0);
-				main_k = param_base[eqtb[3934].hh.rh] + 2;
+				main_k = param_base[eqtb[10834].hh.rh] + 2;
 				mem[main_p - mem_min + 1].int_ = font_info[main_k].int_;
 				mem[main_p - mem_min + 2].int_ = font_info[main_k+1].int_;
 				mem[main_p - mem_min + 3].int_ = font_info[main_k+2].int_;
-				font_glue[eqtb[3934].hh.rh] = main_p;
+				font_glue[eqtb[10834].hh.rh] = main_p;
 			}
 		}
 		main_p = new_spec(main_p);
 		if (cur_list.aux_field.hh.lh >= 2000)
-			mem[main_p - mem_min + 1].int_ += font_info[param_base[eqtb[3934].hh.rh] + 7].int_;
+			mem[main_p - mem_min + 1].int_ += font_info[param_base[eqtb[10834].hh.rh] + 7].int_;
 		mem[main_p - mem_min + 2].int_ = xn_over_d(mem[main_p - mem_min + 2].int_, cur_list.aux_field.hh.lh, 1000);
 		mem[main_p - mem_min + 3].int_ = xn_over_d(mem[main_p - mem_min + 3].int_, 1000, cur_list.aux_field.hh.lh);
 		q = new_glue(main_p);
-		mem[main_p - mem_min].hh.rh = 0;
+		mem[main_p - mem_min].hh.rh = -1073741824;
 	}
 	mem[cur_list.tail_field - mem_min].hh.rh = q;
 	cur_list.tail_field = q;
@@ -15293,7 +15295,7 @@ bool its_all_over()
 		back_input();
 		mem[cur_list.tail_field - mem_min].hh.rh = new_null_box();
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		mem[cur_list.tail_field - mem_min + 1].int_ = eqtb[5833].int_;
+		mem[cur_list.tail_field - mem_min + 1].int_ = eqtb[12733].int_;
 		mem[cur_list.tail_field - mem_min].hh.rh = new_glue(8);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(-1073741824);
@@ -15375,7 +15377,7 @@ void off_save()
 	switch (cur_group) {
 
 	case 14:
-		mem[p - mem_min].hh.lh = 6711;
+		mem[p - mem_min].hh.lh = 13611;
 		print_esc(516);
 		break;
 
@@ -15385,7 +15387,7 @@ void off_save()
 		break;
 
 	case 16:
-		mem[p - mem_min].hh.lh = 6712;
+		mem[p - mem_min].hh.lh = 13612;
 		mem[p - mem_min].hh.rh = get_avail();
 		p = mem[p - mem_min].hh.rh;
 		mem[p - mem_min].hh.lh = 3118;
@@ -15438,14 +15440,14 @@ void extra_right_brace()
 
 void normal_paragraph()
 {
-	if (eqtb[5282].int_)
-		eq_word_define(5282, 0);
-	if (eqtb[5847].int_)
-		eq_word_define(5847, 0);
-	if (eqtb[5304].int_ != 1)
-		eq_word_define(5304, 1);
-	if (eqtb[3412].hh.rh)
-		eq_define(3412, 118, 0);
+	if (eqtb[12182].int_)
+		eq_word_define(12182, 0);
+	if (eqtb[12747].int_)
+		eq_word_define(12747, 0);
+	if (eqtb[12204].int_ != 1)
+		eq_word_define(12204, 1);
+	if (eqtb[10312].hh.rh != (-1073741824))
+		eq_define(10312, 118, -1073741824);
 }
 
 void box_end(integer box_context)
@@ -15453,17 +15455,17 @@ void box_end(integer box_context)
 	halfword p;
 
 	if (box_context < 1073741824) {
-		if (!cur_box)
+		if (cur_box == (-1073741824))
 			return;
 		mem[cur_box - mem_min + 4].int_ = box_context;
 		if (abs(cur_list.mode_field) == 1) {
 			append_to_vlist(cur_box);
-			if (adjust_tail) {
+			if (adjust_tail != (-1073741824)) {
 				if (mem_max - 5 != adjust_tail) {
 					mem[cur_list.tail_field - mem_min].hh.rh = mem[mem_max - mem_min - 5].hh.rh;
 					cur_list.tail_field = adjust_tail;
 				}
-				adjust_tail = 0;
+				adjust_tail = -1073741824;
 			}
 			if (cur_list.mode_field > 0)
 				build_page();
@@ -15484,12 +15486,12 @@ void box_end(integer box_context)
 	}
 	if (box_context < 1073742336) {
 		if (box_context < 1073742080)
-			eq_define(box_context - 1073738146, 119, cur_box);
+			eq_define(box_context - 1073731246, 119, cur_box);
 		else
-			geq_define(box_context - 1073738402, 119, cur_box);
+			geq_define(box_context - 1073731502, 119, cur_box);
 		return;
 	}
-	if (!cur_box)
+	if (cur_box == (-1073741824))
 		return;
 	if (box_context <= 1073742336) {
 		ship_out(cur_box);
@@ -15526,17 +15528,17 @@ void begin_box(integer box_context)
 
 	case 0:
 		scan_eight_bit_int();
-		cur_box = eqtb[cur_val+3678].hh.rh;
-		eqtb[cur_val+3678].hh.rh = 0;
+		cur_box = eqtb[cur_val+10578].hh.rh;
+		eqtb[cur_val+10578].hh.rh = -1073741824;
 		break;
 
 	case 1:
 		scan_eight_bit_int();
-		cur_box = copy_node_list(eqtb[cur_val+3678].hh.rh);
+		cur_box = copy_node_list(eqtb[cur_val+10578].hh.rh);
 		break;
 
 	case 2:
-		cur_box = 0;
+		cur_box = -1073741824;
 		if (abs(cur_list.mode_field) == 203) {
 			you_cant();
 			help_ptr = 1;
@@ -15568,7 +15570,7 @@ void begin_box(integer box_context)
 				cur_box = cur_list.tail_field;
 				mem[cur_box - mem_min + 4].int_ = 0;
 				cur_list.tail_field = p;
-				mem[p - mem_min].hh.rh = 0;
+				mem[p - mem_min].hh.rh = -1073741824;
 _L30: ;
 			}
 		}
@@ -15612,13 +15614,13 @@ _L30: ;
 		cur_list.mode_field = -k;
 		if (k == 1) {
 			cur_list.aux_field.int_ = -65536000;
-			if (eqtb[3418].hh.rh)
-				begin_token_list(eqtb[3418].hh.rh, 11);
+			if (eqtb[10318].hh.rh != (-1073741824))
+				begin_token_list(eqtb[10318].hh.rh, 11);
 		}
 		else {
 			cur_list.aux_field.hh.lh = 1000;
-			if (eqtb[3417].hh.rh)
-				begin_token_list(eqtb[3417].hh.rh, 10);
+			if (eqtb[10317].hh.rh != (-1073741824))
+				begin_token_list(eqtb[10317].hh.rh, 10);
 		}
 		goto _L10;
 		break;
@@ -15654,7 +15656,7 @@ void package(small_number c)
 {
 	scaled h;
 	halfword p;
-	scaled d = eqtb[5837].int_;
+	scaled d = eqtb[12737].int_;
 
 	unsave();
 	save_ptr -= 3;
@@ -15667,7 +15669,7 @@ void package(small_number c)
 		if (c == 4) {
 			h = 0;
 			p = mem[cur_box - mem_min + 5].hh.rh;
-			if (p) {
+			if (p != (-1073741824)) {
 				if (mem[p - mem_min].hh.U2.b0 <= 2)
 					h = mem[p - mem_min + 3].int_;
 			}
@@ -15700,22 +15702,22 @@ void new_graf(bool indented)
 	push_nest();
 	cur_list.mode_field = 102;
 	cur_list.aux_field.hh.lh = 1000;
-	if (eqtb[5313].int_ <= 0) {
+	if (eqtb[12213].int_ <= 0) {
 		cur_lang = 0;
 	}
-	else if (eqtb[5313].int_ > 255)
+	else if (eqtb[12213].int_ > 255)
 		cur_lang = 0;
 	else
-		cur_lang = eqtb[5313].int_;
+		cur_lang = eqtb[12213].int_;
 	cur_list.aux_field.hh.rh = cur_lang;
-	cur_list.pg_field = (((norm_min(eqtb[5314].int_) * 64) + norm_min(eqtb[5315].int_)) * 65536) + cur_lang;
+	cur_list.pg_field = (((norm_min(eqtb[12214].int_) * 64) + norm_min(eqtb[12215].int_)) * 65536) + cur_lang;
 	if (indented) {
 		cur_list.tail_field = new_null_box();
 		mem[cur_list.head_field - mem_min].hh.rh = cur_list.tail_field;
-		mem[cur_list.tail_field - mem_min + 1].int_ = eqtb[5830].int_;
+		mem[cur_list.tail_field - mem_min + 1].int_ = eqtb[12730].int_;
 	}
-	if (eqtb[3414].hh.rh)
-		begin_token_list(eqtb[3414].hh.rh, 7);
+	if (eqtb[10314].hh.rh != (-1073741824))
+		begin_token_list(eqtb[10314].hh.rh, 7);
 	if (nest_ptr == 1)
 		build_page();
 }
@@ -15727,7 +15729,7 @@ void indent_in_hmode()
 	if (cur_chr <= 0)
 		return;
 	p = new_null_box();
-	mem[p - mem_min + 1].int_ = eqtb[5830].int_;
+	mem[p - mem_min + 1].int_ = eqtb[12730].int_;
 	if (abs(cur_list.mode_field) == 102) {
 		cur_list.aux_field.hh.lh = 1000;
 	}
@@ -15771,7 +15773,7 @@ void end_graf()
 	if (cur_list.head_field == cur_list.tail_field)
 		pop_nest();
 	else
-		line_break(eqtb[5269].int_);
+		line_break(eqtb[12169].int_);
 	normal_paragraph();
 	error_count = 0;
 }
@@ -15831,7 +15833,7 @@ void delete_last()
 	quarterword m, N;
 
 	if ((cur_list.mode_field == 1) && (cur_list.tail_field == cur_list.head_field)) {
-		if ((cur_chr != 10) || (last_glue != 65535)) {
+		if ((cur_chr != 10) || (last_glue != 1073741824)) {
 			you_cant();
 			help_ptr = 2;
 			help_line[1] = 1070;
@@ -15859,7 +15861,7 @@ void delete_last()
 				}
 				q = mem[p - mem_min].hh.rh;
 			} while (q != cur_list.tail_field);
-			mem[p - mem_min].hh.rh = 0;
+			mem[p - mem_min].hh.rh = -1073741824;
 			flush_node_list(cur_list.tail_field);
 			cur_list.tail_field = p;
 		}
@@ -15873,8 +15875,8 @@ void unpackage()
 	char c = cur_chr;
 
 	scan_eight_bit_int();
-	p = eqtb[cur_val+3678].hh.rh;
-	if (!p)
+	p = eqtb[cur_val+10578].hh.rh;
+	if (p == (-1073741824))
 		goto _L10;
 	if ((abs(cur_list.mode_field) == 203) || ((abs(cur_list.mode_field) == 1) && (mem[p - mem_min].hh.U2.b0 != 1))
 			|| ((abs(cur_list.mode_field) == 102) && mem[p - mem_min].hh.U2.b0)) {
@@ -15892,10 +15894,10 @@ void unpackage()
 	}
 	else {
 		mem[cur_list.tail_field - mem_min].hh.rh = mem[p - mem_min + 5].hh.rh;
-		eqtb[cur_val+3678].hh.rh = 0;
+		eqtb[cur_val+10578].hh.rh = -1073741824;
 		free_node(p, 7);
 	}
-	while (mem[cur_list.tail_field - mem_min].hh.rh)
+	while (mem[cur_list.tail_field - mem_min].hh.rh != (-1073741824))
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 _L10: ;
 }
@@ -15929,10 +15931,10 @@ void append_discretionary()
 	mem[cur_list.tail_field - mem_min].hh.rh = new_disc();
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 	if (cur_chr == 1) {
-		c = hyphen_char[eqtb[3934].hh.rh];
+		c = hyphen_char[eqtb[10834].hh.rh];
 		if (c >= 0) {
 			if (c < 256)
-				mem[cur_list.tail_field - mem_min + 1].hh.lh = new_character(eqtb[3934].hh.rh, c);
+				mem[cur_list.tail_field - mem_min + 1].hh.lh = new_character(eqtb[10834].hh.rh, c);
 		}
 		return;
 	}
@@ -15953,7 +15955,7 @@ void build_discretionary()
 	unsave();
 	q = cur_list.head_field;
 	p = mem[q - mem_min].hh.rh;
-	while (p) {
+	while (p != (-1073741824)) {
 		if (p < hi_mem_min) {
 			if (mem[p - mem_min].hh.U2.b0 > 2) {
 				if (mem[p - mem_min].hh.U2.b0 != 11) {
@@ -15968,7 +15970,7 @@ void build_discretionary()
 						show_box(p);
 						end_diagnostic(true);
 						flush_node_list(p);
-						mem[q - mem_min].hh.rh = 0;
+						mem[q - mem_min].hh.rh = -1073741824;
 						goto _L30;
 					}
 				}
@@ -16006,7 +16008,7 @@ _L30:
 		else {
 			mem[cur_list.tail_field - mem_min].hh.rh = p;
 		}
-		if (n <= 255) {
+		if (n <= 65535) {
 			mem[cur_list.tail_field - mem_min].hh.U2.b1 = n;
 		}
 		else {
@@ -16035,21 +16037,21 @@ _L10: ;
 void make_accent()
 {
 	double s, t;
-	halfword p, q = 0, r;
+	halfword p, q = -1073741824, r;
 	internal_font_number f;
 	scaled a, h, x, w, delta;
 	four_quarters i;
 
 	scan_char_num();
-	f = eqtb[3934].hh.rh;
+	f = eqtb[10834].hh.rh;
 	p = new_character(f, cur_val);
-	if (!p)
+	if (p == (-1073741824))
 		return;
 	x = font_info[param_base[f] + 5].int_;
 	s = font_info[param_base[f] + 1].int_ / 65536.0;
 	a = font_info[width_base[f] + font_info[char_base[f] + mem[p - mem_min].hh.U2.b1].qqqq.b0].int_;
 	do_assignments();
-	f = eqtb[3934].hh.rh;
+	f = eqtb[10834].hh.rh;
 	if ((cur_cmd == 11) || (cur_cmd == 12) || (cur_cmd == 68)) {
 		q = new_character(f, cur_chr);
 	}
@@ -16060,7 +16062,7 @@ void make_accent()
 	else {
 		back_input();
 	}
-	if (q) {
+	if (q != (-1073741824)) {
 		t = font_info[param_base[f] + 1].int_ / 65536.0;
 		i = font_info[char_base[f] + mem[q - mem_min].hh.U2.b1].qqqq;
 		w = font_info[width_base[f] + i.b0].int_;
@@ -16156,10 +16158,11 @@ void do_endv()
 {
 	base_ptr = input_ptr;
 	input_stack[base_ptr] = cur_input;
-	while ((input_stack[base_ptr].index_field != 2) && (!input_stack[base_ptr].loc_field)
+	while ((input_stack[base_ptr].index_field != 2) && (input_stack[base_ptr].loc_field == (-1073741824))
 		   && (!input_stack[base_ptr].state_field))
 		--base_ptr;
-	if ((input_stack[base_ptr].index_field != 2) || input_stack[base_ptr].loc_field || input_stack[base_ptr].state_field)
+	if ((input_stack[base_ptr].index_field != 2) || (input_stack[base_ptr].loc_field != (-1073741824))
+			|| input_stack[base_ptr].state_field)
 		fatal_error(595);
 	if (cur_group != 6) {
 		off_save();
@@ -16184,7 +16187,7 @@ void push_math(group_code c)
 {
 	push_nest();
 	cur_list.mode_field = -203;
-	cur_list.aux_field.int_ = 0;
+	cur_list.aux_field.int_ = -1073741824;
 	new_save_level(c);
 }
 
@@ -16202,11 +16205,11 @@ void init_math()
 			w = -1073741823;
 		}
 		else {
-			line_break(eqtb[5270].int_);
-			v = mem[just_box - mem_min + 4].int_ + (font_info[param_base[eqtb[3934].hh.rh] + 6].int_ * 2);
+			line_break(eqtb[12170].int_);
+			v = mem[just_box - mem_min + 4].int_ + (font_info[param_base[eqtb[10834].hh.rh] + 6].int_ * 2);
 			w = -1073741823;
 			p = mem[just_box - mem_min + 5].hh.rh;
-			while (p) {
+			while (p != (-1073741824)) {
 _L21:
 				if (p >= hi_mem_min) {
 					f = mem[p - mem_min].hh.U2.b0;
@@ -16269,46 +16272,46 @@ _L45:
 			}
 _L30: ;
 		}
-		if (!eqtb[3412].hh.rh) {
-			if (eqtb[5847].int_ && (((eqtb[5304].int_ >= 0) && (cur_list.pg_field + 2 > eqtb[5304].int_))
-									|| (cur_list.pg_field + 1 < -eqtb[5304].int_))) {
-				l = eqtb[5833].int_ - abs(eqtb[5847].int_);
-				if (eqtb[5847].int_ > 0)
-					s = eqtb[5847].int_;
+		if (eqtb[10312].hh.rh == (-1073741824)) {
+			if (eqtb[12747].int_ && (((eqtb[12204].int_ >= 0) && (cur_list.pg_field + 2 > eqtb[12204].int_))
+									 || (cur_list.pg_field + 1 < -eqtb[12204].int_))) {
+				l = eqtb[12733].int_ - abs(eqtb[12747].int_);
+				if (eqtb[12747].int_ > 0)
+					s = eqtb[12747].int_;
 				else
 					s = 0;
 			}
 			else {
-				l = eqtb[5833].int_;
+				l = eqtb[12733].int_;
 				s = 0;
 			}
 		}
 		else {
-			n = mem[eqtb[3412].hh.rh - mem_min].hh.lh;
+			n = mem[eqtb[10312].hh.rh - mem_min].hh.lh;
 			if (cur_list.pg_field + 2 >= n)
-				p = eqtb[3412].hh.rh + (n * 2);
+				p = eqtb[10312].hh.rh + (n * 2);
 			else
-				p = eqtb[3412].hh.rh + ((cur_list.pg_field + 2) * 2);
+				p = eqtb[10312].hh.rh + ((cur_list.pg_field + 2) * 2);
 			s = mem[p - mem_min - 1].int_;
 			l = mem[p - mem_min].int_;
 		}
 		push_math(15);
 		cur_list.mode_field = 203;
-		eq_word_define(5307, -1);
-		eq_word_define(5843, w);
-		eq_word_define(5844, l);
-		eq_word_define(5845, s);
-		if (eqtb[3416].hh.rh)
-			begin_token_list(eqtb[3416].hh.rh, 9);
+		eq_word_define(12207, -1);
+		eq_word_define(12743, w);
+		eq_word_define(12744, l);
+		eq_word_define(12745, s);
+		if (eqtb[10316].hh.rh != (-1073741824))
+			begin_token_list(eqtb[10316].hh.rh, 9);
 		if (nest_ptr == 1)
 			build_page();
 		return;
 	}
 	back_input();
 	push_math(15);
-	eq_word_define(5307, -1);
-	if (eqtb[3415].hh.rh)
-		begin_token_list(eqtb[3415].hh.rh, 8);
+	eq_word_define(12207, -1);
+	if (eqtb[10315].hh.rh != (-1073741824))
+		begin_token_list(eqtb[10315].hh.rh, 8);
 }
 
 void start_eq_no()
@@ -16316,9 +16319,9 @@ void start_eq_no()
 	save_stack[save_ptr].int_ = cur_chr;
 	++save_ptr;
 	push_math(15);
-	eq_word_define(5307, -1);
-	if (eqtb[3415].hh.rh)
-		begin_token_list(eqtb[3415].hh.rh, 8);
+	eq_word_define(12207, -1);
+	if (eqtb[10315].hh.rh != (-1073741824))
+		begin_token_list(eqtb[10315].hh.rh, 8);
 }
 
 void scan_math(halfword p)
@@ -16333,7 +16336,7 @@ _L21:
 	switch (cur_cmd) {
 
 	case 11: case 12: case 68:
-		c = eqtb[cur_chr+5007].hh.rh;
+		c = eqtb[cur_chr+11907].hh.rh + 1073741824;
 		if (c == 32768) {
 			cur_cs = cur_chr + 1;
 			cur_cmd = eqtb[cur_cs].hh.U2.b0;
@@ -16376,8 +16379,8 @@ _L21:
 	}
 	mem[p - mem_min].hh.rh = 1;
 	mem[p - mem_min].hh.U2.b1 = c & 255;
-	if ((c >= 28672) && (((unsigned)eqtb[5307].int_) < 16))
-		mem[p - mem_min].hh.U2.b0 = eqtb[5307].int_;
+	if ((c >= 28672) && (((unsigned)eqtb[12207].int_) < 16))
+		mem[p - mem_min].hh.U2.b0 = eqtb[12207].int_;
 	else
 		mem[p - mem_min].hh.U2.b0 = (c / 256) & 15;
 _L10: ;
@@ -16400,8 +16403,8 @@ void set_math_char(integer c)
 	mem[p - mem_min + 1].hh.U2.b1 = c & 255;
 	mem[p - mem_min + 1].hh.U2.b0 = (c / 256) & 15;
 	if (c >= 28672) {
-		if (((unsigned)eqtb[5307].int_) < 16)
-			mem[p - mem_min + 1].hh.U2.b0 = eqtb[5307].int_;
+		if (((unsigned)eqtb[12207].int_) < 16)
+			mem[p - mem_min + 1].hh.U2.b0 = eqtb[12207].int_;
 		mem[p - mem_min].hh.U2.b0 = 16;
 	}
 	else {
@@ -16439,7 +16442,7 @@ void scan_delimiter(halfword p, bool r)
 		switch (cur_cmd) {
 
 		case 11: case 12:
-			cur_val = eqtb[cur_chr+5574].int_;
+			cur_val = eqtb[cur_chr+12474].int_;
 			break;
 
 		case 15:
@@ -16505,8 +16508,8 @@ void math_ac()
 	mem[cur_list.tail_field - mem_min + 4].hh.rh = 1;
 	scan_fifteen_bit_int();
 	mem[cur_list.tail_field - mem_min + 4].hh.U2.b1 = cur_val & 255;
-	if ((cur_val >= 28672) && (((unsigned)eqtb[5307].int_) < 16))
-		mem[cur_list.tail_field - mem_min + 4].hh.U2.b0 = eqtb[5307].int_;
+	if ((cur_val >= 28672) && (((unsigned)eqtb[12207].int_) < 16))
+		mem[cur_list.tail_field - mem_min + 4].hh.U2.b0 = eqtb[12207].int_;
 	else
 		mem[cur_list.tail_field - mem_min + 4].hh.U2.b0 = (cur_val / 256) & 15;
 	scan_math(cur_list.tail_field + 1);
@@ -16526,10 +16529,10 @@ halfword fin_mlist(halfword p)
 {
 	halfword q;
 
-	if (cur_list.aux_field.int_) {
+	if (cur_list.aux_field.int_ != (-1073741824)) {
 		mem[cur_list.aux_field.int_ - mem_min + 3].hh.rh = 3;
 		mem[cur_list.aux_field.int_ - mem_min + 3].hh.lh = mem[cur_list.head_field - mem_min].hh.rh;
-		if (!p) {
+		if (p == (-1073741824)) {
 			q = cur_list.aux_field.int_;
 		}
 		else {
@@ -16554,7 +16557,7 @@ void build_choices()
 	halfword p;
 
 	unsave();
-	p = fin_mlist(0);
+	p = fin_mlist(-1073741824);
 	switch (save_stack[save_ptr-1].int_) {
 
 	case 0:
@@ -16584,7 +16587,7 @@ _L10: ;
 void sub_sup()
 {
 	small_number t = 0;
-	halfword p = 0;
+	halfword p = -1073741824;
 
 	if (cur_list.tail_field != cur_list.head_field) {
 		if ((mem[cur_list.tail_field - mem_min].hh.U2.b0 >= 16) && (mem[cur_list.tail_field - mem_min].hh.U2.b0 < 30)) {
@@ -16592,7 +16595,7 @@ void sub_sup()
 			t = mem[p - mem_min].hh.rh;
 		}
 	}
-	if ((!p) || t) {
+	if ((p == (-1073741824)) || t) {
 		mem[cur_list.tail_field - mem_min].hh.rh = new_noad();
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		p = cur_list.tail_field + cur_cmd - 5;
@@ -16619,7 +16622,7 @@ void math_fraction()
 {
 	small_number c = cur_chr;
 
-	if (cur_list.aux_field.int_) {
+	if (cur_list.aux_field.int_ != (-1073741824)) {
 		if (c >= 3) {
 			scan_delimiter(mem_max - 12, false);
 			scan_delimiter(mem_max - 12, false);
@@ -16643,7 +16646,7 @@ void math_fraction()
 	mem[cur_list.aux_field.int_ - mem_min + 3].hh = empty_field;
 	mem[cur_list.aux_field.int_ - mem_min + 4].qqqq = null_delimiter;
 	mem[cur_list.aux_field.int_ - mem_min + 5].qqqq = null_delimiter;
-	mem[cur_list.head_field - mem_min].hh.rh = 0;
+	mem[cur_list.head_field - mem_min].hh.rh = -1073741824;
 	cur_list.tail_field = cur_list.head_field;
 	if (c >= 3) {
 		scan_delimiter(cur_list.aux_field.int_ + 4, false);
@@ -16712,7 +16715,7 @@ void after_math()
 	small_number g1, g2;
 	halfword r, t;
 
-	if ((font_params[eqtb[3937].hh.rh] < 22) || (font_params[eqtb[3953].hh.rh] < 22) || (font_params[eqtb[3969].hh.rh] < 22)) {
+	if ((font_params[eqtb[10837].hh.rh] < 22) || (font_params[eqtb[10853].hh.rh] < 22) || (font_params[eqtb[10869].hh.rh] < 22)) {
 		print_nl(262);
 		print(1157);
 		help_ptr = 3;
@@ -16723,8 +16726,8 @@ void after_math()
 		flush_math();
 		danger = true;
 	}
-	else if ((font_params[eqtb[3938].hh.rh] < 13) || (font_params[eqtb[3954].hh.rh] < 13)
-			 || (font_params[eqtb[3970].hh.rh] < 13)) {
+	else if ((font_params[eqtb[10838].hh.rh] < 13) || (font_params[eqtb[10854].hh.rh] < 13)
+			 || (font_params[eqtb[10870].hh.rh] < 13)) {
 		print_nl(262);
 		print(1161);
 		help_ptr = 3;
@@ -16736,7 +16739,7 @@ void after_math()
 		danger = true;
 	}
 	m = cur_list.mode_field;
-	p = fin_mlist(0);
+	p = fin_mlist(-1073741824);
 	if (cur_list.mode_field == (-m)) {
 		get_x_token();
 		if (cur_cmd != 3) {
@@ -16757,7 +16760,8 @@ void after_math()
 		if (save_stack[save_ptr].int_ == 1)
 			l = true;
 		danger = false;
-		if ((font_params[eqtb[3937].hh.rh] < 22) || (font_params[eqtb[3953].hh.rh] < 22) || (font_params[eqtb[3969].hh.rh] < 22)) {
+		if ((font_params[eqtb[10837].hh.rh] < 22) || (font_params[eqtb[10853].hh.rh] < 22)
+				|| (font_params[eqtb[10869].hh.rh] < 22)) {
 			print_nl(262);
 			print(1157);
 			help_ptr = 3;
@@ -16768,8 +16772,8 @@ void after_math()
 			flush_math();
 			danger = true;
 		}
-		else if ((font_params[eqtb[3938].hh.rh] < 13) || (font_params[eqtb[3954].hh.rh] < 13)
-				 || (font_params[eqtb[3970].hh.rh] < 13)) {
+		else if ((font_params[eqtb[10838].hh.rh] < 13) || (font_params[eqtb[10854].hh.rh] < 13)
+				 || (font_params[eqtb[10870].hh.rh] < 13)) {
 			print_nl(262);
 			print(1161);
 			help_ptr = 3;
@@ -16781,28 +16785,28 @@ void after_math()
 			danger = true;
 		}
 		m = cur_list.mode_field;
-		p = fin_mlist(0);
+		p = fin_mlist(-1073741824);
 	}
 	else {
-		a = 0;
+		a = -1073741824;
 	}
 	if (m < 0) {
-		mem[cur_list.tail_field - mem_min].hh.rh = new_math(eqtb[5831].int_, 0);
+		mem[cur_list.tail_field - mem_min].hh.rh = new_math(eqtb[12731].int_, 0);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		cur_mlist = p;
 		cur_style = 2;
 		mlist_penalties = (cur_list.mode_field > 0);
 		mlist_to_hlist();
 		mem[cur_list.tail_field - mem_min].hh.rh = mem[mem_max - mem_min - 3].hh.rh;
-		while (mem[cur_list.tail_field - mem_min].hh.rh)
+		while (mem[cur_list.tail_field - mem_min].hh.rh != (-1073741824))
 			cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-		mem[cur_list.tail_field - mem_min].hh.rh = new_math(eqtb[5831].int_, 1);
+		mem[cur_list.tail_field - mem_min].hh.rh = new_math(eqtb[12731].int_, 1);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		cur_list.aux_field.hh.lh = 1000;
 		unsave();
 		return;
 	}
-	if (!a) {
+	if (a == (-1073741824)) {
 		get_x_token();
 		if (cur_cmd != 3) {
 			print_nl(262);
@@ -16822,17 +16826,17 @@ void after_math()
 	b = hpack(p, 0, 1);
 	p = mem[b - mem_min + 5].hh.rh;
 	t = adjust_tail;
-	adjust_tail = 0;
+	adjust_tail = -1073741824;
 	w = mem[b - mem_min + 1].int_;
-	z = eqtb[5844].int_;
-	s = eqtb[5845].int_;
-	if ((!a) || danger) {
+	z = eqtb[12744].int_;
+	s = eqtb[12745].int_;
+	if ((a == (-1073741824)) || danger) {
 		e = 0;
 		q = 0;
 	}
 	else {
 		e = mem[a - mem_min + 1].int_;
-		q = e + font_info[param_base[eqtb[3937].hh.rh] + 6].int_;
+		q = e + font_info[param_base[eqtb[10837].hh.rh] + 6].int_;
 	}
 	if (w + q > z) {
 		if (e && ((w - total_shrink[0] + q <= z) || total_shrink[1] || total_shrink[2] || total_shrink[3])) {
@@ -16851,16 +16855,16 @@ void after_math()
 	d = half(z - w);
 	if ((e > 0) && (d < (e * 2))) {
 		d = half(z - w - e);
-		if (p) {
+		if (p != (-1073741824)) {
 			if (p < hi_mem_min) {
 				if (mem[p - mem_min].hh.U2.b0 == 10)
 					d = 0;
 			}
 		}
 	}
-	mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[5274].int_);
+	mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[12174].int_);
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
-	if ((d + s <= eqtb[5843].int_) || l) {
+	if ((d + s <= eqtb[12743].int_) || l) {
 		g1 = 3;
 		g2 = 4;
 	}
@@ -16894,7 +16898,7 @@ void after_math()
 	}
 	mem[b - mem_min + 4].int_ = s + d;
 	append_to_vlist(b);
-	if (a && (!e) && (!l)) {
+	if ((a != (-1073741824)) && (!e) && (!l)) {
 		mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(10000);
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 		mem[a - mem_min + 4].int_ = s + z - mem[a - mem_min + 1].int_;
@@ -16905,7 +16909,7 @@ void after_math()
 		mem[cur_list.tail_field - mem_min].hh.rh = mem[mem_max - mem_min - 5].hh.rh;
 		cur_list.tail_field = t;
 	}
-	mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[5275].int_);
+	mem[cur_list.tail_field - mem_min].hh.rh = new_penalty(eqtb[12175].int_);
 	cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 	if (g2 > 0) {
 		mem[cur_list.tail_field - mem_min].hh.rh = new_param_glue(g2);
@@ -16923,15 +16927,15 @@ void resume_after_display()
 	push_nest();
 	cur_list.mode_field = 102;
 	cur_list.aux_field.hh.lh = 1000;
-	if (eqtb[5313].int_ <= 0) {
+	if (eqtb[12213].int_ <= 0) {
 		cur_lang = 0;
 	}
-	else if (eqtb[5313].int_ > 255)
+	else if (eqtb[12213].int_ > 255)
 		cur_lang = 0;
 	else
-		cur_lang = eqtb[5313].int_;
+		cur_lang = eqtb[12213].int_;
 	cur_list.aux_field.hh.rh = cur_lang;
-	cur_list.pg_field = (((norm_min(eqtb[5314].int_) * 64) + norm_min(eqtb[5315].int_)) * 65536) + cur_lang;
+	cur_list.pg_field = (((norm_min(eqtb[12214].int_) * 64) + norm_min(eqtb[12215].int_)) * 65536) + cur_lang;
 	get_x_token();
 	if (cur_cmd != 10)
 		back_input();
@@ -16945,7 +16949,7 @@ _L20:
 	do {
 		get_token();
 	} while (cur_tok == 2592);
-	if (cur_cs && (cur_cs <= 2614))
+	if (cur_cs && (cur_cs <= 9514))
 		return;
 	print_nl(262);
 	print(1183);
@@ -16957,7 +16961,7 @@ _L20:
 	help_line[0] = 1188;
 	if (!cur_cs)
 		back_input();
-	cur_tok = 6709;
+	cur_tok = 13609;
 	ins_error();
 	goto _L20;
 }
@@ -17001,19 +17005,19 @@ void do_register_command(small_number a)
 	switch (p) {
 
 	case 0:
-		l = cur_val + 5318;
+		l = cur_val + 12218;
 		break;
 
 	case 1:
-		l = cur_val + 5851;
+		l = cur_val + 12751;
 		break;
 
 	case 2:
-		l = cur_val + 2900;
+		l = cur_val + 9800;
 		break;
 
 	case 3:
-		l = cur_val + 3156;
+		l = cur_val + 10056;
 		break;
 	}
 _L40:
@@ -17196,8 +17200,8 @@ void alter_box_dimen()
 	b = cur_val;
 	scan_optional_equals();
 	scan_dimen(false, false, false);
-	if (eqtb[b+3678].hh.rh)
-		mem[eqtb[b+3678].hh.rh + c - mem_min].int_ = cur_val;
+	if (eqtb[b+10578].hh.rh != (-1073741824))
+		mem[eqtb[b+10578].hh.rh + c - mem_min].int_ = cur_val;
 }
 
 void new_font(small_number a)
@@ -17290,8 +17294,8 @@ void new_font(small_number a)
 	f = read_font_info(u, cur_name, cur_area, s);
 _L50:
 	eqtb[u].hh.rh = f;
-	eqtb[f+2624] = eqtb[u];
-	hash[f+2110].rh = t;
+	eqtb[f+9524] = eqtb[u];
+	hash[f+9010].rh = t;
 }
 
 void new_interaction()
@@ -17346,8 +17350,8 @@ void prefixed_command()
 		help_line[0] = 1182;
 		error();
 	}
-	if (eqtb[5306].int_) {
-		if (eqtb[5306].int_ < 0) {
+	if (eqtb[12206].int_) {
+		if (eqtb[12206].int_ < 0) {
 			if (a >= 4)
 				a -= 4;
 		}
@@ -17358,13 +17362,13 @@ void prefixed_command()
 
 	case 87:
 		if (a >= 4)
-			geq_define(3934, 120, cur_chr);
+			geq_define(10834, 120, cur_chr);
 		else
-			eq_define(3934, 120, cur_chr);
+			eq_define(10834, 120, cur_chr);
 		break;
 
 	case 97:
-		if ((cur_chr & 1) && (a < 4) && (eqtb[5306].int_ >= 0))
+		if ((cur_chr & 1) && (a < 4) && (eqtb[12206].int_ >= 0))
 			a += 4;
 		e = (cur_chr >= 2);
 		get_r_token();
@@ -17439,37 +17443,37 @@ void prefixed_command()
 
 			case 2:
 				if (a >= 4)
-					geq_define(p, 73, cur_val + 5318);
+					geq_define(p, 73, cur_val + 12218);
 				else
-					eq_define(p, 73, cur_val + 5318);
+					eq_define(p, 73, cur_val + 12218);
 				break;
 
 			case 3:
 				if (a >= 4)
-					geq_define(p, 74, cur_val + 5851);
+					geq_define(p, 74, cur_val + 12751);
 				else
-					eq_define(p, 74, cur_val + 5851);
+					eq_define(p, 74, cur_val + 12751);
 				break;
 
 			case 4:
 				if (a >= 4)
-					geq_define(p, 75, cur_val + 2900);
+					geq_define(p, 75, cur_val + 9800);
 				else
-					eq_define(p, 75, cur_val + 2900);
+					eq_define(p, 75, cur_val + 9800);
 				break;
 
 			case 5:
 				if (a >= 4)
-					geq_define(p, 76, cur_val + 3156);
+					geq_define(p, 76, cur_val + 10056);
 				else
-					eq_define(p, 76, cur_val + 3156);
+					eq_define(p, 76, cur_val + 10056);
 				break;
 
 			case 6:
 				if (a >= 4)
-					geq_define(p, 72, cur_val + 3422);
+					geq_define(p, 72, cur_val + 10322);
 				else
-					eq_define(p, 72, cur_val + 3422);
+					eq_define(p, 72, cur_val + 10322);
 				break;
 			}
 			break;
@@ -17500,7 +17504,7 @@ void prefixed_command()
 		q = cur_cs;
 		if (cur_cmd == 71) {
 			scan_eight_bit_int();
-			p = cur_val + 3422;
+			p = cur_val + 10322;
 		}
 		else {
 			p = cur_chr;
@@ -17513,15 +17517,15 @@ void prefixed_command()
 			if (cur_cmd == 71) {
 				scan_eight_bit_int();
 				cur_cmd = 72;
-				cur_chr = cur_val + 3422;
+				cur_chr = cur_val + 10322;
 			}
 			if (cur_cmd == 72) {
 				q = eqtb[cur_chr].hh.rh;
-				if (!q) {
+				if (q == (-1073741824)) {
 					if (a >= 4)
-						geq_define(p, 101, 0);
+						geq_define(p, 101, -1073741824);
 					else
-						eq_define(p, 101, 0);
+						eq_define(p, 101, -1073741824);
 				}
 				else {
 					++mem[q - mem_min].hh.lh;
@@ -17536,16 +17540,16 @@ void prefixed_command()
 		back_input();
 		cur_cs = q;
 		q = scan_toks(false, false);
-		if (!mem[def_ref - mem_min].hh.rh) {
+		if (mem[def_ref - mem_min].hh.rh == (-1073741824)) {
 			if (a >= 4)
-				geq_define(p, 101, 0);
+				geq_define(p, 101, -1073741824);
 			else
-				eq_define(p, 101, 0);
+				eq_define(p, 101, -1073741824);
 			mem[def_ref - mem_min].hh.rh = avail;
 			avail = def_ref;
 		}
 		else {
-			if (p == 3413) {
+			if (p == 10313) {
 				mem[q - mem_min].hh.rh = get_avail();
 				q = mem[q - mem_min].hh.rh;
 				mem[q - mem_min].hh.lh = 637;
@@ -17597,16 +17601,16 @@ void prefixed_command()
 		break;
 
 	case 85:
-		if (cur_chr == 3983) {
+		if (cur_chr == 10883) {
 			n = 15;
 		}
-		else if (cur_chr == 5007) {
+		else if (cur_chr == 11907) {
 			n = 32768;
 		}
-		else if (cur_chr == 4751) {
+		else if (cur_chr == 11651) {
 			n = 32767;
 		}
-		else if (cur_chr == 5574)
+		else if (cur_chr == 12474)
 			n = 16777215;
 		else
 			n = 255;
@@ -17615,11 +17619,11 @@ void prefixed_command()
 		p += cur_val;
 		scan_optional_equals();
 		scan_int();
-		if (((cur_val < 0) && (p < 5574)) || (cur_val > n)) {
+		if (((cur_val < 0) && (p < 12474)) || (cur_val > n)) {
 			print_nl(262);
 			print(1201);
 			print_int(cur_val);
-			if (p < 5574)
+			if (p < 12474)
 				print(1202);
 			else
 				print(1203);
@@ -17629,17 +17633,17 @@ void prefixed_command()
 			error();
 			cur_val = 0;
 		}
-		if (p < 5007) {
+		if (p < 11907) {
 			if (a >= 4)
 				geq_define(p, 120, cur_val);
 			else
 				eq_define(p, 120, cur_val);
 		}
-		else if (p < 5574) {
+		else if (p < 12474) {
 			if (a >= 4)
-				geq_define(p, 120, cur_val);
+				geq_define(p, 120, cur_val - 1073741824);
 			else
-				eq_define(p, 120, cur_val);
+				eq_define(p, 120, cur_val - 1073741824);
 		}
 		else if (a >= 4)
 			geq_word_define(p, cur_val);
@@ -17709,7 +17713,7 @@ void prefixed_command()
 		scan_int();
 		n = cur_val;
 		if (n <= 0) {
-			p = 0;
+			p = -1073741824;
 		}
 		else {
 			p = get_node((n * 2) + 1);
@@ -17722,9 +17726,9 @@ void prefixed_command()
 			}
 		}
 		if (a >= 4)
-			geq_define(3412, 118, p);
+			geq_define(10312, 118, p);
 		else
-			eq_define(3412, 118, p);
+			eq_define(10312, 118, p);
 		break;
 
 	case 99:
@@ -17845,7 +17849,7 @@ void issue_message()
 		print_nl(262);
 		print(338);
 		slow_print(s);
-		if (eqtb[3421].hh.rh) {
+		if (eqtb[10321].hh.rh != (-1073741824)) {
 			use_err_help = true;
 		}
 		else if (long_help_seen) {
@@ -17870,13 +17874,13 @@ void issue_message()
 
 void shift_case()
 {
-	halfword p, t;
+	halfword t;
 	eight_bits c;
 	halfword b = cur_chr;
+	halfword p = scan_toks(false, false);
 
-	scan_toks(false, false);
 	p = mem[def_ref - mem_min].hh.rh;
-	while (p) {
+	while (p != (-1073741824)) {
 		t = mem[p - mem_min].hh.lh;
 		if (t < 4352) {
 			c = t & 255;
@@ -17907,10 +17911,10 @@ void show_whatever()
 		print_nl(1253);
 		print_int(cur_val);
 		print_char(61);
-		if (!eqtb[cur_val+3678].hh.rh)
+		if (eqtb[cur_val+10578].hh.rh == (-1073741824))
 			print(410);
 		else
-			show_box(eqtb[cur_val+3678].hh.rh);
+			show_box(eqtb[cur_val+10578].hh.rh);
 		break;
 
 	case 0:
@@ -17936,7 +17940,7 @@ void show_whatever()
 	print_nl(262);
 	print(1254);
 	if (selector == 19) {
-		if (eqtb[5292].int_ <= 0) {
+		if (eqtb[12192].int_ <= 0) {
 			selector = 17;
 			print(1255);
 			selector = 19;
@@ -17947,7 +17951,7 @@ _L50:
 		help_ptr = 0;
 		--error_count;
 	}
-	else if (eqtb[5292].int_ > 0) {
+	else if (eqtb[12192].int_ > 0) {
 		help_ptr = 3;
 		help_line[2] = 1242;
 		help_line[1] = 1243;
@@ -17988,11 +17992,11 @@ void store_fmt_file()
 	print(1271);
 	print(job_name);
 	print_char(32);
-	print_int(eqtb[5286].int_);
+	print_int(eqtb[12186].int_);
 	print_char(46);
-	print_int(eqtb[5285].int_);
+	print_int(eqtb[12185].int_);
 	print_char(46);
-	print_int(eqtb[5284].int_);
+	print_int(eqtb[12184].int_);
 	print_char(41);
 	if (!interaction)
 		selector = 18;
@@ -18016,9 +18020,9 @@ void store_fmt_file()
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = mem_max;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
-	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 6106;
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 13006;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
-	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 1777;
+	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 7649;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 307;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
@@ -18079,7 +18083,7 @@ void store_fmt_file()
 		fmt_file->write(reinterpret_cast<const char *>(&mem[k - mem_min]), sizeof(memory_word));
 	x += mem_end - hi_mem_min + 1;
 	p = avail;
-	while (p) {
+	while (p != (-1073741824)) {
 		--dyn_used;
 		p = mem[p - mem_min].hh.rh;
 	}
@@ -18096,18 +18100,18 @@ void store_fmt_file()
 	k = 1;
 	do {
 		j = k;
-		while (j < 5262) {
+		while (j < 12162) {
 			if ((eqtb[j].hh.rh == eqtb[j+1].hh.rh) && (eqtb[j].hh.U2.b0 == eqtb[j+1].hh.U2.b0)
 					&& (eqtb[j].hh.U2.b1 == eqtb[j+1].hh.U2.b1))
 				goto _L41;
 			++j;
 		}
-		l = 5263;
+		l = 12163;
 		goto _L31;
 _L41:
 		++j;
 		l = j;
-		while (j < 5262) {
+		while (j < 12162) {
 			if ((eqtb[j].hh.rh != eqtb[j+1].hh.rh) || (eqtb[j].hh.U2.b0 != eqtb[j+1].hh.U2.b0)
 					|| (eqtb[j].hh.U2.b1 != eqtb[j+1].hh.U2.b1))
 				goto _L31;
@@ -18123,20 +18127,20 @@ _L31:
 		k = j + 1;
 		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = k - l;
 		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
-	} while (k != 5263);
+	} while (k != 12163);
 	do {
 		j = k;
-		while (j < 6106) {
+		while (j < 13006) {
 			if (eqtb[j].int_ == eqtb[j+1].int_)
 				goto _L42;
 			++j;
 		}
-		l = 6107;
+		l = 13007;
 		goto _L32;
 _L42:
 		++j;
 		l = j;
-		while (j < 6106) {
+		while (j < 13006) {
 			if (eqtb[j].int_ != eqtb[j+1].int_)
 				goto _L32;
 			++j;
@@ -18151,14 +18155,14 @@ _L32:
 		k = j + 1;
 		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = k - l;
 		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
-	} while (k <= 6106);
+	} while (k <= 13006);
 	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = par_loc;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = write_loc;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = hash_used;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
-	cs_count = 2613 - hash_used;
+	cs_count = 9513 - hash_used;
 	for (N1 = hash_used, p = 514; p <= N1; ++p) {
 		if (hash[p-514].rh) {
 			getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = p;
@@ -18168,7 +18172,7 @@ _L32:
 			++cs_count;
 		}
 	}
-	for (p = hash_used + 1; p <= 2880; ++p) {
+	for (p = hash_used + 1; p <= 9780; ++p) {
 		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh = hash[p-514];
 		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	}
@@ -18231,7 +18235,7 @@ _L32:
 		getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = font_false_bchar[k];
 		put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		print_nl(1264);
-		print_esc(hash[k+2110].rh);
+		print_esc(hash[k+9010].rh);
 		print_char(61);
 		print_file_name(font_name[k], font_area[k], 338);
 		if (font_size[k] != font_dsize[k]) {
@@ -18309,7 +18313,7 @@ _L32:
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_ = 69069;
 	put< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
-	eqtb[5294].int_ = 0;
+	eqtb[12194].int_ = 0;
 	w_close(fmt_file);
 }
 
@@ -18366,12 +18370,12 @@ void do_extension()
 
 	case 2:
 		new_write_whatsit(2);
-		mem[cur_list.tail_field - mem_min + 1].hh.rh = 0;
+		mem[cur_list.tail_field - mem_min + 1].hh.rh = -1073741824;
 		break;
 
 	case 3:
 		new_whatsit(3, 2);
-		mem[cur_list.tail_field - mem_min + 1].hh.lh = 0;
+		mem[cur_list.tail_field - mem_min + 1].hh.lh = -1073741824;
 		p = scan_toks(false, true);
 		mem[cur_list.tail_field - mem_min + 1].hh.rh = def_ref;
 		break;
@@ -18384,7 +18388,7 @@ void do_extension()
 			out_what(cur_list.tail_field);
 			flush_node_list(cur_list.tail_field);
 			cur_list.tail_field = p;
-			mem[p - mem_min].hh.rh = 0;
+			mem[p - mem_min].hh.rh = -1073741824;
 		}
 		else {
 			back_input();
@@ -18406,8 +18410,8 @@ void do_extension()
 			else
 				cur_list.aux_field.hh.rh = cur_val;
 			mem[cur_list.tail_field - mem_min + 1].hh.rh = cur_list.aux_field.hh.rh;
-			mem[cur_list.tail_field - mem_min + 1].hh.U2.b0 = norm_min(eqtb[5314].int_);
-			mem[cur_list.tail_field - mem_min + 1].hh.U2.b1 = norm_min(eqtb[5315].int_);
+			mem[cur_list.tail_field - mem_min + 1].hh.U2.b0 = norm_min(eqtb[12214].int_);
+			mem[cur_list.tail_field - mem_min + 1].hh.U2.b1 = norm_min(eqtb[12215].int_);
 		}
 		break;
 
@@ -18421,20 +18425,20 @@ void fix_language()
 {
 	ASCII_code l;
 
-	if (eqtb[5313].int_ <= 0) {
+	if (eqtb[12213].int_ <= 0) {
 		l = 0;
 	}
-	else if (eqtb[5313].int_ > 255)
+	else if (eqtb[12213].int_ > 255)
 		l = 0;
 	else
-		l = eqtb[5313].int_;
+		l = eqtb[12213].int_;
 	if (l == cur_list.aux_field.hh.rh)
 		return;
 	new_whatsit(4, 2);
 	mem[cur_list.tail_field - mem_min + 1].hh.rh = l;
 	cur_list.aux_field.hh.rh = l;
-	mem[cur_list.tail_field - mem_min + 1].hh.U2.b0 = norm_min(eqtb[5314].int_);
-	mem[cur_list.tail_field - mem_min + 1].hh.U2.b1 = norm_min(eqtb[5315].int_);
+	mem[cur_list.tail_field - mem_min + 1].hh.U2.b0 = norm_min(eqtb[12214].int_);
+	mem[cur_list.tail_field - mem_min + 1].hh.U2.b1 = norm_min(eqtb[12215].int_);
 }
 
 void handle_right_brace()
@@ -18483,10 +18487,10 @@ void handle_right_brace()
 
 	case 11:
 		end_graf();
-		q = eqtb[2892].hh.rh;
+		q = eqtb[9792].hh.rh;
 		++mem[q - mem_min].hh.rh;
-		d = eqtb[5836].int_;
-		f = eqtb[5305].int_;
+		d = eqtb[12736].int_;
+		f = eqtb[12205].int_;
 		unsave();
 		--save_ptr;
 		p = vpackage(mem[cur_list.head_field - mem_min].hh.rh, 0, 1, 1073741823);
@@ -18516,7 +18520,7 @@ void handle_right_brace()
 		break;
 
 	case 8:
-		if (cur_input.loc_field || ((cur_input.index_field != 6) && (cur_input.index_field != 3))) {
+		if ((cur_input.loc_field != (-1073741824)) || ((cur_input.index_field != 6) && (cur_input.index_field != 3))) {
 			print_nl(262);
 			print(1009);
 			help_ptr = 2;
@@ -18525,14 +18529,14 @@ void handle_right_brace()
 			error();
 			do {
 				get_token();
-			} while (cur_input.loc_field);
+			} while (cur_input.loc_field != (-1073741824));
 		}
 		end_token_list();
 		end_graf();
 		unsave();
 		output_active = false;
 		insert_penalties = 0;
-		if (eqtb[3933].hh.rh) {
+		if (eqtb[10833].hh.rh != (-1073741824)) {
 			print_nl(262);
 			print(1012);
 			print_esc(409);
@@ -18547,12 +18551,12 @@ void handle_right_brace()
 			mem[page_tail - mem_min].hh.rh = mem[cur_list.head_field - mem_min].hh.rh;
 			page_tail = cur_list.tail_field;
 		}
-		if (mem[mem_max - mem_min - 2].hh.rh) {
-			if (!mem[mem_max - mem_min - 1].hh.rh)
+		if (mem[mem_max - mem_min - 2].hh.rh != (-1073741824)) {
+			if (mem[mem_max - mem_min - 1].hh.rh == (-1073741824))
 				nest[0].tail_field = page_tail;
 			mem[page_tail - mem_min].hh.rh = mem[mem_max - mem_min - 1].hh.rh;
 			mem[mem_max - mem_min - 1].hh.rh = mem[mem_max - mem_min - 2].hh.rh;
-			mem[mem_max - mem_min - 2].hh.rh = 0;
+			mem[mem_max - mem_min - 2].hh.rh = -1073741824;
 			page_tail = mem_max - 2;
 		}
 		pop_nest();
@@ -18565,7 +18569,7 @@ void handle_right_brace()
 
 	case 6:
 		back_input();
-		cur_tok = 6710;
+		cur_tok = 13610;
 		print_nl(262);
 		print(625);
 		print_esc(898);
@@ -18603,10 +18607,10 @@ void handle_right_brace()
 		unsave();
 		--save_ptr;
 		mem[save_stack[save_ptr].int_ - mem_min].hh.rh = 3;
-		p = fin_mlist(0);
+		p = fin_mlist(-1073741824);
 		mem[save_stack[save_ptr].int_ - mem_min].hh.lh = p;
-		if (p) {
-			if (!mem[p - mem_min].hh.rh) {
+		if (p != (-1073741824)) {
+			if (mem[p - mem_min].hh.rh == (-1073741824)) {
 				if (mem[p - mem_min].hh.U2.b0 == 16) {
 					if (!mem[p - mem_min + 3].hh.rh) {
 						if (!mem[p - mem_min + 2].hh.rh) {
@@ -18641,8 +18645,8 @@ void main_control()
 {
 	integer t;
 
-	if (eqtb[3419].hh.rh)
-		begin_token_list(eqtb[3419].hh.rh, 12);
+	if (eqtb[10319].hh.rh != (-1073741824))
+		begin_token_list(eqtb[10319].hh.rh, 12);
 _L60:
 	get_x_token();
 _L21:
@@ -18654,7 +18658,7 @@ _L21:
 			goto _L60;
 		}
 	}
-	if (eqtb[5299].int_ > 0)
+	if (eqtb[12199].int_ > 0)
 		show_cur_cmd_chr();
 	switch (abs(cur_list.mode_field) + cur_cmd) {
 
@@ -18888,13 +18892,13 @@ _L21:
 		break;
 
 	case 214: case 215: case 271:
-		set_math_char(eqtb[cur_chr+5007].hh.rh);
+		set_math_char(eqtb[cur_chr+11907].hh.rh + 1073741824);
 		break;
 
 	case 219:
 		scan_char_num();
 		cur_chr = cur_val;
-		set_math_char(eqtb[cur_chr+5007].hh.rh);
+		set_math_char(eqtb[cur_chr+11907].hh.rh + 1073741824);
 		break;
 
 	case 220:
@@ -18936,8 +18940,8 @@ _L21:
 		push_nest();
 		cur_list.mode_field = -1;
 		cur_list.aux_field.int_ = -65536000;
-		if (eqtb[3418].hh.rh)
-			begin_token_list(eqtb[3418].hh.rh, 11);
+		if (eqtb[10318].hh.rh != (-1073741824))
+			begin_token_list(eqtb[10318].hh.rh, 11);
 		break;
 
 	case 256:
@@ -19017,7 +19021,7 @@ _L21:
 	}
 	goto _L60;
 _L70:
-	main_s = eqtb[cur_chr+4751].hh.rh;
+	main_s = eqtb[cur_chr+11651].hh.rh;
 	if (main_s == 1000) {
 		cur_list.aux_field.hh.lh = 1000;
 	}
@@ -19029,20 +19033,20 @@ _L70:
 		cur_list.aux_field.hh.lh = 1000;
 	else
 		cur_list.aux_field.hh.lh = main_s;
-	main_f = eqtb[3934].hh.rh;
+	main_f = eqtb[10834].hh.rh;
 	bchar = font_bchar[main_f];
 	false_bchar = font_false_bchar[main_f];
 	if (cur_list.mode_field > 0) {
-		if (eqtb[5313].int_ != cur_list.aux_field.hh.rh)
+		if (eqtb[12213].int_ != cur_list.aux_field.hh.rh)
 			fix_language();
 	}
 	lig_stack = avail;
-	if (!lig_stack) {
+	if (lig_stack == (-1073741824)) {
 		lig_stack = get_avail();
 	}
 	else {
 		avail = mem[lig_stack - mem_min].hh.rh;
-		mem[lig_stack - mem_min].hh.rh = 0;
+		mem[lig_stack - mem_min].hh.rh = -1073741824;
 	}
 	mem[lig_stack - mem_min].hh.U2.b0 = main_f;
 	cur_l = cur_chr;
@@ -19062,7 +19066,7 @@ _L70:
 	goto _L111;
 _L80:
 	if (cur_l < 256) {
-		if (mem[cur_q - mem_min].hh.rh > 0) {
+		if (mem[cur_q - mem_min].hh.rh > (-1073741824)) {
 			if (mem[cur_list.tail_field - mem_min].hh.U2.b1 == hyphen_char[main_f])
 				ins_disc = true;
 		}
@@ -19073,7 +19077,7 @@ _L80:
 				lft_hit = false;
 			}
 			if (rt_hit) {
-				if (!lig_stack) {
+				if (lig_stack == (-1073741824)) {
 					++mem[main_p - mem_min].hh.U2.b1;
 					rt_hit = false;
 				}
@@ -19091,7 +19095,7 @@ _L80:
 		}
 	}
 _L90:
-	if (!lig_stack)
+	if (lig_stack == (-1073741824))
 		goto _L21;
 	cur_q = cur_list.tail_field;
 	cur_l = mem[lig_stack - mem_min].hh.U2.b1;
@@ -19137,10 +19141,10 @@ _L100:
 	if (cur_cmd == 65)
 		bchar = 256;
 	cur_r = bchar;
-	lig_stack = 0;
+	lig_stack = -1073741824;
 	goto _L110;
 _L101:
-	main_s = eqtb[cur_chr+4751].hh.rh;
+	main_s = eqtb[cur_chr+11651].hh.rh;
 	if (main_s == 1000) {
 		cur_list.aux_field.hh.lh = 1000;
 	}
@@ -19153,12 +19157,12 @@ _L101:
 	else
 		cur_list.aux_field.hh.lh = main_s;
 	lig_stack = avail;
-	if (!lig_stack) {
+	if (lig_stack == (-1073741824)) {
 		lig_stack = get_avail();
 	}
 	else {
 		avail = mem[lig_stack - mem_min].hh.rh;
-		mem[lig_stack - mem_min].hh.rh = 0;
+		mem[lig_stack - mem_min].hh.rh = -1073741824;
 	}
 	mem[lig_stack - mem_min].hh.U2.b0 = main_f;
 	cur_r = cur_chr;
@@ -19182,7 +19186,7 @@ _L112:
 		if (main_j.b0 <= 128) {
 			if (main_j.b2 >= 128) {
 				if (cur_l < 256) {
-					if (mem[cur_q - mem_min].hh.rh > 0) {
+					if (mem[cur_q - mem_min].hh.rh > (-1073741824)) {
 						if (mem[cur_list.tail_field - mem_min].hh.U2.b1 == hyphen_char[main_f])
 							ins_disc = true;
 					}
@@ -19193,7 +19197,7 @@ _L112:
 							lft_hit = false;
 						}
 						if (rt_hit) {
-							if (!lig_stack) {
+							if (lig_stack == (-1073741824)) {
 								++mem[main_p - mem_min].hh.U2.b1;
 								rt_hit = false;
 							}
@@ -19218,7 +19222,7 @@ _L112:
 			if (cur_l == 256) {
 				lft_hit = true;
 			}
-			else if (!lig_stack)
+			else if (lig_stack == (-1073741824))
 				rt_hit = true;
 			if (interrupt)
 				pause_for_instructions();
@@ -19232,7 +19236,7 @@ _L112:
 
 			case 2: case 6:
 				cur_r = main_j.b3;
-				if (!lig_stack) {
+				if (lig_stack == (-1073741824)) {
 					lig_stack = new_lig_item(cur_r);
 					bchar = 256;
 				}
@@ -19255,7 +19259,7 @@ _L112:
 
 			case 7: case 11:
 				if (cur_l < 256) {
-					if (mem[cur_q - mem_min].hh.rh > 0) {
+					if (mem[cur_q - mem_min].hh.rh > (-1073741824)) {
 						if (mem[cur_list.tail_field - mem_min].hh.U2.b1 == hyphen_char[main_f])
 							ins_disc = true;
 					}
@@ -19286,7 +19290,7 @@ _L112:
 			default:
 				cur_l = main_j.b3;
 				ligature_present = true;
-				if (!lig_stack)
+				if (lig_stack == (-1073741824))
 					goto _L80;
 				else
 					goto _L91;
@@ -19313,7 +19317,7 @@ _L112:
 	goto _L111;
 _L95:
 	main_p = mem[lig_stack - mem_min + 1].hh.rh;
-	if (main_p > 0) {
+	if (main_p > (-1073741824)) {
 		mem[cur_list.tail_field - mem_min].hh.rh = main_p;
 		cur_list.tail_field = mem[cur_list.tail_field - mem_min].hh.rh;
 	}
@@ -19322,8 +19326,8 @@ _L95:
 	free_node(temp_ptr, 2);
 	main_i = font_info[char_base[main_f] + cur_l].qqqq;
 	ligature_present = true;
-	if (!lig_stack) {
-		if (main_p > 0)
+	if (lig_stack == (-1073741824)) {
+		if (main_p > (-1073741824))
 			goto _L100;
 		cur_r = bchar;
 	}
@@ -19332,15 +19336,15 @@ _L95:
 	}
 	goto _L110;
 _L120:
-	if (!eqtb[2894].hh.rh) {
-		main_p = font_glue[eqtb[3934].hh.rh];
-		if (!main_p) {
+	if (!eqtb[9794].hh.rh) {
+		main_p = font_glue[eqtb[10834].hh.rh];
+		if (main_p == (-1073741824)) {
 			main_p = new_spec(0);
-			main_k = param_base[eqtb[3934].hh.rh] + 2;
+			main_k = param_base[eqtb[10834].hh.rh] + 2;
 			mem[main_p - mem_min + 1].int_ = font_info[main_k].int_;
 			mem[main_p - mem_min + 2].int_ = font_info[main_k+1].int_;
 			mem[main_p - mem_min + 3].int_ = font_info[main_k+2].int_;
-			font_glue[eqtb[3934].hh.rh] = main_p;
+			font_glue[eqtb[10834].hh.rh] = main_p;
 		}
 		temp_ptr = new_glue(main_p);
 	}
@@ -19355,7 +19359,7 @@ _L10: ;
 
 void give_err_help()
 {
-	token_show(eqtb[3421].hh.rh);
+	token_show(eqtb[10321].hh.rh);
 }
 
 bool open_fmt_file()
@@ -19413,11 +19417,11 @@ bool load_fmt_file()
 		goto _L6666;
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-	if (x != 6106)
+	if (x != 13006)
 		goto _L6666;
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-	if (x != 1777)
+	if (x != 7649)
 		goto _L6666;
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
@@ -19495,13 +19499,13 @@ bool load_fmt_file()
 	if (mem_min < (-2)) {
 		p = mem[rover - mem_min + 1].hh.lh;
 		q = mem_min + 1;
-		mem[0].hh.rh = 0;
-		mem[0].hh.lh = 0;
+		mem[0].hh.rh = -1073741824;
+		mem[0].hh.lh = -1073741824;
 		mem[p - mem_min + 1].hh.rh = q;
 		mem[rover - mem_min + 1].hh.lh = q;
 		mem[q - mem_min + 1].hh.rh = rover;
 		mem[q - mem_min + 1].hh.lh = p;
-		mem[q - mem_min].hh.rh = 65535;
+		mem[q - mem_min].hh.rh = 1073741824;
 		mem[q - mem_min].hh.lh = -q;
 	}
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
@@ -19511,7 +19515,7 @@ bool load_fmt_file()
 	hi_mem_min = x;
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-	if (((unsigned)x) > mem_max)
+	if ((x < (-1073741824)) || (x > mem_max))
 		goto _L6666;
 	avail = x;
 	mem_end = mem_max;
@@ -19527,7 +19531,7 @@ bool load_fmt_file()
 	do {
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-		if ((x < 1) || (k + x > 6107))
+		if ((x < 1) || (k + x > 13007))
 			goto _L6666;
 		for (j = k; j < (k + x); ++j) {
 			get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
@@ -19536,26 +19540,26 @@ bool load_fmt_file()
 		k += x;
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-		if ((x < 0) || (k + x > 6107))
+		if ((x < 0) || (k + x > 13007))
 			goto _L6666;
 		for (j = k; j < (k + x); ++j)
 			eqtb[j] = eqtb[k-1];
 		k += x;
-	} while (k <= 6106);
+	} while (k <= 13006);
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-	if ((x < 514) || (x > 2614))
+	if ((x < 514) || (x > 9514))
 		goto _L6666;
 	par_loc = x;
 	par_token = par_loc + 4095;
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-	if ((x < 514) || (x > 2614))
+	if ((x < 514) || (x > 9514))
 		goto _L6666;
 	write_loc = x;
 	get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 	x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-	if ((x < 514) || (x > 2614))
+	if ((x < 514) || (x > 9514))
 		goto _L6666;
 	hash_used = x;
 	p = 513;
@@ -19568,7 +19572,7 @@ bool load_fmt_file()
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		hash[p-514] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh;
 	} while (p != hash_used);
-	for (p = hash_used + 1; p <= 2880; ++p) {
+	for (p = hash_used + 1; p <= 9780; ++p) {
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		hash[p-514] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).hh;
 	}
@@ -19605,7 +19609,7 @@ bool load_fmt_file()
 		font_dsize[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-		if (((unsigned)x) > 65535)
+		if ((x < (-1073741824)) || (x > 1073741824))
 			goto _L6666;
 		font_params[k] = x;
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
@@ -19652,7 +19656,7 @@ bool load_fmt_file()
 		param_base[k] = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-		if (((unsigned)x) > lo_mem_max)
+		if ((x < (-1073741824)) || (x > lo_mem_max))
 			goto _L6666;
 		font_glue[k] = x;
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
@@ -19689,7 +19693,7 @@ bool load_fmt_file()
 		hyph_word[j] = x;
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-		if (((unsigned)x) > 65535)
+		if ((x < (-1073741824)) || (x > 1073741824))
 			goto _L6666;
 		hyph_list[j] = x;
 	}
@@ -19730,7 +19734,7 @@ bool load_fmt_file()
 		hyf_num[k] = x;
 		get< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value);
 		x = getfbuf< memory_word>(fmt_file, fmt_file_mode, &fmt_file_value).int_;
-		if (((unsigned)x) > 255)
+		if (((unsigned)x) > 65535)
 			goto _L6666;
 		hyf_next[k] = x;
 	}
@@ -19811,7 +19815,7 @@ void close_files_and_terminate()
 		dvi_four(25400000);
 		dvi_four(473628672);
 		prepare_mag();
-		dvi_four(eqtb[5280].int_);
+		dvi_four(eqtb[12180].int_);
 		dvi_four(max_v);
 		dvi_four(max_h);
 		dvi_buf[dvi_ptr] = max_push / 256;
@@ -19903,7 +19907,7 @@ void final_cleanup()
 		print_int(cur_level - 1);
 		print_char(41);
 	}
-	while (cond_ptr) {
+	while (cond_ptr != (-1073741824)) {
 		print_nl(40);
 		print_esc(1276);
 		print(1278);
@@ -19930,10 +19934,10 @@ void final_cleanup()
 	}
 	if (c == 1) {
 		for (c = 0; c <= 4; ++c) {
-			if (cur_mark[c])
+			if (cur_mark[c] != (-1073741824))
 				delete_token_ref(cur_mark[c]);
 		}
-		if (last_glue != 65535)
+		if (last_glue != 1073741824)
 			delete_glue_ref(last_glue);
 		store_fmt_file();
 		goto _L10;
@@ -19944,109 +19948,109 @@ _L10: ;
 void init_prim()
 {
 	no_new_control_sequence = false;
-	primitive(376, 75, 2882);
-	primitive(377, 75, 2883);
-	primitive(378, 75, 2884);
-	primitive(379, 75, 2885);
-	primitive(380, 75, 2886);
-	primitive(381, 75, 2887);
-	primitive(382, 75, 2888);
-	primitive(383, 75, 2889);
-	primitive(384, 75, 2890);
-	primitive(385, 75, 2891);
-	primitive(386, 75, 2892);
-	primitive(387, 75, 2893);
-	primitive(388, 75, 2894);
-	primitive(389, 75, 2895);
-	primitive(390, 75, 2896);
-	primitive(391, 76, 2897);
-	primitive(392, 76, 2898);
-	primitive(393, 76, 2899);
-	primitive(398, 72, 3413);
-	primitive(399, 72, 3414);
-	primitive(400, 72, 3415);
-	primitive(401, 72, 3416);
-	primitive(402, 72, 3417);
-	primitive(403, 72, 3418);
-	primitive(404, 72, 3419);
-	primitive(405, 72, 3420);
-	primitive(406, 72, 3421);
-	primitive(420, 73, 5263);
-	primitive(421, 73, 5264);
-	primitive(422, 73, 5265);
-	primitive(423, 73, 5266);
-	primitive(424, 73, 5267);
-	primitive(425, 73, 5268);
-	primitive(426, 73, 5269);
-	primitive(427, 73, 5270);
-	primitive(428, 73, 5271);
-	primitive(429, 73, 5272);
-	primitive(430, 73, 5273);
-	primitive(431, 73, 5274);
-	primitive(432, 73, 5275);
-	primitive(433, 73, 5276);
-	primitive(434, 73, 5277);
-	primitive(435, 73, 5278);
-	primitive(436, 73, 5279);
-	primitive(437, 73, 5280);
-	primitive(438, 73, 5281);
-	primitive(439, 73, 5282);
-	primitive(440, 73, 5283);
-	primitive(441, 73, 5284);
-	primitive(442, 73, 5285);
-	primitive(443, 73, 5286);
-	primitive(444, 73, 5287);
-	primitive(445, 73, 5288);
-	primitive(446, 73, 5289);
-	primitive(447, 73, 5290);
-	primitive(448, 73, 5291);
-	primitive(449, 73, 5292);
-	primitive(450, 73, 5293);
-	primitive(451, 73, 5294);
-	primitive(452, 73, 5295);
-	primitive(453, 73, 5296);
-	primitive(454, 73, 5297);
-	primitive(455, 73, 5298);
-	primitive(456, 73, 5299);
-	primitive(457, 73, 5300);
-	primitive(458, 73, 5301);
-	primitive(459, 73, 5302);
-	primitive(460, 73, 5303);
-	primitive(461, 73, 5304);
-	primitive(462, 73, 5305);
-	primitive(463, 73, 5306);
-	primitive(464, 73, 5307);
-	primitive(465, 73, 5308);
-	primitive(466, 73, 5309);
-	primitive(467, 73, 5310);
-	primitive(468, 73, 5311);
-	primitive(469, 73, 5312);
-	primitive(470, 73, 5313);
-	primitive(471, 73, 5314);
-	primitive(472, 73, 5315);
-	primitive(473, 73, 5316);
-	primitive(474, 73, 5317);
-	primitive(478, 74, 5830);
-	primitive(479, 74, 5831);
-	primitive(480, 74, 5832);
-	primitive(481, 74, 5833);
-	primitive(482, 74, 5834);
-	primitive(483, 74, 5835);
-	primitive(484, 74, 5836);
-	primitive(485, 74, 5837);
-	primitive(486, 74, 5838);
-	primitive(487, 74, 5839);
-	primitive(488, 74, 5840);
-	primitive(489, 74, 5841);
-	primitive(490, 74, 5842);
-	primitive(491, 74, 5843);
-	primitive(492, 74, 5844);
-	primitive(493, 74, 5845);
-	primitive(494, 74, 5846);
-	primitive(495, 74, 5847);
-	primitive(496, 74, 5848);
-	primitive(497, 74, 5849);
-	primitive(498, 74, 5850);
+	primitive(376, 75, 9782);
+	primitive(377, 75, 9783);
+	primitive(378, 75, 9784);
+	primitive(379, 75, 9785);
+	primitive(380, 75, 9786);
+	primitive(381, 75, 9787);
+	primitive(382, 75, 9788);
+	primitive(383, 75, 9789);
+	primitive(384, 75, 9790);
+	primitive(385, 75, 9791);
+	primitive(386, 75, 9792);
+	primitive(387, 75, 9793);
+	primitive(388, 75, 9794);
+	primitive(389, 75, 9795);
+	primitive(390, 75, 9796);
+	primitive(391, 76, 9797);
+	primitive(392, 76, 9798);
+	primitive(393, 76, 9799);
+	primitive(398, 72, 10313);
+	primitive(399, 72, 10314);
+	primitive(400, 72, 10315);
+	primitive(401, 72, 10316);
+	primitive(402, 72, 10317);
+	primitive(403, 72, 10318);
+	primitive(404, 72, 10319);
+	primitive(405, 72, 10320);
+	primitive(406, 72, 10321);
+	primitive(420, 73, 12163);
+	primitive(421, 73, 12164);
+	primitive(422, 73, 12165);
+	primitive(423, 73, 12166);
+	primitive(424, 73, 12167);
+	primitive(425, 73, 12168);
+	primitive(426, 73, 12169);
+	primitive(427, 73, 12170);
+	primitive(428, 73, 12171);
+	primitive(429, 73, 12172);
+	primitive(430, 73, 12173);
+	primitive(431, 73, 12174);
+	primitive(432, 73, 12175);
+	primitive(433, 73, 12176);
+	primitive(434, 73, 12177);
+	primitive(435, 73, 12178);
+	primitive(436, 73, 12179);
+	primitive(437, 73, 12180);
+	primitive(438, 73, 12181);
+	primitive(439, 73, 12182);
+	primitive(440, 73, 12183);
+	primitive(441, 73, 12184);
+	primitive(442, 73, 12185);
+	primitive(443, 73, 12186);
+	primitive(444, 73, 12187);
+	primitive(445, 73, 12188);
+	primitive(446, 73, 12189);
+	primitive(447, 73, 12190);
+	primitive(448, 73, 12191);
+	primitive(449, 73, 12192);
+	primitive(450, 73, 12193);
+	primitive(451, 73, 12194);
+	primitive(452, 73, 12195);
+	primitive(453, 73, 12196);
+	primitive(454, 73, 12197);
+	primitive(455, 73, 12198);
+	primitive(456, 73, 12199);
+	primitive(457, 73, 12200);
+	primitive(458, 73, 12201);
+	primitive(459, 73, 12202);
+	primitive(460, 73, 12203);
+	primitive(461, 73, 12204);
+	primitive(462, 73, 12205);
+	primitive(463, 73, 12206);
+	primitive(464, 73, 12207);
+	primitive(465, 73, 12208);
+	primitive(466, 73, 12209);
+	primitive(467, 73, 12210);
+	primitive(468, 73, 12211);
+	primitive(469, 73, 12212);
+	primitive(470, 73, 12213);
+	primitive(471, 73, 12214);
+	primitive(472, 73, 12215);
+	primitive(473, 73, 12216);
+	primitive(474, 73, 12217);
+	primitive(478, 74, 12730);
+	primitive(479, 74, 12731);
+	primitive(480, 74, 12732);
+	primitive(481, 74, 12733);
+	primitive(482, 74, 12734);
+	primitive(483, 74, 12735);
+	primitive(484, 74, 12736);
+	primitive(485, 74, 12737);
+	primitive(486, 74, 12738);
+	primitive(487, 74, 12739);
+	primitive(488, 74, 12740);
+	primitive(489, 74, 12741);
+	primitive(490, 74, 12742);
+	primitive(491, 74, 12743);
+	primitive(492, 74, 12744);
+	primitive(493, 74, 12745);
+	primitive(494, 74, 12746);
+	primitive(495, 74, 12747);
+	primitive(496, 74, 12748);
+	primitive(497, 74, 12749);
+	primitive(498, 74, 12750);
 	primitive(32, 64, 0);
 	primitive(47, 44, 0);
 	primitive(508, 45, 0);
@@ -20060,8 +20064,8 @@ void init_prim()
 	primitive(515, 92, 0);
 	primitive(505, 67, 0);
 	primitive(516, 62, 0);
-	hash[2102].rh = 516;
-	eqtb[2616] = eqtb[cur_val];
+	hash[9002].rh = 516;
+	eqtb[9516] = eqtb[cur_val];
 	primitive(517, 102, 0);
 	primitive(518, 88, 0);
 	primitive(519, 77, 0);
@@ -20085,8 +20089,8 @@ void init_prim()
 	primitive(533, 66, 0);
 	primitive(534, 96, 0);
 	primitive(535, 0, 256);
-	hash[2107].rh = 535;
-	eqtb[2621] = eqtb[cur_val];
+	hash[9007].rh = 535;
+	eqtb[9521] = eqtb[cur_val];
 	primitive(536, 98, 0);
 	primitive(537, 109, 0);
 	primitive(407, 71, 0);
@@ -20144,25 +20148,25 @@ void init_prim()
 	primitive(771, 105, 15);
 	primitive(772, 105, 16);
 	primitive(773, 106, 2);
-	hash[2104].rh = 773;
-	eqtb[2618] = eqtb[cur_val];
+	hash[9004].rh = 773;
+	eqtb[9518] = eqtb[cur_val];
 	primitive(774, 106, 4);
 	primitive(775, 106, 3);
 	primitive(800, 87, 0);
-	hash[2110].rh = 800;
-	eqtb[2624] = eqtb[cur_val];
+	hash[9010].rh = 800;
+	eqtb[9524] = eqtb[cur_val];
 	primitive(897, 4, 256);
 	primitive(898, 5, 257);
-	hash[2101].rh = 898;
-	eqtb[2615] = eqtb[cur_val];
+	hash[9001].rh = 898;
+	eqtb[9515] = eqtb[cur_val];
 	primitive(899, 5, 258);
-	hash[2105].rh = 900;
-	hash[2106].rh = 900;
-	eqtb[2620].hh.U2.b0 = 9;
-	eqtb[2620].hh.rh = mem_max - 11;
-	eqtb[2620].hh.U2.b1 = 1;
-	eqtb[2619] = eqtb[2620];
-	eqtb[2619].hh.U2.b0 = 115;
+	hash[9005].rh = 900;
+	hash[9006].rh = 900;
+	eqtb[9520].hh.U2.b0 = 9;
+	eqtb[9520].hh.rh = mem_max - 11;
+	eqtb[9520].hh.U2.b1 = 1;
+	eqtb[9519] = eqtb[9520];
+	eqtb[9519].hh.U2.b0 = 115;
 	primitive(969, 81, 0);
 	primitive(970, 81, 1);
 	primitive(971, 81, 2);
@@ -20239,8 +20243,8 @@ void init_prim()
 	primitive(1151, 52, 5);
 	primitive(875, 49, 30);
 	primitive(876, 49, 31);
-	hash[2103].rh = 876;
-	eqtb[2617] = eqtb[cur_val];
+	hash[9003].rh = 876;
+	eqtb[9517] = eqtb[cur_val];
 	primitive(1170, 93, 1);
 	primitive(1171, 93, 2);
 	primitive(1172, 93, 4);
@@ -20257,15 +20261,15 @@ void init_prim()
 	primitive(1196, 95, 4);
 	primitive(1197, 95, 5);
 	primitive(1198, 95, 6);
-	primitive(415, 85, 3983);
-	primitive(419, 85, 5007);
-	primitive(416, 85, 4239);
-	primitive(417, 85, 4495);
-	primitive(418, 85, 4751);
-	primitive(477, 85, 5574);
-	primitive(412, 86, 3935);
-	primitive(413, 86, 3951);
-	primitive(414, 86, 3967);
+	primitive(415, 85, 10883);
+	primitive(419, 85, 11907);
+	primitive(416, 85, 11139);
+	primitive(417, 85, 11395);
+	primitive(418, 85, 11651);
+	primitive(477, 85, 12474);
+	primitive(412, 86, 10835);
+	primitive(413, 86, 10851);
+	primitive(414, 86, 10867);
 	primitive(940, 99, 0);
 	primitive(952, 99, 1);
 	primitive(1216, 78, 0);
@@ -20278,8 +20282,8 @@ void init_prim()
 	primitive(1228, 60, 0);
 	primitive(1229, 58, 0);
 	primitive(1230, 58, 1);
-	primitive(1236, 57, 4239);
-	primitive(1237, 57, 4495);
+	primitive(1236, 57, 11139);
+	primitive(1237, 57, 11395);
 	primitive(1238, 19, 0);
 	primitive(1239, 19, 1);
 	primitive(1240, 19, 2);
@@ -20347,7 +20351,7 @@ _L1:
 		--first;
 	} while (first);
 	scanner_status = 0;
-	warning_index = 0;
+	warning_index = -1073741824;
 	first = 1;
 	cur_input.state_field = 33;
 	cur_input.start_field = 1;
@@ -20373,17 +20377,17 @@ _L1:
 		while ((cur_input.loc_field < cur_input.limit_field) && (buffer[cur_input.loc_field] == 32))
 			++cur_input.loc_field;
 	}
-	if (((unsigned)eqtb[5311].int_) > 255)
+	if (((unsigned)eqtb[12211].int_) > 255)
 		--cur_input.limit_field;
 	else
-		buffer[cur_input.limit_field] = eqtb[5311].int_;
+		buffer[cur_input.limit_field] = eqtb[12211].int_;
 	fix_date_and_time();
 	magic_offset = str_start[891] - 144;
 	if (!interaction)
 		selector = 16;
 	else
 		selector = 17;
-	if ((cur_input.loc_field < cur_input.limit_field) && eqtb[buffer[cur_input.loc_field] + 3983].hh.rh)
+	if ((cur_input.loc_field < cur_input.limit_field) && eqtb[buffer[cur_input.loc_field] + 10883].hh.rh)
 		start_input();
 	history = 0;
 	main_control();
@@ -20415,6 +20419,7 @@ _L9999:
 
 static std::iostream * fopen(const char * name, const char * mode)
 {
+	// auto file = std::make_unique<std::fstream>(name, (mode[0] == 'r' ? std::ios::in|std::ios::binary : std::ios::out|std::ios::binary|std::ios::trunc));
 	std::unique_ptr<std::fstream> file(new std::fstream(name, (mode[0] == 'r' ? std::ios::in|std::ios::binary : std::ios::out|std::ios::binary|std::ios::trunc)));
 	if (erstat(file.get()))
 		return nullptr;
