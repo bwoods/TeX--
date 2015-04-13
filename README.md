@@ -67,7 +67,7 @@ Creation of the header file is done through the [`tex.sh`](web/tex.sh) shell scr
 
 If you plan on forking/cloning this project, note that only the `master` branch will keep a nice, linear history. Any other branches will be rebased at will. *Caveat Furcator*.
 
-## License (MIT)
+## License [![License](http://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 
 Copyright (c) 2013 Bryan Woods
 
