@@ -1,6 +1,6 @@
 # TeX--
 
-Based upon version 3.1415926 of [tex.web](web/tex.web). The main goal was getting TeX’s massive number of symbols out of the global scope; making it easy to embed.
+Based upon version 3.14159265 of [tex.web](web/tex.web). The main goal was getting TeX’s massive number of symbols out of the global scope; making it easy to embed.
 
 ## Features
 

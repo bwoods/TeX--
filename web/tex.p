@@ -379,7 +379,7 @@ m:=(m mod 10)+1;k:=1;if m<10 then dig[0]:=m else begin dig[0]:=0;n:=n+1;
 end;end;end;repeat dig[k]:=n mod 10;n:=n div 10;k:=k+1;until n=0;
 print_the_digs(k);end;{:65}{262:}procedure print_cs(p:integer);
 begin if p<514 then if p>=257 then if p=513 then begin print_esc(504);
-print_esc(505);end else begin print_esc(p-257);
+print_esc(505);print_char(32);end else begin print_esc(p-257);
 if eqtb[10883+p-257].hh.rh=11 then print_char(32);
 end else if p<1 then print_esc(506)else print(p-1)else if p>=9781 then
 print_esc(506)else if(hash[p].rh<0)or(hash[p].rh>=str_ptr)then print_esc
@@ -2335,7 +2335,7 @@ pack_job_name(796);
 while not a_open_out(log_file)do{535:}begin selector:=17;
 prompt_file_name(798,796);end{:535};
 log_name:=a_make_name_string(log_file);selector:=18;log_opened:=true;
-{536:}begin write(log_file,'This is TeX, Version 3.1415926');
+{536:}begin write(log_file,'This is TeX, Version 3.14159265');
 slow_print(format_ident);print(799);print_int(eqtb[12184].int);
 print_char(32);months:='JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC';
 for k:=3*eqtb[12185].int-2 to 3*eqtb[12185].int do write(log_file,months
@@ -6497,7 +6497,7 @@ goto 9999;end;initialize;if not get_strings_started then goto 9999;
 init_prim;init_str_ptr:=str_ptr;init_pool_ptr:=pool_ptr;
 fix_date_and_time;ready_already:=314159;1:{55:}selector:=17;tally:=0;
 term_offset:=0;file_offset:=0;
-{:55}{61:}write(term_out,'This is TeX, Version 3.1415926');
+{:55}{61:}write(term_out,'This is TeX, Version 3.14159265');
 if format_ident=0 then write_ln(term_out,' (no format preloaded)')else
 begin slow_print(format_ident);print_ln;end;break(term_out);
 {:61}{528:}job_name:=0;name_in_progress:=false;log_opened:=false;

@@ -864,6 +864,7 @@ void print_cs(integer p)
 			if (p == 513) {
 				print_esc(504);
 				print_esc(505);
+				print_char(32);
 				return;
 			}
 			print_esc(p - 257);
@@ -8303,7 +8304,7 @@ virtual void open_log_file()
 	log_name = a_make_name_string(log_file);
 	selector = 18;
 	log_opened = true;
-	*log_file << "This is TeX, Version 3.1415926";
+	*log_file << "This is TeX, Version 3.14159265";
 	slow_print(format_ident);
 	print(799);
 	print_int(eqtb[12184].int_);
@@ -20324,7 +20325,7 @@ _L1:
 	tally = 0;
 	term_offset = 0;
 	file_offset = 0;
-	*term_out << "This is TeX, Version 3.1415926";
+	*term_out << "This is TeX, Version 3.14159265";
 	if (!format_ident) {
 		*term_out << " (no format preloaded)" << std::endl;
 	}
