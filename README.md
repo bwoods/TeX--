@@ -1,4 +1,4 @@
-# TeX--
+# TeX-- ![](https://img.shields.io/badge/maintained%3F-feature--complete-yellow.svg)
 
 Based upon version 3.14159265 of [tex.web](web/tex.web). The main goal was getting TeX’s massive number of symbols out of the global scope; making it easy to embed.
 
