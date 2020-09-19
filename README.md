@@ -40,7 +40,7 @@ The `filename` or `input` parameter points to the `.tex` file that is to be type
 
 `search_dir` is the path where the `tex` and `tfm` folders are stored. `working_dir` tells TeX where to write its auxiliary files: `.log`, `.toc`, etc. Both paths default to the application’s current working directory if they are not explicitly given.
 
-Any additional macro files needed by the application should be stored in the `.tex` folder. Although, if they are in the `search_dir` directly, they will be found.
+Any additional macro files needed by the application should be stored in the `tex` folder. Although, if they are in the `search_dir` directly, they will be found.
 
 ## A better example
 
